@@ -1,0 +1,72 @@
+{% extends "master.html" %} {% block title %}Model estimates{% endblock title%}
+{% block content %}
+
+<div class="row">
+  <p>
+    You can find
+    <abbr title="International Chemical Identifier">InChI</abbr> and
+    <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
+    <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
+    you can build your own molecule
+    <a href="https://bit.ly/DIYmol" target="_blank">here</a> and copy the SMILES
+    right clicking on the 2D panel.
+  </p>
+  <form action="" method="POST">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-md">{{ form.query }}</div>
+
+      <div class="col-md">
+        <input
+          type="submit"
+          value="Submit SMILES or InChI"
+          class="form-control btn-outline-primary"
+        />
+      </div>
+    </div>
+  </form>
+</div>
+<p>
+  
+</p>
+<div class="row">
+  {% if output %}
+  <div class="col-md text-success">
+    <h3>Estimated ePC-SAFT parameters</h3>
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>Parameter name</th>
+          <th>Parameter value</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for paraname, para in predicted_para%}
+        <tr>
+          <td>{{paraname}}</td>
+          <td>{{para}}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md">
+    <img src="../static/den_agua.png" alt="Density plot." class="img-fluid" />
+  </div>
+  <div class="col-md">
+    <img src="../static/vp_agua.png" alt="Pressure plot." class="img-fluid" />
+  </div>
+  {% else %}
+  <div class="col-md">
+    <ul>
+      {% for error in form.query.errors %}
+      <li class="alert alert-danger">{{error}}</li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  {% endif %}
+</div>
+
+{% endblock content %}

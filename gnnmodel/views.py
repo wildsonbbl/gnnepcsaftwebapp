@@ -4,15 +4,15 @@ import re
 import torch
 from django.shortcuts import render
 
-from data.graph import from_InChI, from_smiles
-from train.models import PNAPCSAFTDUMMY, PnaconvsParams, ReadoutMLPParams
-from train.utils import calc_deg
+from model.data.graph import from_InChI, from_smiles
+from model.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
+from model.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
 
-deg = calc_deg("ramirez", "/workspaces/ePC-SAFT")
+deg = calc_deg("ramirez", "./model")
 device = torch.device("cpu")
-model = PNAPCSAFTDUMMY(
+model = PNAPCSAFT(
     hidden_dim=128,
     pna_params=PnaconvsParams(
         propagation_depth=2,
@@ -25,7 +25,7 @@ model = PNAPCSAFTDUMMY(
 model.to("cpu")
 
 checkpoint = torch.load(
-    "/workspaces/ePC-SAFT/train/checkpoints/model5-0_50e6.pth", map_location="cpu"
+    "./model/train/checkpoints/model5-1_00e6.pth", map_location="cpu"
 )
 
 model.load_state_dict(checkpoint["model_state_dict"])

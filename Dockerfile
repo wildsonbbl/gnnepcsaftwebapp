@@ -10,6 +10,10 @@ ENV PYTHONUNBUFFERED=1
 
 # Install requirements
 RUN pip install --upgrade pip
-RUN pip install rdkit torchmetrics ml-collections polars clu jraph jaxopt
-RUN pip install -U "ray[tune]"
-RUN pip install torch_geometric
+RUN pip install -q git+https://github.com/pyg-team/pytorch_geometric.git
+RUN pip install rdkit torchmetrics ml-collections polars clu contextlib2 -q --no-deps
+RUN pip install pcsaft
+RUN pip install ogb -q
+RUN pip install django django-bootstrap-v5
+RUN python -m pip install django-debug-toolbar
+RUN pip install whitenoise

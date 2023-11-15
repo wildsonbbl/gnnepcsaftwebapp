@@ -26,12 +26,10 @@
     </div>
   </form>
 </div>
-<p>
-  
-</p>
+<p></p>
 <div class="row">
   {% if output %}
-  <div class="col-md text-success">
+  <div class="col-md-4 text-success">
     <h3>Estimated ePC-SAFT parameters</h3>
 
     <table class="table table-hover">
@@ -51,13 +49,18 @@
       </tbody>
     </table>
   </div>
-  <div class="col-md">
-    <img src="../static/den_agua.png" alt="Density plot." class="img-fluid" />
+  {% if plotden %}
+  <div class="col-md-4">
+    <img src="{{ propimage.den.url }}" alt="Density plot." class="img-fluid" />
+    <footer>
+      <small> - Density at 101.325 kPa (1 atm). </small>
+    </footer>
   </div>
-  <div class="col-md">
-    <img src="../static/vp_agua.png" alt="Pressure plot." class="img-fluid" />
+  {% endif %} {% if plotvp %}
+  <div class="col-md-4">
+    <img src="{{ propimage.vp.url }}" alt="Pressure plot." class="img-fluid" />
   </div>
-  {% else %}
+  {% endif %} {% else %}
   <div class="col-md">
     <ul>
       {% for error in form.query.errors %}
@@ -69,4 +72,26 @@
   {% endif %}
 </div>
 
-{% endblock content %}
+{% if plotden or plotvp %}
+<footer>
+  <small>
+    <li>
+      <a
+        href="https://doi.org/10.1002/jcc.26842"
+        target="_blank"
+        class="text-decoration-none"
+        >ThermoML Archive</a
+      >
+    </li>
+    <li>
+      <a
+        href="https://doi.org/10.1002/aic.17722"
+        target="_blank"
+        class="text-decoration-none"
+        >Ramírez-Vélez et al. (2022)</a
+      >
+    </li>
+  </small>
+</footer>
+
+{% endif %} {% endblock content %}

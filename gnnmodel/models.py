@@ -1,3 +1,7 @@
 from django.db import models
 
-# Create your models here.
+
+class PropImage(models.Model):
+    "Images for property plots."
+    den = models.FileField(default="images/den.png")
+    vp = models.FileField(default="images/vp.png")

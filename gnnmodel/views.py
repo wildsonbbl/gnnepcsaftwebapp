@@ -1,14 +1,19 @@
 "request handler."
+import os.path as osp
 import re
 
 import torch
 from django.shortcuts import render
 
-from model.data.graph import from_InChI, from_smiles
+from model.data.graph import from_InChI, smilestoinchi
 from model.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
 from model.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
+from .models import PropImage
+from .utils import plotdata
+
+file_dir = osp.dirname(__file__)
 
 deg = calc_deg("ramirez", "./model")
 device = torch.device("cpu")
@@ -33,18 +38,20 @@ model.load_state_dict(checkpoint["model_state_dict"])
 model.eval()
 
 
-def prediction(query: str) -> tuple[torch.Tensor, bool]:
+def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
 
     inchi_check = re.search("^InChI=", query)
-
-    if inchi_check:
-        gh_fn = from_InChI
-    else:
-        gh_fn = from_smiles
+    inchi = query
+    if not inchi_check:
+        try:
+            inchi = smilestoinchi(query)
+        except (ValueError, TypeError, AttributeError, IndexError) as e:
+            print(e)
+            print("error for query:", query)
 
     try:
-        graph = gh_fn(query).to(device)
+        graph = from_InChI(inchi).to(device)
         with torch.no_grad():
             pred = model.forward(graph)[0]
         output = True
@@ -54,7 +61,7 @@ def prediction(query: str) -> tuple[torch.Tensor, bool]:
         pred = [None]
         output = False
 
-    return pred, output
+    return pred, output, inchi
 
 
 def index(request):
@@ -67,12 +74,15 @@ def index(request):
     pred = None
     query = ""
     output = False
+    plotden, plotvp = False, False
+    propimage = PropImage.objects.all()[0]  # pylint: disable = E1101
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
-            pred, output = prediction(query)
+            pred, output, inchi = prediction(query)
+            plotden, plotvp = plotdata(pred.numpy(), inchi)
 
     else:
         form = InChIorSMILESinput()
@@ -87,6 +97,9 @@ def index(request):
         else [(None, None)],
         "query": query,
         "output": output,
+        "plotden": plotden,
+        "plotvp": plotvp,
+        "propimage": propimage,
     }
 
     return render(request, "pred.html", context)

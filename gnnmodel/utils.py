@@ -1,4 +1,6 @@
+import base64
 import os.path as osp
+from io import BytesIO
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,10 +40,10 @@ def pltcustom(ra, scale="linear", ylabel=""):
     plt.yscale(scale)
 
 
-def plotdata(para: np.ndarray, inchi: str):
+def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
     "plot den and vp data if available."
-    plotden = False
-    plotvp = False
+    plotden = ""
+    plotvp = ""
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
         pred_rho, pred_vp = rhovp_data(para, rho, vp)
@@ -57,7 +59,6 @@ def plotdata(para: np.ndarray, inchi: str):
             pred_rho = pred_rho[idx_p]
 
             if rho.shape[0] > 1:
-                plotden = True
                 idx = np.argsort(rho[:, 0], 0)
                 x = rho[idx, 0]
                 y = rho[idx, -1]
@@ -69,16 +70,19 @@ def plotdata(para: np.ndarray, inchi: str):
                     pltline(x, y)
                 pltcustom(ra, ylabel="Density (mol / m³)")
                 sns.despine(trim=True)
+                imgbio = BytesIO()
                 plt.savefig(
-                    osp.join(file_dir, "../media/images/den.png"),
+                    imgbio,
                     dpi=300,
                     format="png",
                     bbox_inches="tight",
                     transparent=True,
                 )
+                imgbio.seek(0)
+                plotden = base64.b64encode(imgbio.read()).decode("ascii")
+
                 plt.close()
             if ~np.any(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
-                plotvp = True
                 idx = np.argsort(vp[:, 0], 0)
                 x = vp[idx, 0]
                 y = vp[idx, -1] / 1000
@@ -90,12 +94,16 @@ def plotdata(para: np.ndarray, inchi: str):
                     pltline(x, y)
                 pltcustom(ra, ylabel="Vapor pressure (kPa)")
                 sns.despine(trim=True)
+                imgbio = BytesIO()
                 plt.savefig(
-                    osp.join(file_dir, "../media/images/vp.png"),
+                    imgbio,
                     dpi=300,
                     format="png",
                     bbox_inches="tight",
                     transparent=True,
                 )
+                imgbio.seek(0)
+                plotvp = base64.b64encode(imgbio.read()).decode("ascii")
+
                 plt.close()
     return plotden, plotvp

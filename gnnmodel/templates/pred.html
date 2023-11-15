@@ -51,14 +51,14 @@
   </div>
   {% if plotden %}
   <div class="col-md-4">
-    <img src="{{ propimage.den.url }}" alt="Density plot." class="img-fluid" />
+    <img src="{{ den_uri }}" alt="Density plot." class="img-fluid" />
     <footer>
       <small> - Density at 101.325 kPa (1 atm). </small>
     </footer>
   </div>
   {% endif %} {% if plotvp %}
   <div class="col-md-4">
-    <img src="{{ propimage.vp.url }}" alt="Pressure plot." class="img-fluid" />
+    <img src="{{ vp_uri }}" alt="Pressure plot." class="img-fluid" />
   </div>
   {% endif %} {% else %}
   <div class="col-md">

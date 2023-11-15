@@ -10,7 +10,6 @@ from model.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
 from model.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
-from .models import PropImage
 from .utils import plotdata
 
 file_dir = osp.dirname(__file__)
@@ -66,6 +65,7 @@ def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
 
 def index(request):
     "handle request"
+
     available_params = [
         "Segment number",
         "Segment diameter (Å)",
@@ -74,8 +74,7 @@ def index(request):
     pred = None
     query = ""
     output = False
-    plotden, plotvp = False, False
-    propimage = PropImage.objects.all()[0]  # pylint: disable = E1101
+    plotden, plotvp = "", ""
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
 
@@ -86,6 +85,9 @@ def index(request):
 
     else:
         form = InChIorSMILESinput()
+    imgtype = "image/png"
+    den_uri = f"data:{imgtype};base64,{plotden}"
+    vp_uri = f"data:{imgtype};base64,{plotvp}"
 
     context = {
         "form": form,
@@ -99,7 +101,8 @@ def index(request):
         "output": output,
         "plotden": plotden,
         "plotvp": plotvp,
-        "propimage": propimage,
+        "den_uri": den_uri,
+        "vp_uri": vp_uri,
     }
 
     return render(request, "pred.html", context)

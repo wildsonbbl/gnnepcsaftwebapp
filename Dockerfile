@@ -1,5 +1,7 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM paperspace/gradient-base:pt112-tf29-jax0317-py39-20230125
+FROM python:3.9.18-bullseye
+
+EXPOSE 8000
 
 # Keeps Python from generating .pyc files in the container
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -7,13 +9,17 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
+# Install pip requirements
+COPY requirements.txt .
+RUN python -m pip install -r requirements.txt
 
-# Install requirements
-RUN pip install --upgrade pip
-RUN pip install -q git+https://github.com/pyg-team/pytorch_geometric.git
-RUN pip install rdkit torchmetrics ml-collections polars clu contextlib2 -q --no-deps
-RUN pip install pcsaft
-RUN pip install ogb -q
-RUN pip install django django-bootstrap-v5
-RUN python -m pip install django-debug-toolbar
-RUN pip install whitenoise
+WORKDIR /app
+COPY . /app
+
+# Creates a non-root user with an explicit UID and adds permission to access the /app folder
+# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
+RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
+
+# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "gnnepcsaft.wsgi"]

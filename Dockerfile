@@ -15,6 +15,7 @@ RUN python -m pip install -r requirements.txt
 
 WORKDIR /app
 COPY . /app
+RUN git clone https://github.com/wildsonbbl/GNN-ePC-SAFT.git ./model/
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
 # For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers

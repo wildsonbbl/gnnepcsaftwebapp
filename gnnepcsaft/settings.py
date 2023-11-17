@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "gnnmodel",
     "debug_toolbar",
     "bootstrap5",
+    "fontawesomefree",
 ]
 
 MIDDLEWARE = [

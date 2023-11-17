@@ -112,3 +112,8 @@ def index(request):
 def homepage(request):
     "handle request"
     return render(request, "homepage.html")
+
+
+def authorpage(request):
+    "handle request"
+    return render(request, "author.html")

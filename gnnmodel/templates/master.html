@@ -1,10 +1,20 @@
 <!DOCTYPE html>
-
+{% load static %}
 <html lang="en">
   <head>
     <title>{% block title %}{% endblock title %}</title>
     {% load bootstrap5 %} {% bootstrap_css %} {% bootstrap_javascript %}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="{% static 'fontawesomefree/css/fontawesome.css' %}"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <link
+      href="{% static 'fontawesomefree/css/brands.css' %}"
+      rel="stylesheet"
+      type="text/css"
+    />
   </head>
   <body>
     <div class="container-fluid">
@@ -23,6 +33,9 @@
             >GITHUB</a
           >
         </li>
+        <li class="nav-item">
+          <a class="nav-link link-light" href="/author">ABOUT ME</a>
+        </li>
       </ul>
 
       <div class="row">
@@ -40,11 +53,60 @@
               href="https://github.com/zmeri/PC-SAFT"
               target="_blank"
               >PC-SAFT</a
-            > package or any other implementation of the <abbr title='Equation of State'>EoS</abbr>.
+            >
+            package or any other implementation of the
+            <abbr title="Equation of State">EoS</abbr>.
           </p>
-
-          {% block content %}{% endblock content %}
         </div>
+      </div>
+
+      <div class="row">{% block content %}{% endblock content %}</div>
+
+      <div class="row">
+        <!-- Remove the container if you want to extend the Footer to full width. -->
+        <div class="container my-5">
+          <footer
+            class="text-center text-white"
+            style="background-color: #f1f1f1"
+          >
+            <!-- Grid container -->
+            <div class="container pt-4">
+              <!-- Section: Social media -->
+              <section class="mb-4">
+                <!-- Linkedin -->
+                <a
+                  class="btn btn-link btn-floating btn-lg text-dark m-1"
+                  href="https://www.linkedin.com/in/wildsonbbl/"
+                  role="button"
+                  data-mdb-ripple-color="dark"
+                  target="_blank"
+                  ><i class="fab fa-linkedin"></i
+                ></a>
+                <!-- Github -->
+                <a
+                  class="btn btn-link btn-floating btn-lg text-dark m-1"
+                  href="https://github.com/wildsonbbl"
+                  role="button"
+                  data-mdb-ripple-color="dark"
+                  target="_blank"
+                  ><i class="fab fa-github"></i
+                ></a>
+                <!-- ORCID -->
+                <a
+                  class="btn btn-link btn-floating btn-lg text-dark m-1"
+                  href="https://orcid.org/0000-0002-0189-6000"
+                  role="button"
+                  data-mdb-ripple-color="dark"
+                  target="_blank"
+                  ><i class="fab fa-orcid"></i
+                ></a>
+              </section>
+              <!-- Section: Social media -->
+            </div>
+            <!-- Grid container -->
+          </footer>
+        </div>
+        <!-- End of .container -->
       </div>
     </div>
   </body>

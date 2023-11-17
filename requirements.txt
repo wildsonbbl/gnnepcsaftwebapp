@@ -17,3 +17,4 @@ gunicorn
 torch==1.12.1+cpu 
 torch_geometric==2.4.0
 torchmetrics==1.2.0
+fontawesomefree

@@ -23,21 +23,21 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: django-secret_key
+            - name: django_secret_key
               valueFrom:
                 secretKeyRef:
                   name: webapp-secret
-                  key: django-secret_key
-            - name: domain-name
+                  key: django_secret_key
+            - name: domain_name
               valueFrom:
                 configMapKeyRef:
                   name: webapp-config
-                  key: domain-name
-            - name: django-allowed_hosts
+                  key: domain_name
+            - name: django_allowed_hosts
               valueFrom:
                 secretKeyRef:
                   name: webapp-secret
-                  key: django-allowed_hosts
+                  key: django_allowed_hosts
 ---
 apiVersion: v1
 kind: Service

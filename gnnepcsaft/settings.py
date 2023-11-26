@@ -21,14 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("django-secret_key")
+SECRET_KEY = os.getenv("django_secret_key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    os.getenv("domain-name"),
-    os.getenv("django-allowed_hosts"),
+    os.getenv("domain_name"),
+    os.getenv("django_allowed_hosts"),
 ]
 
 
@@ -152,4 +152,4 @@ SESSION_COOKIE_SECURE = True
 
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = ["https://*." + os.getenv("domain-name")]
+CSRF_TRUSTED_ORIGINS = ["https://*." + os.getenv("domain_name")]

@@ -1,3 +1,4 @@
+"Module for utils like plotting data."
 import base64
 import os.path as osp
 from io import BytesIO
@@ -5,8 +6,6 @@ from io import BytesIO
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import torch
-
 from model.data.graphdataset import Ramirez, ThermoMLDataset
 from model.demo.utils import pltline, pltscatter
 from model.train.utils import rhovp_data
@@ -40,6 +39,7 @@ def pltcustom(ra, scale="linear", ylabel=""):
     plt.yscale(scale)
 
 
+# pylint: disable=R0914
 def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
     "plot den and vp data if available."
     plotden = ""
@@ -52,7 +52,7 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
             ra = True
             para = ra_data[inchi].squeeze().numpy()
             ra_rho, ra_vp = rhovp_data(para, rho, vp)
-
+        # plot rho data
         if ~np.any(rho == np.zeros_like(rho)):
             idx_p = abs(rho[:, 1] - 101325) < 15_000
             rho = rho[idx_p]
@@ -82,28 +82,29 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
                 plotden = base64.b64encode(imgbio.read()).decode("ascii")
 
                 plt.close()
-            if ~np.any(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
-                idx = np.argsort(vp[:, 0], 0)
-                x = vp[idx, 0]
-                y = vp[idx, -1] / 1000
-                pltscatter(x, y)
-                y = pred_vp[idx] / 1000
+        # plot vp data
+        if ~np.any(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
+            idx = np.argsort(vp[:, 0], 0)
+            x = vp[idx, 0]
+            y = vp[idx, -1] / 1000
+            pltscatter(x, y)
+            y = pred_vp[idx] / 1000
+            pltline(x, y)
+            if ra:
+                y = ra_vp[idx] / 1000
                 pltline(x, y)
-                if ra:
-                    y = ra_vp[idx] / 1000
-                    pltline(x, y)
-                pltcustom(ra, ylabel="Vapor pressure (kPa)")
-                sns.despine(trim=True)
-                imgbio = BytesIO()
-                plt.savefig(
-                    imgbio,
-                    dpi=300,
-                    format="png",
-                    bbox_inches="tight",
-                    transparent=True,
-                )
-                imgbio.seek(0)
-                plotvp = base64.b64encode(imgbio.read()).decode("ascii")
+            pltcustom(ra, ylabel="Vapor pressure (kPa)")
+            sns.despine(trim=True)
+            imgbio = BytesIO()
+            plt.savefig(
+                imgbio,
+                dpi=300,
+                format="png",
+                bbox_inches="tight",
+                transparent=True,
+            )
+            imgbio.seek(0)
+            plotvp = base64.b64encode(imgbio.read()).decode("ascii")
 
-                plt.close()
+            plt.close()
     return plotden, plotvp

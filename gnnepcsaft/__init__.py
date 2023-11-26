@@ -1,3 +1,4 @@
+"GNNePCSAFT web app."
 import os
 import sys
 

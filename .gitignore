@@ -1,6 +1,5 @@
 .devcontainer*
 .vscode/
 **productionfiles
-**model
 webapp-*.yaml
 docker-compose*

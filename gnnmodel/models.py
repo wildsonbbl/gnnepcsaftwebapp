@@ -1,1 +1,2 @@
-from django.db import models
+"Module for django models (dbs)."
+# from django.db import models

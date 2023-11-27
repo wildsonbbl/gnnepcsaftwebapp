@@ -1,10 +1,10 @@
+"Django forms."
 import re
 
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-
-from model.data.graph import from_InChI, from_smiles
+from gnnepcsaft.data.graph import from_InChI, from_smiles
 
 
 class BootstrapForm(forms.Form):

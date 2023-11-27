@@ -6,7 +6,7 @@ import sys
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gnnepcsaft.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webapp.settings")
     try:
         # pylint: disable = C0415
         from django.core.management import execute_from_command_line

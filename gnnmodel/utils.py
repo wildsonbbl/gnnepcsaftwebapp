@@ -3,19 +3,22 @@ import base64
 import os.path as osp
 from io import BytesIO
 
+import gnnepcsaft.data as gd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from model.data.graphdataset import Ramirez, ThermoMLDataset
-from model.demo.utils import pltline, pltscatter
-from model.train.utils import rhovp_data
+from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
+from gnnepcsaft.demo.utils import pltline, pltscatter
+from gnnepcsaft.train.utils import rhovp_data
 
 file_dir = osp.dirname(__file__)
-dt = Ramirez("./model/data/ramirez2022")
+dataset_dir = osp.dirname(gd.__file__)
+
+dt = Ramirez(dataset_dir + "/ramirez2022")
 ra_data = {}
 for gh in dt:
     ra_data[gh.InChI] = gh.para
-dt = ThermoMLDataset("./model/data/thermoml")
+dt = ThermoMLDataset(dataset_dir + "/thermoml")
 tml_data = {}
 for gh in dt:
     tml_data[gh.InChI] = [prop.numpy() for prop in [gh.rho, gh.vp]]

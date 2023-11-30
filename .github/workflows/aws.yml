@@ -32,7 +32,7 @@ on:
 
 env:
   AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: wildsonbbl/gnnepcsaft # set this to your Amazon ECR repository name
+  ECR_REPOSITORY: gnnepcsaft # set this to your Amazon ECR repository name
   ECS_SERVICE: webapp-svc # set this to your Amazon ECS service name
   ECS_CLUSTER: gnnepcsaft-webapp-cluster-df # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION:
@@ -66,6 +66,12 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: install buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          buildx-version: latest
+
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
@@ -75,8 +81,9 @@ jobs:
           # Build a docker container and
           # push it to ECR so that it can
           # be deployed to ECS.
-          docker build --platform linux/aarch64 -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker buildx build --push \
+            --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            --platform linux/amd64,linux/arm64 .          
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Amazon ECS task definition

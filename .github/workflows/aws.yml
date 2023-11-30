@@ -33,6 +33,7 @@ on:
 env:
   AWS_REGION: us-east-1 # set this to your preferred AWS region, e.g. us-west-1
   ECR_REPOSITORY: gnnepcsaft # set this to your Amazon ECR repository name
+  ECR_REGISTRY_ALIAS: h5f8r1z0
   ECS_SERVICE: webapp-svc # set this to your Amazon ECS service name
   ECS_CLUSTER: gnnepcsaft-webapp-cluster-df # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION:
@@ -65,6 +66,9 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          mask-password: "true"
+          registry-type: public
 
       - name: install buildx
         id: buildx
@@ -82,9 +86,9 @@ jobs:
           # push it to ECR so that it can
           # be deployed to ECS.
           docker buildx build --push \
-            --tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            --tag $ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG \
             --platform linux/amd64,linux/arm64 .          
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=$ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def

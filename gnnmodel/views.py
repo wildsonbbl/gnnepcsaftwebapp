@@ -30,7 +30,7 @@ model = PNAPCSAFT(
 )
 model.to("cpu")
 
-checkpoint = torch.load(file_dir + "/static/model5-9_50e6.pth", map_location="cpu")
+checkpoint = torch.load(file_dir + "/static/model5-11_00e6.pth", map_location="cpu")
 
 model.load_state_dict(checkpoint["model_state_dict"])
 

@@ -10,6 +10,7 @@ from gnnepcsaft.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
 from gnnepcsaft.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
+from .models import GnnepcsaftDB
 from .utils import plotdata
 
 file_dir = osp.dirname(__file__)
@@ -40,14 +41,7 @@ model.eval()
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
 
-    inchi_check = re.search("^InChI=", query)
-    inchi = query
-    if not inchi_check:
-        try:
-            inchi = smilestoinchi(query)
-        except (ValueError, TypeError, AttributeError, IndexError) as e:
-            print(e)
-            print("error for query:", query)
+    inchi = checking_inchi(query)
 
     try:
         graph = from_InChI(inchi).to(device)
@@ -61,6 +55,19 @@ def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
         output = False
 
     return pred, output, inchi
+
+
+def checking_inchi(query: str) -> str:
+    "Check if query is inchi and return an inchi."
+    inchi_check = re.search("^InChI=", query)
+    inchi = query
+    if not inchi_check:
+        try:
+            inchi = smilestoinchi(query)
+        except (ValueError, TypeError, AttributeError, IndexError) as e:
+            print(e)
+            print("error for query:", query)
+    return inchi
 
 
 def index(request):
@@ -82,6 +89,18 @@ def index(request):
             query = form.cleaned_data["query"]
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
+            # pylint: disable=no-member
+            comp = GnnepcsaftDB.objects.filter(inchi=inchi).all()
+            # pylint: enable=no-member
+            if len(comp) == 0:
+                new_comp = GnnepcsaftDB(
+                    inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
+                )
+                new_comp.save()
+            else:
+                stored_comp = comp[0]
+                stored_comp.counting += 1
+                stored_comp.save()
 
     else:
         form = InChIorSMILESinput()

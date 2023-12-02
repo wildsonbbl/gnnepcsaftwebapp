@@ -27,3 +27,5 @@ LICENSE
 README.md
 **/.devcontainer
 webapp-*.yaml
+webapp/.env
+**/.aws

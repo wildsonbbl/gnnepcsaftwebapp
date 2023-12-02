@@ -92,15 +92,7 @@ def index(request):
             # pylint: disable=no-member
             comp = GnnepcsaftDB.objects.filter(inchi=inchi).all()
             # pylint: enable=no-member
-            if len(comp) == 0:
-                new_comp = GnnepcsaftDB(
-                    inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
-                )
-                new_comp.save()
-            else:
-                stored_comp = comp[0]
-                stored_comp.counting += 1
-                stored_comp.save()
+            db_update(pred, inchi, comp)
 
     else:
         form = InChIorSMILESinput()
@@ -125,6 +117,19 @@ def index(request):
     }
 
     return render(request, "pred.html", context)
+
+
+def db_update(pred, inchi, comp):
+    "Updates the gnnepcsaft db."
+    if len(comp) == 0:
+        new_comp = GnnepcsaftDB(
+            inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
+        )
+        new_comp.save()
+    else:
+        stored_comp = comp[0]
+        stored_comp.counting += 1
+        stored_comp.save()
 
 
 # Create your views here.

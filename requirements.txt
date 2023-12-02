@@ -6,6 +6,8 @@ ml_collections
 numpy
 ogb
 polars
+psycopg2-binary
+python-dotenv
 rdkit
 scipy
 seaborn

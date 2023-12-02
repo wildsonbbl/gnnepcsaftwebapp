@@ -22,6 +22,7 @@ RUN cp -rf eigen-master/. PC-SAFT-1.4.1/externals/eigen
 RUN python -m pip install ./PC-SAFT-1.4.1 --no-build-isolation
 RUN rm -rf PC-SAFT* eigen-master* v1.4.1.zip
 
+RUN python manage.py collectstatic --no-input
 WORKDIR /app
 COPY . /app
 

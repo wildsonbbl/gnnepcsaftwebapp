@@ -2,7 +2,7 @@
 from django.db import models
 
 
-class GnnepcsaftDB(models.Model):
+class GnnepcsaftPara(models.Model):
     "Table at DB for gnnepcsaft predicted params."
     inchi = models.CharField(max_length=255)
     m = models.FloatField()

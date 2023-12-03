@@ -10,7 +10,7 @@ from gnnepcsaft.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
 from gnnepcsaft.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
-from .models import GnnepcsaftDB
+from .models import GnnepcsaftPara
 from .utils import plotdata
 
 file_dir = osp.dirname(__file__)
@@ -90,7 +90,7 @@ def index(request):
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             # pylint: disable=no-member
-            comp = GnnepcsaftDB.objects.filter(inchi=inchi).all()
+            comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
             # pylint: enable=no-member
             db_update(pred, inchi, comp)
 
@@ -122,7 +122,7 @@ def index(request):
 def db_update(pred, inchi, comp):
     "Updates the gnnepcsaft db."
     if len(comp) == 0:
-        new_comp = GnnepcsaftDB(
+        new_comp = GnnepcsaftPara(
             inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
         )
         new_comp.save()

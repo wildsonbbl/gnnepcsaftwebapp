@@ -2,12 +2,12 @@
 
 from django.contrib import admin
 
-from .models import GnnepcsaftDB
+from .models import GnnepcsaftPara
 
 
-class GnnepcsaftDBAdmin(admin.ModelAdmin):
+class GnnepcsaftParaAdmin(admin.ModelAdmin):
     "DB table row look at admin page."
     list_display = ["inchi", "counting"]
 
 
-admin.site.register(GnnepcsaftDB, GnnepcsaftDBAdmin)
+admin.site.register(GnnepcsaftPara, GnnepcsaftParaAdmin)

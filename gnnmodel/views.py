@@ -90,9 +90,9 @@ def index(request):
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             # pylint: disable=no-member
-            # comp = GnnepcsaftDB.objects.filter(inchi=inchi).all()
+            comp = GnnepcsaftDB.objects.filter(inchi=inchi).all()
             # pylint: enable=no-member
-            # db_update(pred, inchi, comp)
+            db_update(pred, inchi, comp)
 
     else:
         form = InChIorSMILESinput()

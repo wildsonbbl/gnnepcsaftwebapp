@@ -1,57 +1,81 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp-deployment
+  name: webapp-depl
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: webapp
+      app: webapp-pod
   template:
     metadata:
       labels:
-        app: webapp
+        app: webapp-pod
     spec:
       containers:
-        - name: webapp-pod
-          imagePullPolicy: IfNotPresent # dont forget to change later 
+        - name: webapp-container
+          imagePullPolicy: IfNotPresent # dont forget to change later
           image: wildsonbbl/gnnepcsaft:v2
           resources:
             limits:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: "2Gi"
+              cpu: "2.0"
           ports:
             - containerPort: 8000
           env:
-            - name: django_secret_key
+            - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: webapp-secret
-                  key: django_secret_key
-            - name: domain_name
+                  key: DJANGO_SECRET_KEY
+            - name: DJANGO_ALLOWED_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DJANGO_ALLOWED_HOSTS
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DB_PASSWORD
+            - name: DOMAIN_NAME
               valueFrom:
                 configMapKeyRef:
                   name: webapp-config
-                  key: domain_name
-            - name: django_allowed_hosts
+                  key: DOMAIN_NAME
+            - name: DB_USER
               valueFrom:
-                secretKeyRef:
-                  name: webapp-secret
-                  key: django_allowed_hosts
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_USER
+            - name: DB_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_NAME
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_PORT
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp-in-svc
+  name: webapp-svc
 spec:
-  type: NodePort
   selector:
-    app: webapp
+    app: webapp-pod
   ports:
     - protocol: TCP
       port: 8000
       targetPort: 8000
-      nodePort: 30100
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -60,11 +84,18 @@ metadata:
   labels:
     name: webapp-ingress
 spec:
-  defaultBackend:
-          service:
-            name: webapp-in-svc
-            port: 
-              number: 8000
-
-
-    
+  tls: 
+  - hosts: 
+    - gnnepcsaft.online
+    secretName: webapp-secret-tls
+  rules:
+    - host: gnnepcsaft.online
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: webapp-svc
+                port:
+                  number: 8000

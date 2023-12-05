@@ -14,12 +14,14 @@
   <form action="" method="POST">
     {% csrf_token %}
     <div class="row">
-      <div class="col-md">{{ form.query }}</div>
+      <div class="my-1">
+        {{ form }}
+      </div>
 
-      <div class="col-md">
+      <div class="md my-1">
         <input
           type="submit"
-          value="Submit SMILES or InChI"
+          value="Estimate ePC-SAFT parameters"
           class="form-control btn-outline-primary"
         />
       </div>

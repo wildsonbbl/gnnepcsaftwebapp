@@ -19,10 +19,10 @@ class BootstrapForm(forms.Form):
 class InChIorSMILESinput(BootstrapForm):
     "Form to receive InChI/SMILES from user."
     query = forms.CharField(
+        label="Type/Paste InChI or SMILES",
         strip=True,
         empty_value="InChI or SMILES",
         required=True,
-        help_text="InChI or SMILES",
         initial="CCO",
     )
 

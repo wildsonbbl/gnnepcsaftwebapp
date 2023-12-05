@@ -15,7 +15,10 @@
     {% csrf_token %}
     <div class="row">
       <div class="my-1">
-        {{ form }}
+        <label for="id_query" class="form-label"
+          >Type/Paste InChI or SMILES:</label
+        >
+        {{ form.query }}
       </div>
 
       <div class="md my-1">

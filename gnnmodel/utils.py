@@ -3,16 +3,14 @@ import base64
 import os.path as osp
 from io import BytesIO
 
-import gnnepcsaft.data as gd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
-from gnnepcsaft.demo.utils import pltline, pltscatter
 from gnnepcsaft.train.utils import rhovp_data
 
 file_dir = osp.dirname(__file__)
-dataset_dir = osp.dirname(gd.__file__)
+dataset_dir = osp.join(file_dir, "static/data")
 
 dt = Ramirez(dataset_dir + "/ramirez2022")
 ra_data = {}
@@ -42,6 +40,16 @@ def pltcustom(ra, scale="linear", ylabel=""):
     plt.yscale(scale)
 
 
+def pltline(x, y):
+    "Line plot."
+    return plt.plot(x, y, linewidth=0.5)
+
+
+def pltscatter(x, y):
+    "Scatter plot."
+    return plt.scatter(x, y, marker="x", s=10, c="black")
+
+
 # pylint: disable=R0914
 def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
     "plot den and vp data if available."
@@ -56,7 +64,7 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
             para = ra_data[inchi].squeeze().numpy()
             ra_rho, ra_vp = rhovp_data(para, rho, vp)
         # plot rho data
-        if ~np.any(rho == np.zeros_like(rho)):
+        if ~np.all(rho == np.zeros_like(rho)):
             idx_p = abs(rho[:, 1] - 101325) < 15_000
             rho = rho[idx_p]
             pred_rho = pred_rho[idx_p]
@@ -86,7 +94,7 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
 
                 plt.close()
         # plot vp data
-        if ~np.any(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
+        if ~np.all(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
             idx = np.argsort(vp[:, 0], 0)
             x = vp[idx, 0]
             y = vp[idx, -1] / 1000

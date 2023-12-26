@@ -2,11 +2,11 @@
 import os.path as osp
 import re
 
-import gnnepcsaft
 import torch
 from django.shortcuts import render
+from gnnepcsaft.configs.default import get_config
 from gnnepcsaft.data.graph import from_InChI, smilestoinchi
-from gnnepcsaft.train.models import PNAPCSAFT, PnaconvsParams, ReadoutMLPParams
+from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
 from gnnepcsaft.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
@@ -14,13 +14,12 @@ from .models import GnnepcsaftPara
 from .utils import plotdata
 
 file_dir = osp.dirname(__file__)
-workdir = osp.dirname(gnnepcsaft.__file__)
+workdir = osp.join(file_dir, "static")
 
 
 deg = calc_deg("ramirez", workdir)
 device = torch.device("cpu")
-model = PNAPCSAFT(
-    hidden_dim=128,
+model = PNApcsaftL(
     pna_params=PnaconvsParams(
         propagation_depth=2,
         pre_layers=1,
@@ -28,12 +27,13 @@ model = PNAPCSAFT(
         deg=deg,
     ),
     mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
+    config=get_config(),
 )
 model.to("cpu")
 
-checkpoint = torch.load(file_dir + "/static/model.pth", map_location="cpu")
+checkpoint = torch.load(file_dir + "/static/model.ckpt", map_location="cpu")
 
-model.load_state_dict(checkpoint["model_state_dict"])
+model.load_state_dict(checkpoint["state_dict"])
 
 model.eval()
 

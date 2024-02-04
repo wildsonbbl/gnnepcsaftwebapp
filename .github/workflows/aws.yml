@@ -36,7 +36,7 @@ env:
   ECR_REGISTRY_ALIAS: h5f8r1z0
   
   ECS_SERVICE: gnnepcsaft-svc # set this to your Amazon ECS service name
-  ECS_CLUSTER: gnnepcsaft-cl-2 # set this to your Amazon ECS cluster name
+  ECS_CLUSTER: gnnepcsaft-cl-default # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION:
     .aws/webapp-task-definition.json # set this to the path to your Amazon ECS task definition
     # file, e.g. .aws/task-definition.json

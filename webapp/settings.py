@@ -169,4 +169,7 @@ SESSION_COOKIE_SECURE = True
 
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = ["https://*." + os.getenv("DOMAIN_NAME", "*")]
+CSRF_TRUSTED_ORIGINS = [
+    "https://*." + os.getenv("DOMAIN_NAME", "*"),
+    "http://*." + os.getenv("DOMAIN_NAME", "*"),
+]

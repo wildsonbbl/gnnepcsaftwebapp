@@ -2,4 +2,3 @@
 .vscode/
 **productionfiles
 webapp-*.yaml
-docker-compose*

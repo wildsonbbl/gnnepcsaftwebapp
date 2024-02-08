@@ -19,6 +19,5 @@ providers:
     filename: /etc/traefik/tls.yaml
 
 log:
-  level: debug
-accessLog: {}
+  level: error
 

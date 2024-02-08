@@ -20,3 +20,5 @@ providers:
 
 log:
   level: debug
+accessLog: {}
+

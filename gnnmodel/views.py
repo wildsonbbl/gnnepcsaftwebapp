@@ -37,6 +37,12 @@ model.load_state_dict(checkpoint["state_dict"])
 
 model.eval()
 
+available_params = [
+    "Segment number",
+    "Segment diameter (Å)",
+    "Dispersion energy (K)",
+]
+
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
@@ -73,11 +79,6 @@ def checking_inchi(query: str) -> str:
 def index(request):
     "handle request"
 
-    available_params = [
-        "Segment number",
-        "Segment diameter (Å)",
-        "Dispersion energy (K)",
-    ]
     pred = None
     query = ""
     output = False

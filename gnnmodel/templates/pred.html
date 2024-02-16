@@ -34,6 +34,16 @@
 <p></p>
 <div class="row">
   {% if output %}
+
+  <div class="col-md-2 offset-md-5">
+    <img src="{{ mol_uri }}" alt="Molecule plot." class="img-fluid" />
+  </div>
+
+  {% endif %}
+</div>
+<div class="row">
+  {% if output %}
+
   <div class="col-md-4 text-success">
     <h3>Estimated ePC-SAFT parameters</h3>
 

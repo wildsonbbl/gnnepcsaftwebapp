@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get install curl unzip gcc g++ libxrender1 -y
+RUN apt-get update && apt-get install curl unzip gcc g++ libxrender1 libxext6 -y
 
 # Install pip requirements
 RUN python -m pip install -U pip wheel

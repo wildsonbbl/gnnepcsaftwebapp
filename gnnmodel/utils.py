@@ -128,10 +128,12 @@ def plotmol(inchi: str):
 
     mol = Chem.MolFromInchi(inchi)
 
-    img = Draw.MolToMPL(
-        mol,
-        size=(80, 80),
-    )
+    options = Draw.DrawingOptions()
+    options.bgColor = None
+    options.atomLabelMinFontSize = 4
+    options.useFraction = 1
+
+    img = Draw.MolToMPL(mol, options=options)
     imgbio = BytesIO()
     plt.axis("off")
     img.savefig(

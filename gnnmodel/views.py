@@ -11,7 +11,7 @@ from gnnepcsaft.train.utils import calc_deg
 
 from .forms import InChIorSMILESinput
 from .models import GnnepcsaftPara
-from .utils import plotdata
+from .utils import plotdata, plotmol
 
 file_dir = osp.dirname(__file__)
 workdir = osp.join(file_dir, "static")
@@ -36,6 +36,12 @@ checkpoint = torch.load(file_dir + "/static/model.ckpt", map_location="cpu")
 model.load_state_dict(checkpoint["state_dict"])
 
 model.eval()
+
+available_params = [
+    "Segment number",
+    "Segment diameter (Å)",
+    "Dispersion energy (K)",
+]
 
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
@@ -73,15 +79,10 @@ def checking_inchi(query: str) -> str:
 def index(request):
     "handle request"
 
-    available_params = [
-        "Segment number",
-        "Segment diameter (Å)",
-        "Dispersion energy (K)",
-    ]
     pred = None
     query = ""
     output = False
-    plotden, plotvp = "", ""
+    plotden, plotvp, molimg = "", "", ""
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
 
@@ -89,6 +90,7 @@ def index(request):
             query = form.cleaned_data["query"]
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
+            molimg = plotmol(inchi)
             # pylint: disable=no-member
             comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
             # pylint: enable=no-member
@@ -99,21 +101,25 @@ def index(request):
     imgtype = "image/png"
     den_uri = f"data:{imgtype};base64,{plotden}"
     vp_uri = f"data:{imgtype};base64,{plotvp}"
+    mol_uri = f"data:{imgtype};base64,{molimg}"
 
     context = {
         "form": form,
-        "predicted_para": [
-            (paraname, round(para.item(), 2))
-            for para, paraname in zip(pred, available_params)
-        ]
-        if output
-        else [(None, None)],
+        "predicted_para": (
+            [
+                (paraname, round(para.item(), 2))
+                for para, paraname in zip(pred, available_params)
+            ]
+            if output
+            else [(None, None)]
+        ),
         "query": query,
         "output": output,
         "plotden": plotden,
         "plotvp": plotvp,
         "den_uri": den_uri,
         "vp_uri": vp_uri,
+        "mol_uri": mol_uri,
     }
 
     return render(request, "pred.html", context)

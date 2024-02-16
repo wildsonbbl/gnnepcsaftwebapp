@@ -8,6 +8,8 @@ import numpy as np
 import seaborn as sns
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
 from gnnepcsaft.train.utils import rhovp_data
+from rdkit import Chem
+from rdkit.Chem import Draw
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "static/data")
@@ -119,3 +121,28 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
 
             plt.close()
     return plotden, plotvp
+
+
+def plotmol(inchi: str):
+    "Plot molecule."
+
+    mol = Chem.MolFromInchi(inchi)
+
+    options = Draw.DrawingOptions()
+    options.bgColor = None
+    options.atomLabelMinFontSize = 4
+    options.useFraction = 1
+
+    img = Draw.MolToMPL(mol, options=options)
+    imgbio = BytesIO()
+    plt.axis("off")
+    img.savefig(
+        imgbio,
+        dpi=300,
+        format="png",
+        bbox_inches="tight",
+        transparent=True,
+    )
+    plt.close()
+    imgbio.seek(0)
+    return base64.b64encode(imgbio.read()).decode("ascii")

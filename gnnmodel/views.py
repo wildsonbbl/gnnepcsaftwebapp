@@ -108,7 +108,7 @@ def estimator(request):
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             molimg = plotmol(inchi)
             with open(
-                osp.join(file_dir, "static/description.txt"), "w", encoding="utf-8"
+                osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
             ) as file:
                 file.write(inchi)
             # pylint: disable=no-member
@@ -154,13 +154,19 @@ def description(request):
     "handle request"
 
     with open(
-        osp.join(file_dir, "static/description.txt"), "r", encoding="utf-8"
+        osp.join(file_dir, "templates/description.txt"), "r", encoding="utf-8"
     ) as file:
         inchi = file.readline()
 
-    with open(
-        osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
-    ) as file:
-        file.write(markdown(resume_mol(inchi)))
+    if inchi != "":
+        with open(
+            osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
+        ) as template_file:
+            template_file.write(markdown(resume_mol(inchi)))
+
+        with open(
+            osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
+        ) as file:
+            file.write("")
 
     return render(request, "description.html")

@@ -16,14 +16,21 @@ from rdkit.Chem import Draw
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "static/data")
 
-dt = Ramirez(dataset_dir + "/ramirez2022")
-ra_data = {}
-for gh in dt:
-    ra_data[gh.InChI] = gh.para
-dt = ThermoMLDataset(dataset_dir + "/thermoml")
-tml_data = {}
-for gh in dt:
-    tml_data[gh.InChI] = [prop.numpy() for prop in [gh.rho, gh.vp]]
+
+def make_datasets(_dataset_dir):
+    "make datasets."
+    dt = Ramirez(_dataset_dir + "/ramirez2022")
+    _ra_data = {}
+    for gh in dt:
+        _ra_data[gh.InChI] = gh.para
+    dt = ThermoMLDataset(_dataset_dir + "/thermoml")
+    _tml_data = {}
+    for gh in dt:
+        _tml_data[gh.InChI] = [prop.numpy() for prop in [gh.rho, gh.vp]]
+    return _ra_data, _tml_data
+
+
+ra_data, tml_data = make_datasets(dataset_dir)
 
 
 sns.set_theme(style="ticks")
@@ -140,7 +147,7 @@ def plotmol(inchi: str):
     plt.axis("off")
     img.savefig(
         imgbio,
-        dpi=300,
+        dpi=100,
         format="png",
         bbox_inches="tight",
         transparent=True,

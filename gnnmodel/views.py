@@ -20,23 +20,7 @@ workdir = osp.join(file_dir, "static")
 
 deg = calc_deg("ramirez", workdir)
 device = torch.device("cpu")
-model = PNApcsaftL(
-    pna_params=PnaconvsParams(
-        propagation_depth=2,
-        pre_layers=1,
-        post_layers=3,
-        deg=deg,
-    ),
-    mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
-    config=get_config(),
-)
-model.to("cpu")
 
-checkpoint = torch.load(file_dir + "/static/model.ckpt", map_location="cpu")
-
-model.load_state_dict(checkpoint["state_dict"])
-
-model.eval()
 
 available_params = [
     "Segment number",
@@ -45,8 +29,38 @@ available_params = [
 ]
 
 
+def db_update(pred, inchi, comp):
+    "Updates the gnnepcsaft db."
+    if len(comp) == 0:
+        new_comp = GnnepcsaftPara(
+            inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
+        )
+        new_comp.save()
+    else:
+        stored_comp = comp[0]
+        stored_comp.counting += 1
+        stored_comp.save()
+
+
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
+
+    model = PNApcsaftL(
+        pna_params=PnaconvsParams(
+            propagation_depth=2,
+            pre_layers=1,
+            post_layers=3,
+            deg=deg,
+        ),
+        mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
+        config=get_config(),
+    )
+    model.to("cpu")
+
+    checkpoint = torch.load(file_dir + "/static/model.ckpt", map_location="cpu")
+    model.load_state_dict(checkpoint["state_dict"])
+
+    model.eval()
 
     inchi = checking_inchi(query)
 
@@ -77,6 +91,7 @@ def checking_inchi(query: str) -> str:
     return inchi
 
 
+# Create your views here.
 def index(request):
     "handle request"
 
@@ -102,9 +117,6 @@ def index(request):
     else:
         form = InChIorSMILESinput()
     imgtype = "image/png"
-    den_uri = f"data:{imgtype};base64,{plotden}"
-    vp_uri = f"data:{imgtype};base64,{plotvp}"
-    mol_uri = f"data:{imgtype};base64,{molimg}"
 
     context = {
         "form": form,
@@ -118,30 +130,16 @@ def index(request):
         ),
         "query": query,
         "output": output,
-        "plotden": plotden,
-        "plotvp": plotvp,
-        "den_uri": den_uri,
-        "vp_uri": vp_uri,
-        "mol_uri": mol_uri,
+        "plotden": plotden != "",
+        "plotvp": plotvp != "",
+        "den_uri": f"data:{imgtype};base64,{plotden}",
+        "vp_uri": f"data:{imgtype};base64,{plotvp}",
+        "mol_uri": f"data:{imgtype};base64,{molimg}",
     }
 
     return render(request, "pred.html", context)
 
 
-def db_update(pred, inchi, comp):
-    "Updates the gnnepcsaft db."
-    if len(comp) == 0:
-        new_comp = GnnepcsaftPara(
-            inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
-        )
-        new_comp.save()
-    else:
-        stored_comp = comp[0]
-        stored_comp.counting += 1
-        stored_comp.save()
-
-
-# Create your views here.
 def homepage(request):
     "handle request"
     return render(request, "homepage.html")

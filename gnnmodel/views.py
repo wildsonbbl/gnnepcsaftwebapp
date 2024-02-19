@@ -92,16 +92,13 @@ def index(request):
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             molimg = plotmol(inchi)
-            description = markdown(resume_mol(inchi))
             with open(
                 osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
             ) as file:
-                file.write(description)
+                file.write(markdown(resume_mol(inchi)))
             # pylint: disable=no-member
-            comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
+            db_update(pred, inchi, GnnepcsaftPara.objects.filter(inchi=inchi).all())
             # pylint: enable=no-member
-            db_update(pred, inchi, comp)
-
     else:
         form = InChIorSMILESinput()
     imgtype = "image/png"

@@ -8,10 +8,11 @@ from gnnepcsaft.configs.default import get_config
 from gnnepcsaft.data.graph import from_InChI, smilestoinchi
 from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
 from gnnepcsaft.train.utils import calc_deg
+from markdown import markdown
 
 from .forms import InChIorSMILESinput
 from .models import GnnepcsaftPara
-from .utils import plotdata, plotmol
+from .utils import plotdata, plotmol, resume_mol
 
 file_dir = osp.dirname(__file__)
 workdir = osp.join(file_dir, "static")
@@ -91,6 +92,11 @@ def index(request):
             pred, output, inchi = prediction(query)
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             molimg = plotmol(inchi)
+            description = markdown(resume_mol(inchi))
+            with open(
+                osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
+            ) as file:
+                file.write(description)
             # pylint: disable=no-member
             comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
             # pylint: enable=no-member

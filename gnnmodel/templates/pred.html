@@ -31,7 +31,9 @@
     </div>
   </form>
 </div>
+
 <p></p>
+
 <div class="row">
   {% if output %}
 
@@ -41,6 +43,7 @@
 
   {% endif %}
 </div>
+
 <div class="row">
   {% if output %}
 
@@ -86,6 +89,7 @@
 
   {% endif %}
 </div>
+
 <div class="row">
   <div class="col-md-4 offset-md-4">
     {% if plotden or plotvp %}
@@ -110,6 +114,19 @@
       </small>
     </footer>
   </div>
+</div>
+
+<p></p>
+
+<div class="row">
+  {% if output %}
+
+  <div class="col-md">
+    <h3 class="text-center">AI generated molecule description</h3>
+    <small>{% include "description.html" %}</small>
+  </div>
+
+  {% endif %}
 </div>
 
 {% endif %} {% endblock content %}

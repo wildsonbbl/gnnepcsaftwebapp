@@ -1,6 +1,7 @@
 absl_py
 Cython
 Django
+markdown
 matplotlib
 ml_collections
 numpy

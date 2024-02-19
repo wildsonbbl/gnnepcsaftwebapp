@@ -1,6 +1,8 @@
 absl_py
 Cython
 Django
+google-generativeai
+markdown
 matplotlib
 ml_collections
 numpy

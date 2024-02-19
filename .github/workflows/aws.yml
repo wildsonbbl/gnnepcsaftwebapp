@@ -55,15 +55,15 @@ jobs:
             --platform linux/amd64 .          
           echo "image=$ECR_REGISTRY/$ECR_REGISTRY_ALIAS/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Deploy to EC2
-        env:
-          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          HOSTNAME: ${{ secrets.SSH_HOST }}
-          USER_NAME: ${{ secrets.SSH_USER }}
-          image: ${{ steps.build-image.outputs.image }}
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME}
-
-            sudo docker pull $image
-            sudo docker compose up -d
+      # - name: Deploy to EC2
+      #   env:
+      #     PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     HOSTNAME: ${{ secrets.SSH_HOST }}
+      #     USER_NAME: ${{ secrets.SSH_USER }}
+      #     image: ${{ steps.build-image.outputs.image }}
+      #   run: |
+      #     echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
+      #     ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME}
+      # 
+      #       sudo docker pull $image
+      #       sudo docker compose up -d

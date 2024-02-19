@@ -1,8 +1,10 @@
 "Module for utils like plotting data."
 import base64
+import os
 import os.path as osp
 from io import BytesIO
 
+import google.generativeai as genai
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -146,3 +148,36 @@ def plotmol(inchi: str):
     plt.close()
     imgbio.seek(0)
     return base64.b64encode(imgbio.read()).decode("ascii")
+
+
+def resume_mol(inchi: str):
+    "Describe the molecule with google's gemini."
+
+    genai.configure(api_key=os.environ["API_KEY"])
+
+    model = genai.GenerativeModel("gemini-pro")
+
+    response = model.generate_content(
+        [
+            f"""
+            First, describe the molecule with this InChI in detail: {inchi}. 
+            
+            Then, answer the following questions about this molecule:
+              
+               - Is the molecule an organic or inorganic compound? 
+               - Which organic groups are present?
+               - Is it a Lewis acid or base or both? 
+               - Can it do hydrogen bonds? 
+               - Is it a hydrogen bond donor or acceptor? 
+               
+            Make sure to answer each of those questions. To be able to do that you are gonna need
+             to take into account all the organic groups known in chemistry, 
+            the difference between a Lewis acid and base, the concept of a 
+            hydrogen bond, a hydrogen bond donor
+            and hydrogen bond acceptor. Once you have all this 
+            information gathered, you will be able to answer. 
+            """,
+        ]
+    )
+
+    return response.text

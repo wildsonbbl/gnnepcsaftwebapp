@@ -90,9 +90,9 @@
   {% endif %}
 </div>
 
+{% if plotden or plotvp %}
 <div class="row">
   <div class="col-md-4 offset-md-4">
-    {% if plotden or plotvp %}
     <footer>
       <small>
         <li>
@@ -115,18 +115,14 @@
     </footer>
   </div>
 </div>
+{% endif %}
 
 <p></p>
-
+{% if output %}
 <div class="row">
-  {% if output %}
-
   <div class="col-md">
     <h3 class="text-center">AI generated molecule description</h3>
     <small>{% include "description.html" %}</small>
   </div>
-
-  {% endif %}
 </div>
-
 {% endif %} {% endblock content %}

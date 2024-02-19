@@ -163,6 +163,10 @@ def resume_mol(inchi: str):
     genai.configure(api_key=os.environ["API_KEY"])
 
     model = genai.GenerativeModel("gemini-pro")
+    config = genai.GenerationConfig(
+        candidate_count=1,
+        temperature=0.4,
+    )
 
     response = model.generate_content(
         [
@@ -184,7 +188,8 @@ def resume_mol(inchi: str):
             and hydrogen bond acceptor. Once you have all this 
             information gathered, you will be able to answer. 
             """,
-        ]
+        ],
+        generation_config=config,
     )
 
     return response.text

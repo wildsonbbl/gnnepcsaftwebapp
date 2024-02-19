@@ -92,7 +92,7 @@ def checking_inchi(query: str) -> str:
 
 
 # Create your views here.
-def index(request):
+def estimator(request):
     "handle request"
 
     pred = None
@@ -108,9 +108,9 @@ def index(request):
             plotden, plotvp = plotdata(pred.numpy(), inchi)
             molimg = plotmol(inchi)
             with open(
-                osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
+                osp.join(file_dir, "static/description.txt"), "w", encoding="utf-8"
             ) as file:
-                file.write(markdown(resume_mol(inchi)))
+                file.write(inchi)
             # pylint: disable=no-member
             db_update(pred, inchi, GnnepcsaftPara.objects.filter(inchi=inchi).all())
             # pylint: enable=no-member
@@ -148,3 +148,19 @@ def homepage(request):
 def authorpage(request):
     "handle request"
     return render(request, "author.html")
+
+
+def description(request):
+    "handle request"
+
+    with open(
+        osp.join(file_dir, "static/description.txt"), "r", encoding="utf-8"
+    ) as file:
+        inchi = file.readline()
+
+    with open(
+        osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
+    ) as file:
+        file.write(markdown(resume_mol(inchi)))
+
+    return render(request, "description.html")

@@ -37,8 +37,18 @@
 <div class="row">
   {% if output %}
 
-  <div class="col-md-2 offset-md-5">
+  <div class="col-md-3 offset-md-3">
     <img src="{{ mol_uri }}" alt="Molecule plot." class="img-fluid" />
+  </div>
+
+  <div class="col-md-3 align-items-center d-flex">
+    <a
+      href="description"
+      target="_blank"
+      class="btn btn-outline-secondary"
+      type="button"
+      >AI generated molecule description</a
+    >
   </div>
 
   {% endif %}
@@ -113,16 +123,6 @@
         </li>
       </small>
     </footer>
-  </div>
-</div>
-{% endif %}
-
-<p></p>
-{% if output %}
-<div class="row">
-  <div class="col-md">
-    <h3 class="text-center">AI generated molecule description</h3>
-    <small>{% include "description.html" %}</small>
   </div>
 </div>
 {% endif %} {% endblock content %}

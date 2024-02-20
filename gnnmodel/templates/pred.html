@@ -1,128 +1,111 @@
-{% extends "master.html" %} {% block title %}Model estimates{% endblock title%}
+{% extends "master.html" %}
+{% block title %}
+  Model Estimates
+{% endblock title %}
 {% block content %}
-
-<div class="row">
-  <p>
-    You can find
-    <abbr title="International Chemical Identifier">InChI</abbr> and
-    <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
-    <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
-    you can build your own molecule
-    <a href="https://bit.ly/DIYmol" target="_blank">here</a> and copy the SMILES
-    right clicking on the 2D panel.
-  </p>
-  <form action="" method="POST">
-    {% csrf_token %}
-    <div class="row">
-      <div class="my-1">
-        <label for="id_query" class="form-label"
-          >Type/Paste InChI or SMILES:</label
-        >
-        {{ form.query }}
+  <div class="row">
+    <h3 class="text-center">Estimator</h3>
+  </div>
+  <div class="row">
+    <p>
+      You can find
+      <abbr title="International Chemical Identifier">InChI</abbr> and
+      <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
+      <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
+      you can build your own molecule
+      <a href="https://bit.ly/DIYmol" target="_blank">here</a> and copy the SMILES
+      right clicking on the 2D panel.
+    </p>
+    <form action="" method="post">
+      {% csrf_token %}
+      <div class="row">
+        <div class="my-1">
+          <label for="id_query" class="form-label">Type/Paste InChI or SMILES:</label>
+          {{ form.query }}
+        </div>
+        <div class="md my-1">
+          <input type="submit"
+                 value="Estimate ePC-SAFT parameters"
+                 class="form-control btn-outline-primary" />
+        </div>
       </div>
-
-      <div class="md my-1">
-        <input
-          type="submit"
-          value="Estimate ePC-SAFT parameters"
-          class="form-control btn-outline-primary"
-        />
+    </form>
+  </div>
+  <div class="row">
+    {% if output %}
+      <div class="col-md-3 offset-md-3">
+        <img src="{{ mol_uri }}" alt="Molecule plot." class="img-fluid" />
+      </div>
+      <div class="col-md-3 align-items-center d-flex">
+        <a href="{% url "description" %}"
+           target="_blank"
+           class="btn btn-outline-secondary"
+           type="button">AI generated molecule description</a>
+      </div>
+    {% endif %}
+  </div>
+  <div class="row">
+    {% if output %}
+      <div class="col-md-4 text-success">
+        <h3>Estimated ePC-SAFT parameters</h3>
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Parameter name</th>
+              <th>Parameter value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for paraname, para in predicted_para %}
+              <tr>
+                <td>{{ paraname }}</td>
+                <td>{{ para }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if plotden %}
+        <div class="col-md-4">
+          <img src="{{ den_uri }}" alt="Density plot." class="img-fluid" />
+          <footer>
+            <small>
+              <li>Density at 101.325 kPa (1 atm).</li>
+            </small>
+          </footer>
+        </div>
+      {% endif %}
+      {% if plotvp %}
+        <div class="col-md-4">
+          <img src="{{ vp_uri }}" alt="Pressure plot." class="img-fluid" />
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="col-md">
+        <ul>
+          {% for error in form.query.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+  </div>
+  {% if plotden or plotvp %}
+    <div class="row">
+      <div class="col-md-4 offset-md-4">
+        <footer>
+          <small>
+            <li>
+              <a href="https://doi.org/10.1002/jcc.26842"
+                 target="_blank"
+                 class="text-decoration-none">ThermoML Archive</a>
+            </li>
+            <li>
+              <a href="https://doi.org/10.1002/aic.17722"
+                 target="_blank"
+                 class="text-decoration-none">Ramírez-Vélez et al. (2022)</a>
+            </li>
+          </small>
+        </footer>
       </div>
     </div>
-  </form>
-</div>
-
-<p></p>
-
-<div class="row">
-  {% if output %}
-
-  <div class="col-md-3 offset-md-3">
-    <img src="{{ mol_uri }}" alt="Molecule plot." class="img-fluid" />
-  </div>
-
-  <div class="col-md-3 align-items-center d-flex">
-    <a
-      href="description"
-      target="_blank"
-      class="btn btn-outline-secondary"
-      type="button"
-      >AI generated molecule description</a
-    >
-  </div>
-
   {% endif %}
-</div>
-
-<div class="row">
-  {% if output %}
-
-  <div class="col-md-4 text-success">
-    <h3>Estimated ePC-SAFT parameters</h3>
-
-    <table class="table table-hover">
-      <thead>
-        <tr>
-          <th>Parameter name</th>
-          <th>Parameter value</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for paraname, para in predicted_para%}
-        <tr>
-          <td>{{paraname}}</td>
-          <td>{{para}}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% if plotden %}
-  <div class="col-md-4">
-    <img src="{{ den_uri }}" alt="Density plot." class="img-fluid" />
-    <footer>
-      <small> <li>Density at 101.325 kPa (1 atm).</li> </small>
-    </footer>
-  </div>
-  {% endif %} {% if plotvp %}
-  <div class="col-md-4">
-    <img src="{{ vp_uri }}" alt="Pressure plot." class="img-fluid" />
-  </div>
-  {% endif %} {% else %}
-  <div class="col-md">
-    <ul>
-      {% for error in form.query.errors %}
-      <li class="alert alert-danger">{{error}}</li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  {% endif %}
-</div>
-
-{% if plotden or plotvp %}
-<div class="row">
-  <div class="col-md-4 offset-md-4">
-    <footer>
-      <small>
-        <li>
-          <a
-            href="https://doi.org/10.1002/jcc.26842"
-            target="_blank"
-            class="text-decoration-none"
-            >ThermoML Archive</a
-          >
-        </li>
-        <li>
-          <a
-            href="https://doi.org/10.1002/aic.17722"
-            target="_blank"
-            class="text-decoration-none"
-            >Ramírez-Vélez et al. (2022)</a
-          >
-        </li>
-      </small>
-    </footer>
-  </div>
-</div>
-{% endif %} {% endblock content %}
+{% endblock content %}

@@ -1,0 +1,10 @@
+{% extends "master.html" %}
+{% block title %}
+  Molecule Description
+{% endblock title %}
+{% block content %}
+  <div class="row">
+    <h3 class="text-center">AI generated molecule description</h3>
+    <div class="col-md">{{ output | safe }}</div>
+  </div>
+{% endblock content %}

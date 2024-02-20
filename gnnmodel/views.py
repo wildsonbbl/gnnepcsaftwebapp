@@ -153,20 +153,19 @@ def authorpage(request):
 def description(request):
     "handle request"
 
+    html_output = ""
+
     with open(
         osp.join(file_dir, "templates/description.txt"), "r", encoding="utf-8"
     ) as file:
         inchi = file.readline()
 
     if inchi != "":
-        with open(
-            osp.join(file_dir, "templates/description.html"), "w", encoding="utf-8"
-        ) as template_file:
-            template_file.write(markdown(resume_mol(inchi)))
+        html_output = markdown(resume_mol(inchi))
 
         with open(
             osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
         ) as file:
             file.write("")
 
-    return render(request, "description.html")
+    return render(request, "description.html", {"output": html_output})

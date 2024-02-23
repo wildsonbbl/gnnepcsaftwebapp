@@ -24,6 +24,7 @@ RUN rm -rf PC-SAFT* eigen-master* v1.4.1.zip
 
 WORKDIR /app
 COPY . /app
+COPY daemon.json /etc/docker/daemon.json
 RUN python manage.py collectstatic --no-input
 RUN python manage.py migrate --no-input
 

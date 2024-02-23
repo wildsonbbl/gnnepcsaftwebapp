@@ -25,6 +25,8 @@ services:
         reservations:
           memory: 50MB
     memswap_limit: 1G
+    networks:
+      - ip6net1
 
   webapp:
     container_name: gnnepcsaft
@@ -50,3 +52,13 @@ services:
     memswap_limit: 1G
     command:
       ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:8000", "webapp.wsgi"]
+    networks:
+      - ip6net1
+
+networks:
+  ip6net:
+    external: True
+    # docker network create --ipv6 \
+    # --subnet="fdf6:e94a:ba2d::/64" \
+    # --gateway="fdf6:e94a:ba2d::1" \
+    # ip6net1

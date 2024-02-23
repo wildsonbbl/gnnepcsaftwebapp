@@ -24,3 +24,6 @@ torchmetrics
 lightning
 fontawesomefree
 https://github.com/wildsonbbl/gnnepcsaft/archive/refs/heads/main.zip
+pillow
+langchain
+langchain-google-genai

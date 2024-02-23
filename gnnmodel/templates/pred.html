@@ -68,11 +68,9 @@
       {% if plotden %}
         <div class="col-md-4">
           <img src="{{ den_uri }}" alt="Density plot." class="img-fluid" />
-          <footer>
-            <small>
-              <li>Density at 101.325 kPa (1 atm).</li>
-            </small>
-          </footer>
+          <small>
+            <li>Density at 101.325 kPa (1 atm).</li>
+          </small>
         </div>
       {% endif %}
       {% if plotvp %}
@@ -91,20 +89,18 @@
   {% if plotden or plotvp %}
     <div class="row">
       <div class="col-md-4 offset-md-4">
-        <footer>
-          <small>
-            <li>
-              <a href="https://doi.org/10.1002/jcc.26842"
-                 target="_blank"
-                 class="text-decoration-none">ThermoML Archive</a>
-            </li>
-            <li>
-              <a href="https://doi.org/10.1002/aic.17722"
-                 target="_blank"
-                 class="text-decoration-none">Ramírez-Vélez et al. (2022)</a>
-            </li>
-          </small>
-        </footer>
+        <small>
+          <li>
+            <a href="https://doi.org/10.1002/jcc.26842"
+               target="_blank"
+               class="text-decoration-none">ThermoML Archive</a>
+          </li>
+          <li>
+            <a href="https://doi.org/10.1002/aic.17722"
+               target="_blank"
+               class="text-decoration-none">Ramírez-Vélez et al. (2022)</a>
+          </li>
+        </small>
       </div>
     </div>
   {% endif %}

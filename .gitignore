@@ -1,4 +1,4 @@
 .devcontainer*
 .vscode/
 **productionfiles
-webapp-*.yaml
+webapp-secret*.yaml

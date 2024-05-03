@@ -54,9 +54,6 @@ services:
       - ip6net1
 
 networks:
-  ip6net:
+  ip6net1:
     external: True
-    # docker network create --ipv6 \
-    # --subnet="fdf6:e94a:ba2d::/64" \
-    # --gateway="fdf6:e94a:ba2d::1" \
-    # ip6net1
+    #  docker network create --ipv6 --subnet="fdf6:e94a:ba2d::/64" --gateway="fdf6:e94a:ba2d::1" ip6net1

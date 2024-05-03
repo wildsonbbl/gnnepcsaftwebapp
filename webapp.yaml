@@ -97,9 +97,12 @@ metadata:
     name: webapp-ingress
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
   namespace: default
 spec:
-  ingressClassName: nginx-ingress
+  ingressClassName: nginx
   tls:
     - hosts:
         - gnnepcsaft.online

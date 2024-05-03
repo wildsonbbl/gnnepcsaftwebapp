@@ -2,8 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: webapp-depl
+  labels:
+    app: webapp-pod
+  namespace: default
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: webapp-pod
@@ -18,8 +21,11 @@ spec:
           image: wildsonbbl/gnnepcsaft:v2
           resources:
             limits:
-              memory: "2Gi"
-              cpu: "2.0"
+              memory: "1Gi"
+              cpu: "1"
+            requests:
+              memory: "1Gi"
+              cpu: "0.50"
           ports:
             - containerPort: 8000
           env:
@@ -45,13 +51,13 @@ spec:
                   key: DOMAIN_NAME
             - name: DB_USER
               valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
+                secretKeyRef:
+                  name: webapp-secret
                   key: DB_USER
             - name: DB_HOST
               valueFrom:
-                configMapKeyRef:
-                  name: webapp-config
+                secretKeyRef:
+                  name: webapp-secret
                   key: DB_HOST
             - name: DB_NAME
               valueFrom:
@@ -63,12 +69,18 @@ spec:
                 configMapKeyRef:
                   name: webapp-config
                   key: DB_PORT
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: API_KEY
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: webapp-svc
+  namespace: default
 spec:
   selector:
     app: webapp-pod
@@ -83,11 +95,15 @@ metadata:
   name: webapp-ingress
   labels:
     name: webapp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  namespace: default
 spec:
-  tls: 
-  - hosts: 
-    - gnnepcsaft.online
-    secretName: webapp-secret-tls
+  ingressClassName: nginx-ingress
+  tls:
+    - hosts:
+        - gnnepcsaft.online
+      secretName: webapp-secret-tls
   rules:
     - host: gnnepcsaft.online
       http:
@@ -99,3 +115,14 @@ spec:
                 name: webapp-svc
                 port:
                   number: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  labels:
+    app.kubernetes.io/component: controller
+  name: nginx-ingress
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: k8s.io/ingress-nginx

@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webapp-config
+data:
+  DOMAIN_NAME: "gnnepcsaft.online"
+  DB_NAME: "postgres"
+  DB_PORT: "5432"

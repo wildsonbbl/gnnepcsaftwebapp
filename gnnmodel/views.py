@@ -12,7 +12,7 @@ from markdown import markdown
 
 from .forms import InChIorSMILESinput
 from .models import GnnepcsaftPara
-from .utils import plotdata, plotmol, resume_mol
+from .utils import plotdata, plotmol
 
 file_dir = osp.dirname(__file__)
 workdir = osp.join(file_dir, "static")
@@ -161,7 +161,7 @@ def description(request):
         inchi = file.readline()
 
     if inchi != "":
-        html_output = markdown(resume_mol(inchi))
+        html_output = markdown("Temporary disabled")
 
         with open(
             osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"

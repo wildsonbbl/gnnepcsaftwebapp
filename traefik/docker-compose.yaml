@@ -15,7 +15,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yaml:/etc/traefik/traefik.yaml:ro
       - ./tls.yaml:/etc/traefik/tls.yaml:ro
-      - ./certs:/etc/certs:ro
+      - ./certs:/etc/certs
     deploy:
       resources:
         limits:
@@ -31,13 +31,14 @@ services:
     image: wildsonbbl/gnnepcsaft:v2
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.webapp-route.rule=HostRegexp(`gnnepcsaft.online`, `{subdomain:[a-z]+}.gnnepcsaft.online`)"
+      - "traefik.http.routers.webapp-route.rule=HostRegexp(`gnnepcsaft.online`)"
       - "traefik.http.routers.webapp-route.entrypoints=websecure"
-      - "traefik.http.routers.webapp-route.tls=true"
       - "traefik.http.routers.webapp-route.service=webapp-svc"
       - "traefik.http.services.webapp-svc.loadbalancer.server.port=8000"
+      - "traefik.http.routers.webapp-route.tls=true"
+      - "traefik.http.routers.webapp-route.tls.certresolver=letsencrypt"
       - "traefik.http.routers.webapp-route.tls.domains[0].main=gnnepcsaft.online"
-      - "traefik.http.routers.webapp-route.tls.domains[0].sans=*.gnnepcsaft.online"
+      - "traefik.http.routers.webapp-route.tls.domains[0].sans=www.gnnepcsaft.online"
 
     env_file:
       - .env

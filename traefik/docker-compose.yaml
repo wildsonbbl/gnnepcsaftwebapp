@@ -56,5 +56,11 @@ services:
 
 networks:
   ip6net1:
-    external: True
-    #  docker network create --ipv6 --subnet="fdf6:e94a:ba2d::/64" --gateway="fdf6:e94a:ba2d::1" ip6net1
+    name: "ip6net1"
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: "fdf6:e94a:ba2d::/64"
+        #- gateway: "fdf6:e94a:ba2d::1"
+#  docker network create --ipv6 --subnet="fdf6:e94a:ba2d::/64" --gateway="fdf6:e94a:ba2d::1" ip6net1

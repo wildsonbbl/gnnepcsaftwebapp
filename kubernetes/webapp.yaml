@@ -6,7 +6,7 @@ metadata:
     app: webapp-pod
   namespace: default
 spec:
-  replicas: 3
+  replicas: 8
   selector:
     matchLabels:
       app: webapp-pod

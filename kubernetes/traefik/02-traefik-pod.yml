@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: traefik-deployment
+  labels:
+    app: traefik
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-account
+      containers:
+        - name: traefik
+          image: traefik:latest
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+            requests:
+              memory: "0.25Gi"
+              cpu: "0.10"
+          ports:
+            - name: web
+              containerPort: 80
+            - name: dashboard
+              containerPort: 8080
+            - name: websecure
+              containerPort: 443
+          args:
+            - --api.insecure
+            - --accesslog
+            - --providers.kubernetesingress
+            - --entryPoints.web.address=:80
+            - --entryPoints.websecure.address=:443
+            # - --entryPoints.web.http.redirections.entrypoint.to=websecure
+            # - --entryPoints.web.http.redirections.entrypoint.scheme=https

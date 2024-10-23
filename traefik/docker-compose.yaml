@@ -1,6 +1,5 @@
 services:
   reverse-proxy:
-    container_name: traefik
     # The official v2 Traefik docker image
     image: traefik:latest
     # Enables the web UI and tells Traefik to listen to docker
@@ -27,7 +26,7 @@ services:
       - ip6net1
 
   webapp:
-    container_name: gnnepcsaft
+    scale: 1
     image: wildsonbbl/gnnepcsaft:v2
     labels:
       - "traefik.enable=true"

@@ -1,4 +1,0 @@
-tls:
-  certificates:
-    - certFile: /etc/certs/certificate.crt
-      keyFile: /etc/certs/private.key

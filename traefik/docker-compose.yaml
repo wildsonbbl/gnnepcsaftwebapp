@@ -12,8 +12,6 @@ services:
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./traefik.yaml:/etc/traefik/traefik.yaml:ro
-      - ./tls.yaml:/etc/traefik/tls.yaml:ro
       - ./certs:/etc/certs
     deploy:
       resources:
@@ -24,6 +22,20 @@ services:
     memswap_limit: 1G
     networks:
       - ip6net1
+    command:
+      - --api.insecure
+      - --accesslog
+      - --providers.docker
+      - --providers.docker.exposedbydefault=true
+      - --entryPoints.web.address=:80
+      - --entryPoints.websecure.address=:443
+      # - --entryPoints.web.http.redirections.entrypoint.to=websecure
+      # - --entryPoints.web.http.redirections.entrypoint.scheme=https
+      - --certificatesresolvers.letsencrypt.acme.email=wil_bbl@hotmail.com
+      - --certificatesresolvers.letsencrypt.acme.storage=acme.json
+      - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --log.level=error
 
   webapp:
     scale: 1

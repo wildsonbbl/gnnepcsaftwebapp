@@ -32,8 +32,8 @@ services:
       # - --entryPoints.web.http.redirections.entrypoint.to=websecure
       # - --entryPoints.web.http.redirections.entrypoint.scheme=https
       - --certificatesresolvers.letsencrypt.acme.email=wil_bbl@hotmail.com
-      - --certificatesresolvers.letsencrypt.acme.storage=acme.json
-      - --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+      - --certificatesresolvers.letsencrypt.acme.storage=/etc/certs/acme.json
+      #- --certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
       - --log.level=error
 
@@ -49,14 +49,14 @@ services:
       - "traefik.http.routers.webapp-route.tls=true"
       - "traefik.http.routers.webapp-route.tls.certresolver=letsencrypt"
       - "traefik.http.routers.webapp-route.tls.domains[0].main=gnnepcsaft.online"
-      - "traefik.http.routers.webapp-route.tls.domains[0].sans=www.gnnepcsaft.online"
+      #- "traefik.http.routers.webapp-route.tls.domains[0].sans=www.gnnepcsaft.online"
 
     env_file:
       - .env
     deploy:
       resources:
         limits:
-          memory: 925M
+          memory: 500M
         reservations:
           memory: 256M
     memswap_limit: 1G

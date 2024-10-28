@@ -34,7 +34,9 @@
   <div class="row">
     {% if output %}
       <div class="col-md-3 offset-md-3">
-        <img src="{{ mol_uri }}" alt="Molecule plot." class="img-fluid" />
+        <img src="/media/images/{{ mol_uri }}"
+             alt="Molecule plot."
+             class="img-fluid" />
       </div>
       <div class="col-md-3 align-items-center d-flex">
         <a href="{% url "description" %}"
@@ -67,7 +69,9 @@
       </div>
       {% if plotden %}
         <div class="col-md-4">
-          <img src="{{ den_uri }}" alt="Density plot." class="img-fluid" />
+          <img src="/media/images/{{ den_uri }}"
+               alt="Density plot."
+               class="img-fluid" />
           <small>
             <li>Density at 101.325 kPa (1 atm).</li>
           </small>
@@ -75,7 +79,9 @@
       {% endif %}
       {% if plotvp %}
         <div class="col-md-4">
-          <img src="{{ vp_uri }}" alt="Pressure plot." class="img-fluid" />
+          <img src="/media/images/{{ vp_uri }}"
+               alt="Pressure plot."
+               class="img-fluid" />
         </div>
       {% endif %}
     {% else %}

@@ -8,4 +8,6 @@ class GnnepcsaftPara(models.Model):
     m = models.FloatField()
     sigma = models.FloatField()
     e = models.FloatField()
-    counting = models.IntegerField()
+    plot_den = models.CharField(max_length=50)
+    plot_vp = models.CharField(max_length=50)
+    plot_mol = models.CharField(max_length=50)

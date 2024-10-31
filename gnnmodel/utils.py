@@ -256,12 +256,13 @@ def resume_mol(inchi: str):
 
 def update_database():
     "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
-    workdir = "/workspaces/webapp/webapp"  # set mannualy
+    workdir = "/workspaces/webapp/gnnepcsaftwebapp"  # set mannualy
     images_dir = osp.join(workdir, "media/images")
     con = lite.connect(osp.join(workdir, "mydatabase"))
-    with con:
-        cur = con.cursor()
-        for inchi in tml_data:
+
+    for inchi in tml_data:
+        with con:
+            cur = con.cursor()
             cur.execute("select * from gnnmodel_gnnepcsaftpara where inchi=?", (inchi,))
             if len(cur.fetchall()) == 0:
                 para, _, _ = prediction(inchi)
@@ -270,10 +271,10 @@ def update_database():
                 para = para.tolist()
                 cur.execute(
                     """
-                INSERT INTO gnnmodel_gnnepcsaftpara 
-                (m, sigma, e, inchi, plot_den, plot_vp, plot_mol) 
-                VALUES (?,?,?,?,?,?,?)
-                """,
+              INSERT INTO gnnmodel_gnnepcsaftpara 
+              (m, sigma, e, inchi, plot_den, plot_vp, plot_mol) 
+              VALUES (?,?,?,?,?,?,?)
+              """,
                     (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
                 )
 

@@ -8,7 +8,7 @@ from markdown import markdown
 
 from .forms import InChIorSMILESinput
 from .models import GnnepcsaftPara, db_update
-from .utils import checking_inchi, plotmol, prediction
+from .utils import checking_inchi, prediction
 
 file_dir = osp.dirname(__file__)
 images_dir = osp.join(settings.MEDIA_ROOT, "images")
@@ -39,7 +39,6 @@ def estimator(request):
             # pylint: enable=E1101
             if len(comp) == 0:
                 pred, output, inchi = prediction(query)
-                molimg = plotmol(inchi, images_dir)
                 comp = db_update(pred, inchi, comp, plots=[plotden, plotvp, molimg])
             comp = comp[0]
             pred = torch.tensor([comp.m, comp.sigma, comp.e])

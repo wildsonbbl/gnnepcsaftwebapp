@@ -8,8 +8,12 @@ jobs:
   build-docker:
     runs-on: ubuntu-latest
     steps:
-      - name: checkout code
+      - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Checkout LFS objects
+        run: git lfs checkout
       - name: install buildx
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1

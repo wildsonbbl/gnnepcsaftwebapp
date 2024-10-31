@@ -107,20 +107,7 @@ def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
                     pltline(x, y)
                 pltcustom(ra, ylabel="Density (mol / m³)")
                 sns.despine(trim=True)
-                basename = "".join(
-                    random.choice(string.ascii_lowercase) for i in range(16)
-                )
-                suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-                plotden = "_".join([basename, suffix, ".png"])
-                img_path = osp.join(images_dir, plotden)
-                plt.savefig(
-                    img_path,
-                    dpi=300,
-                    format="png",
-                    bbox_inches="tight",
-                    transparent=True,
-                )
-                plt.close()
+                plotden = pltsavefig(images_dir)
         # plot vp data
         if ~np.all(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
             idx = np.argsort(vp[:, 0], 0)
@@ -134,19 +121,25 @@ def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
                 pltline(x, y)
             pltcustom(ra, ylabel="Vapor pressure (kPa)")
             sns.despine(trim=True)
-            basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
-            suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-            plotvp = "_".join([basename, suffix, ".png"])
-            img_path = osp.join(images_dir, plotvp)
-            plt.savefig(
-                img_path,
-                dpi=300,
-                format="png",
-                bbox_inches="tight",
-                transparent=True,
-            )
-            plt.close()
+            plotvp = pltsavefig(images_dir)
     return plotden, plotvp
+
+
+def pltsavefig(images_dir):
+    "fn to name img and save with plt.save"
+    basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
+    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    plotpng = "_".join([basename, suffix, ".png"])
+    img_path = osp.join(images_dir, plotpng)
+    plt.savefig(
+        img_path,
+        dpi=300,
+        format="png",
+        bbox_inches="tight",
+        transparent=True,
+    )
+    plt.close()
+    return plotpng
 
 
 def plotmol(inchi: str, images_dir: str) -> str:

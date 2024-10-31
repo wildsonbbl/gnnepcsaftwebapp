@@ -31,3 +31,4 @@ webapp/.env
 **/.aws
 **/.github
 **/traefik
+**media/images**

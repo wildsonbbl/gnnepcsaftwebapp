@@ -5,6 +5,7 @@ import os
 import os.path as osp
 import random
 import re
+import sqlite3 as lite
 import string
 import textwrap
 from io import BytesIO
@@ -15,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import torch
-from django.conf import settings
 from gnnepcsaft.configs.default import get_config
 from gnnepcsaft.data.graph import from_InChI, smilestoinchi
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
@@ -26,14 +26,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from rdkit import Chem
 from rdkit.Chem import Draw
 
-from .models import GnnepcsaftPara
-
 file_dir = osp.dirname(__file__)
-dataset_dir = osp.join(settings.MEDIA_ROOT, "data")
-workdir = settings.MEDIA_ROOT
-images_dir = osp.join(settings.MEDIA_ROOT, "images")
-
-deg = calc_deg("ramirez", workdir)
+dataset_dir = osp.join(file_dir, "data")
+deg = calc_deg("ramirez", file_dir)
 device = torch.device("cpu")
 
 
@@ -82,7 +77,7 @@ def pltscatter(x, y):
 
 
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
+def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
     "plot and save fig of den and vp data if available."
     plotden, plotvp = "", ""
     if inchi in tml_data:
@@ -154,7 +149,7 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
     return plotden, plotvp
 
 
-def plotmol(inchi: str) -> str:
+def plotmol(inchi: str, images_dir: str) -> str:
     "Plot and save fig of molecule."
 
     mol = Chem.MolFromInchi(inchi)
@@ -261,32 +256,26 @@ def resume_mol(inchi: str):
 
 def update_database():
     "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
-
-    for inchi in tml_data:
-        # pylint: disable=E1101
-        comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
-        # pylint: enable=E1101
-        if len(comp) == 0:
-            para, _, _ = prediction(inchi)
-            plotden, plotvp = plotdata(para, inchi)
-            pltmol = plotmol(inchi)
-            db_update(para, inchi, comp, [plotden, plotvp, pltmol])
-
-
-def db_update(pred, inchi, comp, plots):
-    "Updates the gnnepcsaft db."
-    if len(comp) == 0:
-        new_comp = GnnepcsaftPara(
-            inchi=inchi,
-            m=pred[0],
-            sigma=pred[1],
-            e=pred[2],
-            plot_den=plots[0],
-            plot_vp=plots[1],
-            plot_mol=plots[2],
-        )
-        new_comp.save()
-        return [new_comp]
+    workdir = "/workspaces/webapp/webapp"  # set mannualy
+    images_dir = osp.join(workdir, "media/images")
+    con = lite.connect(osp.join(workdir, "mydatabase"))
+    with con:
+        cur = con.cursor()
+        for inchi in tml_data:
+            cur.execute("select * from gnnmodel_gnnepcsaftpara where inchi=?", (inchi,))
+            if len(cur.fetchall()) == 0:
+                para, _, _ = prediction(inchi)
+                plotden, plotvp = plotdata(para, inchi, images_dir)
+                pltmol = plotmol(inchi, images_dir)
+                para = para.tolist()
+                cur.execute(
+                    """
+                INSERT INTO gnnmodel_gnnepcsaftpara 
+                (m, sigma, e, inchi, plot_den, plot_vp, plot_mol) 
+                VALUES (?,?,?,?,?,?,?)
+                """,
+                    (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
+                )
 
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
@@ -304,7 +293,7 @@ def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     )
     model.to("cpu")
 
-    checkpoint = torch.load(osp.join(workdir, "model.ckpt"), map_location="cpu")
+    checkpoint = torch.load(osp.join(dataset_dir, "model.ckpt"), map_location="cpu")
     model.load_state_dict(checkpoint["state_dict"])
 
     model.eval()

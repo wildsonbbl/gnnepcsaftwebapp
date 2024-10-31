@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: webapp-ingress
+  labels:
+    name: webapp-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+  namespace: default
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - gnnepcsaft.online
+      secretName: webapp-secret-tls
+  rules:
+    - host: gnnepcsaft.online
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: webapp-svc
+                port:
+                  number: 8000

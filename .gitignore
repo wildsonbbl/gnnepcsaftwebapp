@@ -2,3 +2,4 @@
 .vscode/
 **productionfiles
 webapp-secret*.yaml
+**media/images**

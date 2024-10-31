@@ -1,94 +1,23 @@
 "request handler."
 import os.path as osp
-import re
 
 import torch
+from django.conf import settings
 from django.shortcuts import render
-from gnnepcsaft.configs.default import get_config
-from gnnepcsaft.data.graph import from_InChI, smilestoinchi
-from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
-from gnnepcsaft.train.utils import calc_deg
 from markdown import markdown
 
 from .forms import InChIorSMILESinput
-from .models import GnnepcsaftPara
-from .utils import plotdata, plotmol
+from .models import GnnepcsaftPara, db_update
+from .utils import checking_inchi, prediction
 
 file_dir = osp.dirname(__file__)
-workdir = osp.join(file_dir, "static")
-
-
-deg = calc_deg("ramirez", workdir)
-device = torch.device("cpu")
-
+images_dir = osp.join(settings.MEDIA_ROOT, "images")
 
 available_params = [
     "Segment number",
     "Segment diameter (Å)",
     "Dispersion energy (K)",
 ]
-
-
-def db_update(pred, inchi, comp):
-    "Updates the gnnepcsaft db."
-    if len(comp) == 0:
-        new_comp = GnnepcsaftPara(
-            inchi=inchi, m=pred[0], sigma=pred[1], e=pred[2], counting=1
-        )
-        new_comp.save()
-    else:
-        stored_comp = comp[0]
-        stored_comp.counting += 1
-        stored_comp.save()
-
-
-def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
-    "Predict ePC-SAFT parameters."
-
-    model = PNApcsaftL(
-        pna_params=PnaconvsParams(
-            propagation_depth=2,
-            pre_layers=1,
-            post_layers=3,
-            deg=deg,
-        ),
-        mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
-        config=get_config(),
-    )
-    model.to("cpu")
-
-    checkpoint = torch.load(file_dir + "/static/model.ckpt", map_location="cpu")
-    model.load_state_dict(checkpoint["state_dict"])
-
-    model.eval()
-
-    inchi = checking_inchi(query)
-
-    try:
-        graph = from_InChI(inchi).to(device)
-        with torch.no_grad():
-            pred = model.forward(graph)[0]
-        output = True
-    except (ValueError, TypeError, AttributeError, IndexError) as e:
-        print(e)
-        print("error for query:", query)
-        pred = [None]
-        output = False
-
-    return pred, output, inchi
-
-
-def checking_inchi(query: str) -> str:
-    "Check if query is inchi and return an inchi."
-    inchi_check = re.search("^InChI=", query)
-    inchi = query
-    if not inchi_check:
-        try:
-            inchi = smilestoinchi(query)
-        except (ValueError, TypeError, AttributeError, IndexError) as e:
-            print(e)
-            print("error for query:", query)
-    return inchi
 
 
 # Create your views here.
@@ -104,19 +33,26 @@ def estimator(request):
 
         if form.is_valid():
             query = form.cleaned_data["query"]
-            pred, output, inchi = prediction(query)
-            plotden, plotvp = plotdata(pred.numpy(), inchi)
-            molimg = plotmol(inchi)
+            inchi = checking_inchi(query)
+            # pylint: disable=E1101
+            comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
+            # pylint: enable=E1101
+            if len(comp) == 0:
+                pred, output, inchi = prediction(query)
+                comp = db_update(pred, inchi, plots=[plotden, plotvp, molimg])
+            comp = comp[0]
+            pred = torch.tensor([comp.m, comp.sigma, comp.e])
+            plotden = comp.plot_den
+            plotvp = comp.plot_vp
+            molimg = comp.plot_mol
+            output = True
+
             with open(
                 osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
             ) as file:
                 file.write(inchi)
-            # pylint: disable=no-member
-            db_update(pred, inchi, GnnepcsaftPara.objects.filter(inchi=inchi).all())
-            # pylint: enable=no-member
     else:
         form = InChIorSMILESinput()
-    imgtype = "image/png"
 
     context = {
         "form": form,
@@ -132,9 +68,9 @@ def estimator(request):
         "output": output,
         "plotden": plotden != "",
         "plotvp": plotvp != "",
-        "den_uri": f"data:{imgtype};base64,{plotden}",
-        "vp_uri": f"data:{imgtype};base64,{plotvp}",
-        "mol_uri": f"data:{imgtype};base64,{molimg}",
+        "den_uri": plotden,
+        "vp_uri": plotvp,
+        "mol_uri": molimg,
     }
 
     return render(request, "pred.html", context)

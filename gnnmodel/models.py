@@ -13,17 +13,17 @@ class GnnepcsaftPara(models.Model):
     plot_mol = models.CharField(max_length=50)
 
 
-def db_update(pred, inchi, comp, plots):
+def db_update(pred, inchi, plots):
     "Updates the gnnepcsaft db."
-    if len(comp) == 0:
-        new_comp = GnnepcsaftPara(
-            inchi=inchi,
-            m=pred[0],
-            sigma=pred[1],
-            e=pred[2],
-            plot_den=plots[0],
-            plot_vp=plots[1],
-            plot_mol=plots[2],
-        )
-        new_comp.save()
-        return [new_comp]
+
+    new_comp = GnnepcsaftPara(
+        inchi=inchi,
+        m=pred[0],
+        sigma=pred[1],
+        e=pred[2],
+        plot_den=plots[0],
+        plot_vp=plots[1],
+        plot_mol=plots[2],
+    )
+    new_comp.save()
+    return [new_comp]

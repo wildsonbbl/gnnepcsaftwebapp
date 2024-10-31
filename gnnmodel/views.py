@@ -39,7 +39,7 @@ def estimator(request):
             # pylint: enable=E1101
             if len(comp) == 0:
                 pred, output, inchi = prediction(query)
-                comp = db_update(pred, inchi, comp, plots=[plotden, plotvp, molimg])
+                comp = db_update(pred, inchi, plots=[plotden, plotvp, molimg])
             comp = comp[0]
             pred = torch.tensor([comp.m, comp.sigma, comp.e])
             plotden = comp.plot_den

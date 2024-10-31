@@ -2,14 +2,16 @@
 import os.path as osp
 
 import torch
+from django.conf import settings
 from django.shortcuts import render
 from markdown import markdown
 
 from .forms import InChIorSMILESinput
-from .models import GnnepcsaftPara
-from .utils import checking_inchi, db_update, plotmol, prediction
+from .models import GnnepcsaftPara, db_update
+from .utils import checking_inchi, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
+images_dir = osp.join(settings.MEDIA_ROOT, "images")
 
 available_params = [
     "Segment number",
@@ -37,7 +39,7 @@ def estimator(request):
             # pylint: enable=E1101
             if len(comp) == 0:
                 pred, output, inchi = prediction(query)
-                molimg = plotmol(inchi)
+                molimg = plotmol(inchi, images_dir)
                 comp = db_update(pred, inchi, comp, plots=[plotden, plotvp, molimg])
             comp = comp[0]
             pred = torch.tensor([comp.m, comp.sigma, comp.e])

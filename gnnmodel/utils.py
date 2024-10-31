@@ -1,7 +1,12 @@
 "Module for utils like plotting data."
 import base64
+import datetime
 import os
 import os.path as osp
+import random
+import re
+import sqlite3 as lite
+import string
 import textwrap
 from io import BytesIO
 from urllib.parse import quote
@@ -10,15 +15,21 @@ from urllib.request import HTTPError, urlopen
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import torch
+from gnnepcsaft.configs.default import get_config
+from gnnepcsaft.data.graph import from_InChI, smilestoinchi
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
-from gnnepcsaft.train.utils import rhovp_data
+from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
+from gnnepcsaft.train.utils import calc_deg, rhovp_data
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rdkit import Chem
 from rdkit.Chem import Draw
 
 file_dir = osp.dirname(__file__)
-dataset_dir = osp.join(file_dir, "static/data")
+dataset_dir = osp.join(file_dir, "data")
+deg = calc_deg("ramirez", file_dir)
+device = torch.device("cpu")
 
 
 def make_datasets(_dataset_dir):
@@ -66,12 +77,12 @@ def pltscatter(x, y):
 
 
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
-    "plot den and vp data if available."
-    plotden = ""
-    plotvp = ""
+def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
+    "plot and save fig of den and vp data if available."
+    plotden, plotvp = "", ""
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
+        ra_rho, ra_vp = np.ndarray, np.ndarray
         pred_rho, pred_vp = rhovp_data(para, rho, vp)
         ra = False
         if inchi in ra_data:
@@ -96,18 +107,7 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
                     pltline(x, y)
                 pltcustom(ra, ylabel="Density (mol / m³)")
                 sns.despine(trim=True)
-                imgbio = BytesIO()
-                plt.savefig(
-                    imgbio,
-                    dpi=300,
-                    format="png",
-                    bbox_inches="tight",
-                    transparent=True,
-                )
-                imgbio.seek(0)
-                plotden = base64.b64encode(imgbio.read()).decode("ascii")
-
-                plt.close()
+                plotden = pltsavefig(images_dir)
         # plot vp data
         if ~np.all(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
             idx = np.argsort(vp[:, 0], 0)
@@ -121,22 +121,55 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[str, str]:
                 pltline(x, y)
             pltcustom(ra, ylabel="Vapor pressure (kPa)")
             sns.despine(trim=True)
-            imgbio = BytesIO()
-            plt.savefig(
-                imgbio,
-                dpi=300,
-                format="png",
-                bbox_inches="tight",
-                transparent=True,
-            )
-            imgbio.seek(0)
-            plotvp = base64.b64encode(imgbio.read()).decode("ascii")
-
-            plt.close()
+            plotvp = pltsavefig(images_dir)
     return plotden, plotvp
 
 
-def plotmol(inchi: str):
+def pltsavefig(images_dir):
+    "fn to name img and save with plt.save"
+    basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
+    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    plotpng = "_".join([basename, suffix, ".png"])
+    img_path = osp.join(images_dir, plotpng)
+    plt.savefig(
+        img_path,
+        dpi=300,
+        format="png",
+        bbox_inches="tight",
+        transparent=True,
+    )
+    plt.close()
+    return plotpng
+
+
+def plotmol(inchi: str, images_dir: str) -> str:
+    "Plot and save fig of molecule."
+
+    mol = Chem.MolFromInchi(inchi)
+
+    options = Draw.DrawingOptions()
+    options.bgColor = None
+    options.atomLabelMinFontSize = 4
+    options.useFraction = 1
+
+    img = Draw.MolToMPL(mol, options=options)
+    basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
+    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    imgmol = "_".join([basename, suffix, ".png"])
+    img_path = osp.join(images_dir, imgmol)
+    plt.axis("off")
+    img.savefig(
+        img_path,
+        dpi=100,
+        format="png",
+        bbox_inches="tight",
+        transparent=True,
+    )
+    plt.close()
+    return imgmol
+
+
+def plotmol_temp(inchi: str) -> str:
     "Plot molecule."
 
     mol = Chem.MolFromInchi(inchi)
@@ -212,3 +245,77 @@ def resume_mol(inchi: str):
     response = chain.invoke({"inchi": inchi, "ans": ans})
 
     return response.content
+
+
+def update_database():
+    "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
+    workdir = "/workspaces/webapp/gnnepcsaftwebapp"  # set mannualy
+    images_dir = osp.join(workdir, "media/images")
+    con = lite.connect(osp.join(workdir, "mydatabase"))
+
+    for inchi in tml_data:
+        with con:
+            cur = con.cursor()
+            cur.execute("select * from gnnmodel_gnnepcsaftpara where inchi=?", (inchi,))
+            if len(cur.fetchall()) == 0:
+                para, _, _ = prediction(inchi)
+                plotden, plotvp = plotdata(para, inchi, images_dir)
+                pltmol = plotmol(inchi, images_dir)
+                para = para.tolist()
+                cur.execute(
+                    """
+              INSERT INTO gnnmodel_gnnepcsaftpara 
+              (m, sigma, e, inchi, plot_den, plot_vp, plot_mol) 
+              VALUES (?,?,?,?,?,?,?)
+              """,
+                    (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
+                )
+
+
+def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
+    "Predict ePC-SAFT parameters."
+
+    model = PNApcsaftL(
+        pna_params=PnaconvsParams(
+            propagation_depth=2,
+            pre_layers=1,
+            post_layers=3,
+            deg=deg,
+        ),
+        mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
+        config=get_config(),
+    )
+    model.to("cpu")
+
+    checkpoint = torch.load(osp.join(dataset_dir, "model.ckpt"), map_location="cpu")
+    model.load_state_dict(checkpoint["state_dict"])
+
+    model.eval()
+
+    inchi = checking_inchi(query)
+
+    try:
+        graph = from_InChI(inchi).to(device)
+        with torch.no_grad():
+            pred = model.forward(graph)[0]
+        output = True
+    except (ValueError, TypeError, AttributeError, IndexError) as e:
+        print(e)
+        print("error for query:", query)
+        pred = [None]
+        output = False
+
+    return pred, output, inchi
+
+
+def checking_inchi(query: str) -> str:
+    "Check if query is inchi and return an inchi."
+    inchi_check = re.search("^InChI=", query)
+    inchi = query
+    if not inchi_check:
+        try:
+            inchi = smilestoinchi(query)
+        except (ValueError, TypeError, AttributeError, IndexError) as e:
+            print(e)
+            print("error for query:", query)
+    return inchi

@@ -7,7 +7,7 @@ from .models import GnnepcsaftPara
 
 class GnnepcsaftParaAdmin(admin.ModelAdmin):
     "DB table row look at admin page."
-    list_display = ["inchi", "counting"]
+    list_display = ["m", "inchi"]
 
 
 admin.site.register(GnnepcsaftPara, GnnepcsaftParaAdmin)

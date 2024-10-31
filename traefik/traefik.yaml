@@ -15,9 +15,16 @@ api:
 providers:
   docker:
     exposedByDefault: true
-  file:
-    filename: /etc/traefik/tls.yaml
+  #file:
+  #  filename: /etc/traefik/tls.yaml
 
 log:
   level: error
 
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: wil_bbl@hotmail.com
+      storage: /etc/certs/acme.json
+      caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      tlsChallenge: {}

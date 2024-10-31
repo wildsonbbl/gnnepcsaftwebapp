@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-depl
+  labels:
+    app: webapp-pod
+  namespace: default
+spec:
+  replicas: 8
+  selector:
+    matchLabels:
+      app: webapp-pod
+  template:
+    metadata:
+      labels:
+        app: webapp-pod
+    spec:
+      containers:
+        - name: webapp-container
+          imagePullPolicy: IfNotPresent # dont forget to change later
+          image: wildsonbbl/gnnepcsaft:v2
+          resources:
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+            requests:
+              memory: "1Gi"
+              cpu: "0.50"
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DJANGO_SECRET_KEY
+            - name: DJANGO_ALLOWED_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DJANGO_ALLOWED_HOSTS
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DB_PASSWORD
+            - name: DOMAIN_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DOMAIN_NAME
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DB_USER
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: DB_HOST
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_NAME
+            - name: DB_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: webapp-config
+                  key: DB_PORT
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: webapp-secret
+                  key: API_KEY
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp-svc
+  namespace: default
+spec:
+  selector:
+    app: webapp-pod
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

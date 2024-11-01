@@ -15,6 +15,7 @@ scipy
 seaborn
 django-debug-toolbar
 django-bootstrap-v5
+django-pwa
 whitenoise
 gunicorn
 --extra-index-url https://download.pytorch.org/whl/cpu/

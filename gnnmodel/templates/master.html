@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 {% load static %}
+{% load pwa %}
+{% load bootstrap5 %}
 <html lang="en">
   <head>
     <title>
       {% block title %}
       {% endblock title %}
     </title>
-    {% load bootstrap5 %}
     {% bootstrap_css %} {% bootstrap_javascript %}
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="GNNePCSAFT webapp.">
@@ -18,9 +19,10 @@
     <link href="{% static 'fontawesomefree/css/brands.css' %}"
           rel="stylesheet"
           type="text/css" />
+    {% progressive_web_app_meta %}
   </head>
   <body>
-    <div class="container-fluid bg-light">
+    <div class="container-fluid bg-light text-dark">
       {% comment %} <ul class="nav bg-dark">
         <li class="nav-item">
           <a class="nav-link link-light" href={% url "homepage" %}>HOME</a>
@@ -38,11 +40,11 @@
       <div class="row">
         <div class="col-md">
           <h3>GNNePCSAFT Webapp</h3>
-          <p class="text-muted">
-            A simple web app with a pretrained <a class="text-decoration-none"
-    href="https://github.com/wildsonbbl/GNN-ePC-SAFT"
-    target="_blank"
-    rel="noopener noreferrer">GNNePCSAFT model</a> to estimate
+          <p>
+            A simple web app with a pretrained
+            <a class="text-decoration-none"
+               href="https://github.com/wildsonbbl/GNN-ePC-SAFT"
+               target="_blank">GNNePCSAFT model</a> to estimate
             <abbr title="electrolyte Perturbed Chain Statistical Associating Fluid Theory">ePC-SAFT</abbr>
             parameters. Parameters can be used with
             <a class="text-decoration-none"
@@ -60,7 +62,7 @@
       <div class="row">
         <!-- Remove the container if you want to extend the Footer to full width. -->
         <div class="container my-5">
-          <footer class="text-center text-white" style="background-color: #f1f1f1">
+          <footer class="text-center">
             <!-- Grid container -->
             <div class="container pt-4">
               <!-- Section: Social media -->
@@ -70,19 +72,25 @@
                    href="https://www.linkedin.com/in/wildsonbbl/"
                    role="button"
                    data-mdb-ripple-color="dark"
-                   target="_blank"><i class="fab fa-linkedin"></i></a>
+                   name="Linkedin"
+                   aria-label="Author Linkedin Page"
+                   target="_blank"><i class="fab fa-linkedin" alt="Author Linkedin Page"></i></a>
                 <!-- Github -->
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://github.com/wildsonbbl"
                    role="button"
                    data-mdb-ripple-color="dark"
-                   target="_blank"><i class="fab fa-github"></i></a>
+                   name="Github"
+                   aria-label="Author Github Page"
+                   target="_blank"><i class="fab fa-github" alt="Author Github Page"></i></a>
                 <!-- ORCID -->
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://orcid.org/0000-0002-0189-6000"
                    role="button"
                    data-mdb-ripple-color="dark"
-                   target="_blank"><i class="fab fa-orcid"></i></a>
+                   name="ORCID"
+                   aria-label="Author ORCID Page"
+                   target="_blank"><i class="fab fa-orcid" alt="Author ORCID Page"></i></a>
               </section>
               <!-- Section: Social media -->
             </div>

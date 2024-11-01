@@ -196,6 +196,5 @@ with open("icons.json", "r", encoding="UTF-8") as file:
 PWA_APP_ICONS = data["icons"]
 PWA_APP_ICONS_APPLE = data["icons"]
 PWA_APP_SPLASH_SCREEN = data["icons"]
-PWA_APP_SCREENSHOTS = data["icons"]
 PWA_APP_DIR = "ltr"
 PWA_APP_LANG = "en-US"

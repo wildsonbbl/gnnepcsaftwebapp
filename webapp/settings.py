@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import json
 import os
 from pathlib import Path
 
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "bootstrap5",
     "fontawesomefree",
+    "pwa",
 ]
 
 MIDDLEWARE = [
@@ -152,7 +154,9 @@ STATIC_URL = "static/"
 
 STATIC_ROOT = BASE_DIR / "productionfiles"
 
-STATICFILES_DIRS = [BASE_DIR / "globalstaticfiles"]
+STATICFILES_DIRS = [
+    BASE_DIR / "globalstaticfiles",
+]
 
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -173,3 +177,25 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*." + os.getenv("DOMAIN_NAME", "*"),
     "http://*." + os.getenv("DOMAIN_NAME", "*"),
 ]
+
+# DJANGO-PWA
+PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
+
+PWA_APP_NAME = "GNNePCSAFT"
+PWA_APP_DESCRIPTION = "GNNePSAFT PWA"
+PWA_APP_THEME_COLOR = "#000000"
+PWA_APP_BACKGROUND_COLOR = "#ffffff"
+PWA_APP_DISPLAY = "standalone"
+PWA_APP_SCOPE = "/"
+PWA_APP_ORIENTATION = "any"
+PWA_APP_START_URL = "/"
+PWA_APP_STATUS_BAR_COLOR = "default"
+# Open and read the icons.JSON file
+with open("icons.json", "r", encoding="UTF-8") as file:
+    data = json.load(file)
+PWA_APP_ICONS = data["icons"]
+PWA_APP_ICONS_APPLE = data["icons"]
+PWA_APP_SPLASH_SCREEN = data["icons"]
+PWA_APP_SCREENSHOTS = data["icons"]
+PWA_APP_DIR = "ltr"
+PWA_APP_LANG = "en-US"

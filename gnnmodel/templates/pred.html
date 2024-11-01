@@ -1,6 +1,6 @@
 {% extends "master.html" %}
 {% block title %}
-  Model Estimates
+  GNNePCSAFT
 {% endblock title %}
 {% block content %}
   <div class="row">
@@ -9,8 +9,8 @@
       <abbr title="International Chemical Identifier">InChI</abbr> and
       <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
       <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
-      you can build your own molecule
-      <a href="https://bit.ly/DIYmol" target="_blank">here</a> and copy the SMILES
+      you can build your own molecule at
+      <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a> and copy the SMILES
       right clicking on the 2D panel.
     </p>
     <form action="" method="post">
@@ -38,7 +38,7 @@
       <div class="col-md-3 align-items-center d-flex">
         <a href="{% url "description" %}"
            target="_blank"
-           class="btn btn-outline-secondary"
+           class="btn btn-outline-secondary text-dark"
            type="button">AI generated molecule description</a>
       </div>
     {% endif %}
@@ -70,7 +70,7 @@
             <img src="https://storage.googleapis.com/gnnepcsaftwebapp/media/images/{{ den_uri }}"
                  alt="Density plot."
                  class="figure-img img-fluid rounded" />
-            <figcaption class="figure-caption">
+            <figcaption class="figure-caption text-dark">
               Density versus temperature plot for the molecule at 101.325 kPa (1 atm) pressure.
             </figcaption>
           </figure>
@@ -82,7 +82,7 @@
             <img src="https://storage.googleapis.com/gnnepcsaftwebapp/media/images/{{ vp_uri }}"
                  alt="Pressure plot."
                  class="figure-img img-fluid rounded" />
-            <figcaption class="figure-caption">Vapor pressure versus temperature plot for the molecule.</figcaption>
+            <figcaption class="figure-caption text-dark">Vapor pressure versus temperature plot for the molecule.</figcaption>
           </figure>
         </div>
       {% endif %}

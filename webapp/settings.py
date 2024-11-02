@@ -154,9 +154,7 @@ STATIC_URL = "static/"
 
 STATIC_ROOT = BASE_DIR / "productionfiles"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "globalstaticfiles",
-]
+STATICFILES_DIRS = []
 
 MEDIA_ROOT = BASE_DIR / "media"
 
@@ -196,6 +194,5 @@ with open("icons.json", "r", encoding="UTF-8") as file:
 PWA_APP_ICONS = data["icons"]
 PWA_APP_ICONS_APPLE = data["icons"]
 PWA_APP_SPLASH_SCREEN = data["icons"]
-PWA_APP_SCREENSHOTS = data["icons"]
 PWA_APP_DIR = "ltr"
 PWA_APP_LANG = "en-US"

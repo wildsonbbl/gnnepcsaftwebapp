@@ -21,23 +21,14 @@
           type="text/css" />
     {% progressive_web_app_meta %}
   </head>
-  <body>
+  <body class="mt-1">
     <div class="container-fluid bg-light text-dark">
-      {% comment %} <ul class="nav bg-dark">
+      <ul class="nav bg-dark ">
         <li class="nav-item">
-          <a class="nav-link link-light" href={% url "homepage" %}>HOME</a>
+          <a class="nav-link link-light" href={% url "estimator" %}>RELOAD</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "estimator" %}>MODEL</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href="https://github.com/wildsonbbl/GNN-ePC-SAFT" target="_blank">GITHUB</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "author" %}>ABOUT ME</a>
-        </li>
-      </ul> {% endcomment %}
-      <div class="row">
+      </ul>
+      <div class="row mt-3">
         <div class="col-md text-center">
           <h3>GNNePCSAFT WebApp</h3>
           <p>

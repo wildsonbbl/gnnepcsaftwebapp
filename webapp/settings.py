@@ -154,9 +154,7 @@ STATIC_URL = "static/"
 
 STATIC_ROOT = BASE_DIR / "productionfiles"
 
-STATICFILES_DIRS = [
-    BASE_DIR / "globalstaticfiles",
-]
+STATICFILES_DIRS = []
 
 MEDIA_ROOT = BASE_DIR / "media"
 

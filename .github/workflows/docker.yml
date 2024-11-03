@@ -3,6 +3,9 @@ name: Deploy to Docker Hub
 on:
   push:
     branches: main
+    paths-ignore:
+      - "**/*.yaml"
+      - "**/*.yml"
 
 jobs:
   build-docker:

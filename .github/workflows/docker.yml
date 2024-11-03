@@ -14,10 +14,15 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          lfs: true
-      - name: Checkout LFS objects
-        run: git lfs checkout
+      - name: Setup DVC
+        uses: iterative/setup-dvc@v1
+      - name: Setup GCP
+        run: |
+          echo "${{secrets.GCP_KEY}}" > GCP_key.json
+          export GOOGLE_APPLICATION_CREDENTIALS='GCP_key.json'
+      - name: DVC pull data
+        run: |
+          dvc pull
       - name: install buildx
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1

@@ -7,9 +7,11 @@ on:
       - completed
 
 jobs:
-  build-docker:
+  deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Setup WARP
+        uses: fscarmen/warp-on-actions@v1.3
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Deploy to AZURE VM

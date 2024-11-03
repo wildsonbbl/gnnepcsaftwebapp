@@ -28,4 +28,5 @@ jobs:
           sudo docker images
           ls
           sudo docker compose up -d
+          sudo docker image prune -f
           ENDSSH

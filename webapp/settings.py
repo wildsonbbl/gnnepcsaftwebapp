@@ -176,13 +176,18 @@ CSRF_TRUSTED_ORIGINS = [
     "http://*." + os.getenv("DOMAIN_NAME", "*"),
 ]
 
-# DJANGO-PWA
+# DJANGO-PWA for manifest.json
 PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
 
 PWA_APP_NAME = "GNNePCSAFT"
-PWA_APP_DESCRIPTION = "GNNePSAFT PWA"
+PWA_APP_DESCRIPTION = """
+A simple web app with a pretrained
+GNNePCSAFT model to estimate ePC-SAFT parameters. 
+Parameters can be used with any implementation 
+of the Equation of State.
+"""
 PWA_APP_THEME_COLOR = "#000000"
-PWA_APP_BACKGROUND_COLOR = "#ffffff"
+PWA_APP_BACKGROUND_COLOR = "#f8f9fa"
 PWA_APP_DISPLAY = "standalone"
 PWA_APP_SCOPE = "/"
 PWA_APP_ORIENTATION = "any"
@@ -194,5 +199,43 @@ with open("icons.json", "r", encoding="UTF-8") as file:
 PWA_APP_ICONS = data["icons"]
 PWA_APP_ICONS_APPLE = data["icons"]
 PWA_APP_SPLASH_SCREEN = data["icons"]
+PWA_APP_SCREENSHOTS = [
+    {
+        "src": "/static/images/icons/Screenshot-wide.png",
+        "sizes": "1920x1020",
+        "type": "image/png",
+        "form_factor": "wide",
+    },
+    {
+        "src": "/static/images/icons/Screenshot-wide-2.png",
+        "sizes": "1920x1020",
+        "type": "image/png",
+        "form_factor": "wide",
+    },
+    {
+        "src": "/static/images/icons/Screenshot-wide-3.png",
+        "sizes": "1920x1020",
+        "type": "image/png",
+        "form_factor": "wide",
+    },
+    {
+        "src": "/static/images/icons/Screenshot-narrow.png",
+        "sizes": "1080x2340",
+        "type": "image/png",
+        "form_factor": "narrow",
+    },
+    {
+        "src": "/static/images/icons/Screenshot-narrow-2.png",
+        "sizes": "1080x2340",
+        "type": "image/png",
+        "form_factor": "narrow",
+    },
+    {
+        "src": "/static/images/icons/Screenshot-narrow-3.png",
+        "sizes": "1080x2340",
+        "type": "image/png",
+        "form_factor": "narrow",
+    },
+]
 PWA_APP_DIR = "ltr"
 PWA_APP_LANG = "en-US"

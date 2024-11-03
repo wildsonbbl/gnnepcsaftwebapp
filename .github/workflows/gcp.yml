@@ -24,7 +24,7 @@ jobs:
         run: |
           echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} <<'ENDSSH'
-          sudo docker pull $image
+          sudo docker pull wildsonbbl/gnnepcsaft:v2
           sudo docker images
           ls
           sudo docker compose up -d

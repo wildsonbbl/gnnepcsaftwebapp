@@ -19,7 +19,7 @@ jobs:
       - name: Setup GCP Key and DVC pull data
         run: |
           echo "${{secrets.GCP_KEY}}" > GCP_key.json
-          export GOOGLE_APPLICATION_CREDENTIALS='GCP_key.json'
+          dvc remote modify --local gcp_bucket credentialpath './GCP_key.json'
           dvc pull
       - name: install buildx
         id: buildx

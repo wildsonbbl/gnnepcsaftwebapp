@@ -16,10 +16,12 @@ jobs:
         uses: actions/checkout@v2
       - name: Setup DVC
         uses: iterative/setup-dvc@v1
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: ${{ secrets.GCP_KEY }}
       - name: Setup GCP Key and DVC pull data
         run: |
-          echo "${{secrets.GCP_KEY}}" > GCP_key.json
-          dvc remote modify --local gcp_bucket credentialpath './GCP_key.json'
           dvc pull
       - name: install buildx
         id: buildx

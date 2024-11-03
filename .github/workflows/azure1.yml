@@ -26,4 +26,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME}
 
             sudo docker pull $image
+            sudo docker images
+            ls
             sudo docker compose up -d

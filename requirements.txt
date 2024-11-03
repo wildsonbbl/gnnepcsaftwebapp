@@ -1,6 +1,7 @@
 absl_py
 Cython
 Django
+dvc-gs
 google-generativeai
 markdown
 matplotlib

@@ -32,3 +32,5 @@ webapp/.env
 **/.github
 **/traefik
 **media/images**
+gha-creds-*.json
+**/kubernetes

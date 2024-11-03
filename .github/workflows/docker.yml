@@ -20,7 +20,7 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           credentials_json: ${{ secrets.GCP_KEY }}
-      - name: Setup GCP Key and DVC pull data
+      - name: DVC pull data
         run: |
           dvc pull
       - name: install buildx

@@ -4,3 +4,4 @@
 webapp-secret*.yaml
 **media/images**
 gha-creds-*.json
+**.env

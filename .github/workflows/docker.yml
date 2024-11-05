@@ -32,7 +32,6 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: Build, tag, and push image to docker hub
         run: |
-          echo "${{ secrets.WEBAPP_ENV }}" > ./webapp/.env
           docker buildx build --push \
             --tag wildsonbbl/gnnepcsaft:v2 \
             --platform linux/amd64 .

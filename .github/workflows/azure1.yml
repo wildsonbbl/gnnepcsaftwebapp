@@ -19,6 +19,7 @@ jobs:
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.AZURE_HOST1 }}
+          protocol: "tcp6"
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_AZURE }}
           script: |

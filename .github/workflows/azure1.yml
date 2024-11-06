@@ -27,7 +27,8 @@ jobs:
           sudo docker pull wildsonbbl/gnnepcsaft:v2
           sudo docker images
           ls
-          echo "${{ secrets.WEBAPP_ENV }}" > .env
+          sudo rm -rf .env
+          sudo echo "${{ secrets.WEBAPP_ENV }}" > .env
           sudo docker compose up -d
           sudo docker image prune -f
           ENDSSH

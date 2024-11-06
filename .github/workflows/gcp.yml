@@ -16,19 +16,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Deploy to GCP VM
-        env:
-          PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_GCP }}
-          HOSTNAME: ${{ secrets.GCP_HOST }}
-          USER_NAME: ${{ secrets.USER }}
-          image: wildsonbbl/gnnepcsaft:v2
-        run: |
-          echo "$PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key ${USER_NAME}@${HOSTNAME} <<'ENDSSH'
-          sudo docker pull wildsonbbl/gnnepcsaft:v2
-          sudo docker images
-          ls
-          sudo rm -rf .env
-          sudo echo "${{ secrets.WEBAPP_ENV }}" > .env
-          sudo docker compose up -d
-          sudo docker image prune -f
-          ENDSSH
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_GCP }}
+          script: |
+            sudo docker pull wildsonbbl/gnnepcsaft:v2
+            sudo docker images
+            ls
+            sudo rm -rf .env
+            sudo echo "${{ secrets.WEBAPP_ENV }}" > .env
+            sudo docker compose up -d
+            sudo docker image prune -f

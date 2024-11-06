@@ -18,7 +18,8 @@ jobs:
       - name: Deploy to AZURE VM
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.AZURE_HOST1 }}
+          host: "${{ secrets.AZURE_HOST1 }}, ${{ secrets.AZURE_HOST2 }}"
+          sync: true
           protocol: "tcp6"
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_AZURE }}

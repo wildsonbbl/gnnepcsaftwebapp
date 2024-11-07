@@ -5,27 +5,34 @@ async function makingdb() {
   const db = await idb.openDB(dbname, 1, {
     upgrade(db) {
       const gnnstore = db.createObjectStore(storename, {
-        keyPath: "id",
-        autoIncrement: true,
+        keyPath: "inchi",
       });
 
-      gnnstore.createIndex("inchi", "inchi", { unique: true });
+      gnnstore.createIndex("smiles", "smiles", { unique: false });
+
+      alasql(
+        'ATTACH INDEXEDDB DATABASE myidatabase; \
+         USE myidatabase; \
+         SELECT m, sigma, e, inchi, smiles \
+         INTO gnnepcsaftparameters \
+         FROM CSV("/static/mydata.csv", {headers:true, separator: "|"});',
+        [],
+        function (res) {
+          console.log("Number of records added: ", res[2]);
+        }
+      );
     },
   });
-  alasql(
-    'ATTACH INDEXEDDB DATABASE myidatabase; \
-      USE myidatabase; \
-      SELECT * INTO gnnepcsaftparameters FROM CSV("/static/mydata.csv", {headers:true, separator: " | "});',
-    [],
-    function (res) {
-      console.log("Number of records added: ", res[2]);
-    }
-  );
+
   return db;
 }
 
 const db = makingdb();
 
 async function getinchi(key) {
-  return (await db).getFromIndex(storename, "inchi", key);
+  return (await db).get(storename, key);
+}
+
+async function getsmiles(key) {
+  return (await db).getFromIndex(storename, "smiles", key);
 }

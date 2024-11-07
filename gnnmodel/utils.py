@@ -253,11 +253,17 @@ def update_database():
     images_dir = osp.join(workdir, "media/images")
     con = lite.connect(osp.join(workdir, "mydatabase"))
 
+    data = []
     for inchi in tml_data:
         with con:
             cur = con.cursor()
-            cur.execute("select * from gnnmodel_gnnepcsaftpara where inchi=?", (inchi,))
-            if len(cur.fetchall()) == 0:
+            cur.execute(
+                "select m, sigma, e, inchi from gnnmodel_gnnepcsaftpara where inchi=?",
+                (inchi,),
+            )
+            result = cur.fetchall()
+            data.append(result[0])
+            if len(result) == 0:
                 para, _, _ = prediction(inchi)
                 plotden, plotvp = plotdata(para, inchi, images_dir)
                 pltmol = plotmol(inchi, images_dir)
@@ -270,6 +276,13 @@ def update_database():
               """,
                     (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
                 )
+    np.savetxt(
+        "./static/mydata.csv",
+        data,
+        delimiter=" | ",
+        fmt="% s",
+        header="m | sigma | e | inchi",
+    )
 
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:

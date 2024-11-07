@@ -1,5 +1,6 @@
 "Module for utils like plotting data."
 import base64
+import csv
 import datetime
 import os
 import os.path as osp
@@ -17,7 +18,7 @@ import numpy as np
 import seaborn as sns
 import torch
 from gnnepcsaft.configs.default import get_config
-from gnnepcsaft.data.graph import from_InChI, smilestoinchi
+from gnnepcsaft.data.graph import from_InChI, inchitosmiles, smilestoinchi
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
 from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
 from gnnepcsaft.train.utils import calc_deg, rhovp_data
@@ -258,11 +259,17 @@ def update_database():
         with con:
             cur = con.cursor()
             cur.execute(
-                "select m, sigma, e, inchi from gnnmodel_gnnepcsaftpara where inchi=?",
+                "SELECT \
+                  ROUND(m, 2), \
+                  ROUND(sigma,2), \
+                  ROUND(e, 2), \
+                  inchi\
+                FROM gnnmodel_gnnepcsaftpara WHERE inchi=?",
                 (inchi,),
             )
+            smiles = inchitosmiles(inchi, False, False)
             result = cur.fetchall()
-            data.append(result[0])
+            data.append(result[0] + (smiles,))
             if len(result) == 0:
                 para, _, _ = prediction(inchi)
                 plotden, plotvp = plotdata(para, inchi, images_dir)
@@ -276,13 +283,11 @@ def update_database():
               """,
                     (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
                 )
-    np.savetxt(
-        "./static/mydata.csv",
-        data,
-        delimiter=" | ",
-        fmt="% s",
-        header="m | sigma | e | inchi",
-    )
+    with open("./static/mydata.csv", "w", encoding="UTF-8") as f:
+        writer = csv.writer(f, delimiter="|")
+
+        writer.writerow(["m", "sigma", "e", "inchi", "smiles"])
+        writer.writerows(data)
 
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:

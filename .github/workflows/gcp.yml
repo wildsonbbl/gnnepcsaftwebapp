@@ -23,6 +23,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY_GCP }}
           command_timeout: 20m
           script: |
+            sudo docker compose down
             sudo docker pull wildsonbbl/gnnepcsaft:v2
             sudo docker images
             ls

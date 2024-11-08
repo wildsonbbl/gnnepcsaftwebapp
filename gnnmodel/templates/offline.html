@@ -1,16 +1,66 @@
 {% extends "master.html" %}
 {% block title %}
-  Author
+  Offline Mode
 {% endblock title %}
 {% block content %}
   <div class="row">
-    <h3 class="text-center">Offline</h3>
+    <h3 class="text-center">Offline Mode</h3>
   </div>
-  <div class="row">
-    <p>Offline mode is not yet available.</p>
-    <p>
-      For any further questions, you can reach out in one of the available social
-      medias at the bottom of the page.
-    </p>
+  <div class="row" id="formRow">
+    <form action="" method="post" id="submitQuery">
+      <div class="row">
+        <div class="my-1">
+          <label for="id_query" class="form-label">Type/Paste InChI or SMILES:</label>
+          <input type="text"
+                 name="query"
+                 value="CCO"
+                 class="form-control"
+                 required
+                 id="id_query">
+        </div>
+        <div class="md my-1">
+          <input type="submit"
+                 value="Click to estimate ePC-SAFT parameters"
+                 class="form-control btn-outline-primary" />
+        </div>
+      </div>
+    </form>
   </div>
+  <div class="row" id="outputRow">
+    <div class="col-md-4 text-success">
+      <h3 id="output"></h3>
+      <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Parameter name</th>
+            <th>Parameter value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Segment number</td>
+            <td id="m"></td>
+          </tr>
+          <tr>
+            <td>Segment diameter (Å)</td>
+            <td id="sigma"></td>
+          </tr>
+          <tr>
+            <td>Dispersion energy (K)</td>
+            <td id="e"></td>
+          </tr>
+          <tr>
+            <td>InChI</td>
+            <td id="inchi"></td>
+          </tr>
+          <tr>
+            <td>SMILES</td>
+            <td id="smiles"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="/static/js/queries.js"></script>
 {% endblock content %}

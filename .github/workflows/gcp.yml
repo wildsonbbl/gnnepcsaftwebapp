@@ -31,4 +31,5 @@ jobs:
             sudo echo "${{ secrets.WEBAPP_ENV }}" > .env
             sudo docker compose up -d
             sudo docker image prune -f
-            curl --header "X-Forwarded-For: ${{ secrets.GCP_HOST }}" https://gnnepcsaft.online
+
+# curl --header "X-Forwarded-For: ${{ secrets.GCP_HOST }}" https://gnnepcsaft.online

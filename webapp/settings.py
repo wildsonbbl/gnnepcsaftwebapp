@@ -180,6 +180,7 @@ CSRF_TRUSTED_ORIGINS = [
 PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
 
 PWA_APP_NAME = "GNNePCSAFT"
+PWA_APP_ID = "/"
 PWA_APP_DESCRIPTION = "A simple web app with a pretrained \
 GNNePCSAFT model to estimate ePC-SAFT parameters. \
 Parameters can be used with any implementation \
@@ -187,6 +188,11 @@ of the Equation of State."
 PWA_APP_THEME_COLOR = "#000000"
 PWA_APP_BACKGROUND_COLOR = "#f8f9fa"
 PWA_APP_DISPLAY = "fullscreen"
+PWA_APP_DISPLAY_OVERRIDE = [
+    "fullscreen",
+    "standalone",
+    "browser",
+]
 PWA_APP_SCOPE = "/"
 PWA_APP_ORIENTATION = "any"
 PWA_APP_START_URL = "/"
@@ -237,3 +243,57 @@ PWA_APP_SCREENSHOTS = [
 ]
 PWA_APP_DIR = "ltr"
 PWA_APP_LANG = "en-US"
+PWA_APP_EDGE_SIDE_PANEL = {}
+PWA_APP_SHORTCUTS = [
+    {
+        "name": "Offline Mode",
+        "short_name": "Off",
+        "url": "/offline",
+        "description": "Offline Mode access a local database to give the model results.",
+        "icons": [
+            {
+                "src": "/static/images/icons/android/android-launchericon-96-96.png",
+                "sizes": "96x96",
+            },
+            {
+                "src": "/static/images/icons/android/android-launchericon-72-72.png",
+                "sizes": "72x72",
+            },
+            {
+                "src": "/static/images/icons/android/android-launchericon-48-48.png",
+                "sizes": "48x48",
+            },
+        ],
+    },
+    {
+        "name": "Online Mode",
+        "short_name": "On",
+        "url": "/",
+        "description": "Online Mode access the server to give updated model results.",
+        "icons": [
+            {
+                "src": "/static/images/icons/android/android-launchericon-96-96.png",
+                "sizes": "96x96",
+            },
+            {
+                "src": "/static/images/icons/android/android-launchericon-72-72.png",
+                "sizes": "72x72",
+            },
+            {
+                "src": "/static/images/icons/android/android-launchericon-48-48.png",
+                "sizes": "48x48",
+            },
+        ],
+    },
+]
+PWA_APP_CATEGORIES = ["education", "productivity", "utilities"]
+PWA_APP_LAUNCH_HANDLER = {"client_mode": ["navigate-existing", "auto"]}
+PWA_APP_PREFER_RELATED_APPLICATIONS = "false"
+PWA_APP_RELATED_APPLICATIONS = [
+    {
+        "platform": "python",
+        "url": "https://pypi.org/project/pcsaft/",
+        "id": "pcsaft",
+    },
+]
+PWA_APP_HANDLE_LINKS = "not-preferred"

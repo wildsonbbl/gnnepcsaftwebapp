@@ -28,14 +28,14 @@
       </div>
     </form>
   </div>
-  <div class="row">
+  <div class="row mb-3">
     {% if plotden or plotvp %}
-      <div class="col-md-3 offset-md-3">
+      <div class="col-md">
         <img src="https://storage.googleapis.com/gnnepcsaftwebapp/media/images/{{ mol_uri }}"
              alt="Molecule plot."
              class="img-fluid" />
       </div>
-      <div class="col-md-3 align-items-center d-flex">
+      <div class="col-md align-items-center d-flex justify-content-center">
         <a href="{% url "description" %}"
            target="_blank"
            class="btn btn-outline-secondary text-dark"
@@ -46,7 +46,7 @@
   <div class="row">
     {% if output %}
       <div class="col-md-4 text-success">
-        <h3>Estimated ePC-SAFT parameters</h3>
+        <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
         <table class="table table-hover">
           <thead>
             <tr>

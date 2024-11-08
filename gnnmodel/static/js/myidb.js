@@ -1,31 +1,38 @@
-import { openDB, deleteDB, wrap, unwrap } from 'https://unpkg.com/idb?module';
-
 const dbname = "myidatabase",
-      storename = "gnnepcsaftparameters";
+  storename = "gnnepcsaftparameters";
 
-const db = await openDB(dbname, 1, {
-  upgrade(db) {
-    
-    const gnnstore = db.createObjectStore(storename, {
-      keyPath: 'id',
-      autoIncrement: true,
-    });
+async function makingdb() {
+  const db = await idb.openDB(dbname, 1, {
+    upgrade(db) {
+      const gnnstore = db.createObjectStore(storename, {
+        keyPath: "inchi",
+      });
 
-    gnnstore.createIndex('inchi', 'inchi', {unique: true});
-  },
-});
+      gnnstore.createIndex("smiles", "smiles", { unique: false });
 
-// instância da transação
-const store = db.transaction(storename, 'readwrite').objectStore(storename);
+      alasql(
+        'ATTACH INDEXEDDB DATABASE myidatabase; \
+         USE myidatabase; \
+         SELECT m, sigma, e, inchi, smiles \
+         INTO gnnepcsaftparameters \
+         FROM CSV("/static/mydata.csv", {headers:true, separator: "|"});',
+        [],
+        function (res) {
+          console.log("Number of records added: ", res[2]);
+        }
+      );
+    },
+  });
 
+  return db;
+}
 
+const db = makingdb();
 
-// operações assíncronas a serem resolvidas
-await Promise.all([
- store.add({
-  inchi: 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3',
-  m: 5.87,
-  sigma: 2.31,
-  e:  187.87
- }),
-]);
+async function getinchi(key) {
+  return (await db).get(storename, key);
+}
+
+async function getsmiles(key) {
+  return (await db).getFromIndex(storename, "smiles", key);
+}

@@ -541,18 +541,23 @@
       ]
     }
   ],
-  "app_id": "/",
-  "display_override": ["fullscreen", "standalone", "browser"],
+  "id": "/",
+  "display_override": [
+    "fullscreen",
+    "standalone",
+    "browser",
+    "window-controls-overlay"
+  ],
   "edge_side_panel": {},
   "categories": ["education", "productivity", "utilities"],
   "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
-  "PREFER_RELATED_APPLICATIONS": "false",
-  "RELATED_APPLICATIONS": [
+  "prefer_related_applications": false,
+  "related_applications": [
     {
       "platform": "python",
       "url": "https://pypi.org/project/pcsaft/",
       "id": "pcsaft"
     }
   ],
-  "HANDLE_LINKS": "not-preferred"
+  "handle_links": "not-preferred"
 }

@@ -21,6 +21,7 @@ jobs:
           host: ${{ secrets.GCP_HOST }}
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_GCP }}
+          command_timeout: 20m
           script: |
             sudo docker pull wildsonbbl/gnnepcsaft:v2
             sudo docker images

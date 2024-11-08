@@ -18,7 +18,7 @@ jobs:
       - name: Deploy to AZURE VM
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: "${{ secrets.AZURE_HOST1 }}, ${{ secrets.AZURE_HOST2 }}"
+          host: "${{ secrets.AZURE_HOST1 }}"
           sync: true
           protocol: "tcp6"
           username: ${{ secrets.USER }}
@@ -34,4 +34,3 @@ jobs:
             sudo docker compose up -d
             sudo docker image prune -f
             curl --header "X-Forwarded-For: ${{ secrets.AZURE_HOST1 }}" https://gnnepcsaft.online
-            curl --header "X-Forwarded-For: ${{ secrets.AZURE_HOST2 }}" https://gnnepcsaft.online

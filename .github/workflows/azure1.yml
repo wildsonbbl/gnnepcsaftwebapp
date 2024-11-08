@@ -23,6 +23,7 @@ jobs:
           protocol: "tcp6"
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_AZURE }}
+          command_timeout: 20m
           script: |
             sudo docker pull wildsonbbl/gnnepcsaft:v2
             sudo docker images

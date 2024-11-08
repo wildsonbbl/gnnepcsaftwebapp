@@ -18,11 +18,14 @@ jobs:
       - name: Deploy to AZURE VM
         uses: appleboy/ssh-action@v1.1.0
         with:
-          host: ${{ secrets.AZURE_HOST2 }}
+          host: "${{ secrets.AZURE_HOST2 }}"
+          sync: true
           protocol: "tcp6"
           username: ${{ secrets.USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY_AZURE }}
+          command_timeout: 30m
           script: |
+            sudo docker compose down
             sudo docker pull wildsonbbl/gnnepcsaft:v2
             sudo docker images
             ls
@@ -30,3 +33,4 @@ jobs:
             sudo echo "${{ secrets.WEBAPP_ENV }}" > .env
             sudo docker compose up -d
             sudo docker image prune -f
+            curl --header "X-Forwarded-For: ${{ secrets.AZURE_HOST2 }}" https://gnnepcsaft.online

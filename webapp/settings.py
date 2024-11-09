@@ -176,6 +176,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://*." + os.getenv("DOMAIN_NAME", "*"),
 ]
 
+
 # DJANGO-PWA for manifest.json
 PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
 
@@ -192,6 +193,7 @@ PWA_APP_DISPLAY_OVERRIDE = [
     "fullscreen",
     "standalone",
     "browser",
+    "window-controls-overlay",
 ]
 PWA_APP_SCOPE = "/"
 PWA_APP_ORIENTATION = "any"
@@ -288,7 +290,7 @@ PWA_APP_SHORTCUTS = [
 ]
 PWA_APP_CATEGORIES = ["education", "productivity", "utilities"]
 PWA_APP_LAUNCH_HANDLER = {"client_mode": ["navigate-existing", "auto"]}
-PWA_APP_PREFER_RELATED_APPLICATIONS = "false"
+PWA_APP_PREFER_RELATED_APPLICATIONS = False
 PWA_APP_RELATED_APPLICATIONS = [
     {
         "platform": "python",

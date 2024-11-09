@@ -10,10 +10,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - teste3.gnnepcsaft.online
+        - gnnepcsaft.wildsonbbl.com
       secretName: tls-staging
   rules:
-    - host: teste3.gnnepcsaft.online
+    - host: gnnepcsaft.wildsonbbl.com
       http:
         paths:
           - path: /

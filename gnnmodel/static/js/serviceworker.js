@@ -10,6 +10,7 @@ var filesToCache = [
   "/static/fontawesomefree/webfonts/fa-brands-400.ttf",
   "/static/js/myidb.js",
   "/static/js/queries.js",
+  "/static/js/install.js",
   "/static/images/icons/android/android-launchericon-48-48.png",
   "/static/images/icons/android/android-launchericon-72-72.png",
   "/static/images/icons/android/android-launchericon-96-96.png",

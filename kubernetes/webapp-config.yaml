@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: webapp-config
 data:
-  DOMAIN_NAME: "gnnepcsaft.online"
+  DOMAIN_NAME: "wildsonbbl.com"
   DB_NAME: "postgres"
   DB_PORT: "5432"

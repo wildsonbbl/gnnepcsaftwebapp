@@ -14,10 +14,10 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - gnnepcsaft.online
+        - gnnepcsaft.wildsonbbl.com
       secretName: webapp-secret-tls
   rules:
-    - host: gnnepcsaft.online
+    - host: gnnepcsaft.wildsonbbl.com
       http:
         paths:
           - pathType: Prefix

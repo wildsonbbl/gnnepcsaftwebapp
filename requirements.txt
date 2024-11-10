@@ -11,6 +11,8 @@ ogb
 polars
 psycopg2-binary
 python-dotenv
+ray[train]
+ray[tune]
 rdkit
 scipy
 seaborn

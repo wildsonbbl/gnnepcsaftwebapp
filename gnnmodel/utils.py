@@ -292,7 +292,8 @@ def update_database():
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
-
+    config = get_config()
+    config.hidden_dim = 64
     model = PNApcsaftL(
         pna_params=PnaconvsParams(
             propagation_depth=2,
@@ -301,7 +302,7 @@ def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
             deg=deg,
         ),
         mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
-        config=get_config(),
+        config=config,
     )
     model.to("cpu")
 

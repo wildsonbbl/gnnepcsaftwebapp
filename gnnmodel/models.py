@@ -5,15 +5,31 @@ from django.db import models
 class GnnepcsaftPara(models.Model):
     "Table at DB for gnnepcsaft predicted params."
     inchi = models.CharField(max_length=255)
+    smiles = models.CharField(max_length=255)
     m = models.FloatField()
     sigma = models.FloatField()
     e = models.FloatField()
-    plot_den = models.CharField(max_length=50)
-    plot_vp = models.CharField(max_length=50)
-    plot_mol = models.CharField(max_length=50)
 
 
-def db_update(pred, inchi, plots):
+class ThermoMLDenData(models.Model):
+    "Table at DB for ThermoML Archive and GNNePCSAFT predicted density data."
+    inchi = models.CharField(max_length=255)
+    T = models.FloatField()  # Temperature
+    den_tml = models.FloatField()
+    den_gnn = models.FloatField(null=True)
+    den_ra = models.FloatField(null=True)
+
+
+class ThermoMLVPData(models.Model):
+    "Table at DB for ThermoML Archive and GNNePCSAFT predicted vapor pressure data."
+    inchi = models.CharField(max_length=255)
+    T = models.FloatField()  # Temperature
+    vp_tml = models.FloatField()
+    vp_gnn = models.FloatField(null=True)
+    vp_ra = models.FloatField(null=True)
+
+
+def db_update(pred, inchi):
     "Updates the gnnepcsaft db."
 
     new_comp = GnnepcsaftPara(
@@ -21,9 +37,6 @@ def db_update(pred, inchi, plots):
         m=pred[0],
         sigma=pred[1],
         e=pred[2],
-        plot_den=plots[0],
-        plot_vp=plots[1],
-        plot_mol=plots[2],
     )
     new_comp.save()
     return [new_comp]

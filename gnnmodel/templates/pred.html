@@ -30,6 +30,7 @@
       </form>
     </div>
     <div class="row" id="results">
+      <script src='static/js/plot.js'></script>
       {% if output %}
         <div class="col-md-4 mt-2 text-success">
           <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
@@ -53,135 +54,13 @@
         <div class="col-md-4 mt-2 ">
           {% if plotden %}
             <div id="den_plot" alt="Density plot"></div>
-            <script>
-              var alldata =JSON.parse("{{den_data|escapejs}}");
-              var trace1 = {
-                x: alldata["T"],
-                y: alldata["TML"],
-                mode: 'markers',
-                type: 'scatter',
-                name : 'ThermoML Archive',
-                color: 'black'
-
-              };
-              
-              var trace2 = {
-                x: alldata["T"],
-                y: alldata["GNN"],
-                mode: 'lines',
-                type: 'scatter',
-                name:'GNNePCSAFT',
-              };
-              
-              var trace3 = {
-                x: alldata["T"],
-                y: alldata["RA"],
-                mode: 'lines',
-                type: 'scatter',
-                name: 'Ramírez-Vélez et al. (2022)'
-              };
-              if (!alldata["RA"][0]){
-                trace3={};
-              }
-
-              var layout = {
-                legend:{
-                  x: 0.3,
-                  y: 1,
-                  font: {size: 10},
-                },
-                paper_bgcolor: "#f8f9fa",
-                plot_bgcolor:"#f8f9fa",
-                margin:{
-                  b: 50,
-                  t: 50,
-                  l: 50,
-                  r: 20,
-                },
-                xaxis:{
-                  title:{
-                    text: "Temperature (K)"
-                  }
-                },
-                yaxis:{
-                  title:{
-                    text: "Density (mol / m³)"
-                  }
-                },
-                
-              };
-              
-              var plot_data = [trace1, trace2, trace3];
-              
-              Plotly.newPlot('den_plot', plot_data, layout,{responsive: true});
-            </script>
+            <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
           {% endif %}
         </div>
         <div class="col-md-4 mt-2 ">
           {% if plotvp %}
             <div id="vp_plot" alt="Vapor pressure plot"></div>
-            <script>
-              var alldata = JSON.parse("{{vp_data|escapejs}}");
-              var trace1 = {
-                x: alldata["T"],
-                y: alldata["TML"],
-                mode: 'markers',
-                type: 'scatter',
-                name : 'ThermoML Archive',
-                color: 'black'
-
-              };
-              
-              var trace2 = {
-                x: alldata["T"],
-                y: alldata["GNN"],
-                mode: 'lines',
-                type: 'scatter',
-                name:'GNNePCSAFT',
-              };
-              
-              var trace3 = {
-                x: alldata["T"],
-                y: alldata["RA"],
-                mode: 'lines',
-                type: 'scatter',
-                name: 'Ramírez-Vélez et al. (2022)'
-              };
-              if (!alldata["RA"][0]){
-                trace3={};
-              }
-
-              var layout = {
-                legend:{
-                  x: 0,
-                  y: 1,
-                  font: {size: 10},
-                },
-                paper_bgcolor: "#f8f9fa",
-                plot_bgcolor:"#f8f9fa",
-                margin:{
-                  b: 50,
-                  t: 50,
-                  l: 50,
-                  r: 20,
-                },
-                xaxis:{
-                  title:{
-                    text: "Temperature (K)"
-                  }
-                },
-                yaxis:{
-                  title:{
-                    text: "Vapor Pressure (kPa)"
-                  }
-                },
-                
-              };
-              
-              var plot_data = [trace1, trace2, trace3];
-              
-              Plotly.newPlot('vp_plot', plot_data, layout,{responsive: true});
-            </script>
+            <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           {% endif %}
         </div>
       {% else %}
@@ -192,9 +71,9 @@
         </div>
       {% endif %}
     </div>
-    <div class="row" id="plotReference">
+    <div class="row justify-content-md-center" id="plotReference">
       {% if plotden or plotvp %}
-        <div class="col-md-4 offset-md-4">
+        <div class="col-md-4">
           <small>
             <li>
               <a href="https://doi.org/10.1002/jcc.26842"
@@ -212,7 +91,7 @@
     </div>
     {% if output %}
       <div class="row my-3 mx-1 justify-content-md-center" id="3dmol">
-        <div class="col-md-4 border border-dark">
+        <div class="col-md-4 d-grid border border-dark">
           <div id="molplot" style="width: 100%; height: 250px; position: relative"></div>
           <script>
            let element = document.querySelector('#molplot');

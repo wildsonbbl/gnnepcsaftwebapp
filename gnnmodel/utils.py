@@ -210,7 +210,7 @@ def update_database():
             )
             smiles = inchitosmiles(inchi, False, False)
             result = cur.fetchall()
-            if len(result) >= 0:
+            if len(result) == 0:
                 para, _, _ = prediction(inchi)
                 plotden, plotvp = plotdata(para, inchi)
                 para = para.tolist()

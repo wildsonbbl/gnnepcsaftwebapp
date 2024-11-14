@@ -11,6 +11,8 @@ ogb
 polars
 psycopg2-binary
 python-dotenv
+ray[train]
+ray[tune]
 rdkit
 scipy
 seaborn
@@ -32,3 +34,5 @@ langchain-google-genai
 langchain-community
 unstructured
 jq
+teqp
+PCSAFTsuperanc

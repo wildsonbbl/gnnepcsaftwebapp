@@ -1,4 +1,5 @@
 "request handler."
+import json
 import os.path as osp
 
 import torch
@@ -7,8 +8,8 @@ from django.shortcuts import render
 from markdown import markdown
 
 from .forms import InChIorSMILESinput
-from .models import GnnepcsaftPara, db_update
-from .utils import checking_inchi, prediction
+from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData, db_update
+from .utils import checking_inchi, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
 images_dir = osp.join(settings.MEDIA_ROOT, "images")
@@ -36,15 +37,32 @@ def estimator(request):
             inchi = checking_inchi(query)
             # pylint: disable=E1101
             comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
-            # pylint: enable=E1101
             if len(comp) == 0:
                 pred, output, inchi = prediction(query)
-                comp = db_update(pred, inchi, plots=[plotden, plotvp, molimg])
+                comp = db_update(pred, inchi)
             comp = comp[0]
             pred = torch.tensor([comp.m, comp.sigma, comp.e])
-            plotden = comp.plot_den
-            plotvp = comp.plot_vp
-            molimg = comp.plot_mol
+            alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
+            if len(alldata) > 0:
+                plotvp = {"T": [], "TML": [], "GNN": [], "RA": []}
+                for row in alldata:
+                    plotvp["T"].append(row.T)
+                    plotvp["TML"].append(row.vp_tml)
+                    plotvp["GNN"].append(row.vp_gnn)
+                    plotvp["RA"].append(row.vp_ra)
+                plotvp = json.dumps(plotvp)
+
+            alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()
+            if len(alldata) > 0:
+                plotden = {"T": [], "TML": [], "GNN": [], "RA": []}
+                for row in alldata:
+                    plotden["T"].append(row.T)
+                    plotden["TML"].append(row.den_tml)
+                    plotden["GNN"].append(row.den_gnn)
+                    plotden["RA"].append(row.den_ra)
+                plotden = json.dumps(plotden)
+
+            molimg = plotmol(inchi)
             output = True
 
             with open(
@@ -68,9 +86,9 @@ def estimator(request):
         "output": output,
         "plotden": plotden != "",
         "plotvp": plotvp != "",
-        "den_uri": plotden,
-        "vp_uri": plotvp,
-        "mol_uri": molimg,
+        "den_data": plotden,
+        "vp_data": plotvp,
+        "mol_data": molimg,
     }
 
     return render(request, "pred.html", context)

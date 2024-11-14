@@ -1,21 +1,14 @@
 "Module for utils like plotting data."
-import base64
 import csv
-import datetime
 import os
 import os.path as osp
-import random
 import re
 import sqlite3 as lite
-import string
 import textwrap
-from io import BytesIO
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
 
-import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 import torch
 from gnnepcsaft.configs.default import get_config
 from gnnepcsaft.data.graph import from_InChI, inchitosmiles, smilestoinchi
@@ -25,7 +18,7 @@ from gnnepcsaft.train.utils import calc_deg, rhovp_data
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rdkit import Chem
-from rdkit.Chem import Draw
+from rdkit.Chem import AllChem
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
@@ -49,38 +42,10 @@ def make_datasets(_dataset_dir):
 ra_data, tml_data = make_datasets(dataset_dir)
 
 
-sns.set_theme(style="ticks")
-
-
-def pltcustom(ra, scale="linear", ylabel=""):
-    """
-    Add legend and lables for `plotdata`.
-    """
-    plt.xlabel("T (K)")
-    plt.ylabel(ylabel)
-    plt.title("")
-    legend = ["ThermoML Archive", "GNNePCSAFT"]
-    if ra:
-        legend += ["Ramírez-Vélez et al. (2022)"]
-    plt.legend(legend)
-    plt.grid(False)
-    plt.yscale(scale)
-
-
-def pltline(x, y):
-    "Line plot."
-    return plt.plot(x, y, linewidth=0.5)
-
-
-def pltscatter(x, y):
-    "Scatter plot."
-    return plt.scatter(x, y, marker="x", s=10, c="black")
-
-
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
-    "plot and save fig of den and vp data if available."
-    plotden, plotvp = "", ""
+def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list, list]:
+    "Organize data for plotting."
+    plotden, plotvp = [], []
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
         ra_rho, ra_vp = np.ndarray, np.ndarray
@@ -98,101 +63,78 @@ def plotdata(para: np.ndarray, inchi: str, images_dir: str) -> tuple[str, str]:
 
             if rho.shape[0] > 1:
                 idx = np.argsort(rho[:, 0], 0)
-                x = rho[idx, 0]
-                y = rho[idx, -1]
-                pltscatter(x, y)
-                y = pred_rho[idx]
-                pltline(x, y)
+                plotden = np.stack(
+                    [
+                        rho[idx, 0],
+                        rho[idx, -1],
+                        pred_rho[idx],
+                    ],
+                    -1,
+                )
                 if ra:
-                    y = ra_rho[idx_p][idx]
-                    pltline(x, y)
-                pltcustom(ra, ylabel="Density (mol / m³)")
-                sns.despine(trim=True)
-                plotden = pltsavefig(images_dir)
+                    plotden = np.concatenate(
+                        [
+                            plotden,
+                            ra_rho[idx_p][idx][:, np.newaxis],
+                        ],
+                        -1,
+                    )
+                else:
+                    plotden = np.concatenate(
+                        [
+                            plotden,
+                            np.full(
+                                (plotden.shape[0], 1),
+                                np.nan,
+                            ),
+                        ],
+                        -1,
+                    )
         # plot vp data
         if ~np.all(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
             idx = np.argsort(vp[:, 0], 0)
-            x = vp[idx, 0]
-            y = vp[idx, -1] / 1000
-            pltscatter(x, y)
-            y = pred_vp[idx] / 1000
-            pltline(x, y)
+            plotvp = np.stack(
+                [
+                    vp[idx, 0],
+                    vp[idx, -1] / 1000,  # Pressure in kPa
+                    pred_vp[idx] / 1000,
+                ],
+                -1,
+            )
             if ra:
-                y = ra_vp[idx] / 1000
-                pltline(x, y)
-            pltcustom(ra, ylabel="Vapor pressure (kPa)")
-            sns.despine(trim=True)
-            plotvp = pltsavefig(images_dir)
+                plotvp = np.concatenate(
+                    [
+                        plotvp,
+                        ra_vp[idx][:, np.newaxis] / 1000,
+                    ],
+                    -1,
+                )
+            else:
+                plotvp = np.concatenate(
+                    [
+                        plotvp,
+                        np.full(
+                            (plotvp.shape[0], 1),
+                            np.nan,
+                        ),
+                    ],
+                    -1,
+                )
+
     return plotden, plotvp
 
 
-def pltsavefig(images_dir):
-    "fn to name img and save with plt.save"
-    basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
-    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-    plotpng = "_".join([basename, suffix, ".png"])
-    img_path = osp.join(images_dir, plotpng)
-    plt.savefig(
-        img_path,
-        dpi=300,
-        format="png",
-        bbox_inches="tight",
-        transparent=True,
-    )
-    plt.close()
-    return plotpng
-
-
-def plotmol(inchi: str, images_dir: str) -> str:
-    "Plot and save fig of molecule."
+def plotmol(inchi: str) -> str:
+    "Make Mol block for 3Dmol."
 
     mol = Chem.MolFromInchi(inchi)
-
-    options = Draw.DrawingOptions()
-    options.bgColor = None
-    options.atomLabelMinFontSize = 4
-    options.useFraction = 1
-
-    img = Draw.MolToMPL(mol, options=options)
-    basename = "".join(random.choice(string.ascii_lowercase) for i in range(16))
-    suffix = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-    imgmol = "_".join([basename, suffix, ".png"])
-    img_path = osp.join(images_dir, imgmol)
-    plt.axis("off")
-    img.savefig(
-        img_path,
-        dpi=100,
-        format="png",
-        bbox_inches="tight",
-        transparent=True,
-    )
-    plt.close()
+    mol = Chem.AddHs(mol)
+    params = AllChem.ETKDGv3()
+    params.randomSeed = 0xF00D
+    AllChem.EmbedMolecule(mol, params)
+    mol = Chem.RemoveHs(mol, implicitOnly=False)
+    imgmol = Chem.MolToMolBlock(mol)
     return imgmol
-
-
-def plotmol_temp(inchi: str) -> str:
-    "Plot molecule."
-
-    mol = Chem.MolFromInchi(inchi)
-
-    options = Draw.DrawingOptions()
-    options.bgColor = None
-    options.atomLabelMinFontSize = 4
-    options.useFraction = 1
-
-    img = Draw.MolToMPL(mol, options=options)
-    imgbio = BytesIO()
-    plt.axis("off")
-    img.savefig(
-        imgbio,
-        dpi=100,
-        format="png",
-        bbox_inches="tight",
-        transparent=True,
-    )
-    plt.close()
-    imgbio.seek(0)
-    return base64.b64encode(imgbio.read()).decode("ascii")
 
 
 def resume_mol(inchi: str):
@@ -251,7 +193,6 @@ def resume_mol(inchi: str):
 def update_database():
     "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
     workdir = "/workspaces/webapp/gnnepcsaftwebapp"  # set mannualy
-    images_dir = osp.join(workdir, "media/images")
     con = lite.connect(osp.join(workdir, "mydatabase"))
 
     data = []
@@ -269,20 +210,42 @@ def update_database():
             )
             smiles = inchitosmiles(inchi, False, False)
             result = cur.fetchall()
-            data.append(result[0] + (smiles,))
-            if len(result) == 0:
+            if len(result) >= 0:
                 para, _, _ = prediction(inchi)
-                plotden, plotvp = plotdata(para, inchi, images_dir)
-                pltmol = plotmol(inchi, images_dir)
+                plotden, plotvp = plotdata(para, inchi)
                 para = para.tolist()
                 cur.execute(
                     """
-              INSERT INTO gnnmodel_gnnepcsaftpara 
-              (m, sigma, e, inchi, plot_den, plot_vp, plot_mol) 
-              VALUES (?,?,?,?,?,?,?)
-              """,
-                    (para[0], para[1], para[2], inchi, plotden, plotvp, pltmol),
+                    INSERT INTO gnnmodel_gnnepcsaftpara 
+                    (m, sigma, e, inchi, smiles) 
+                    VALUES (?,?,?,?,?)
+                    """,
+                    (para[0], para[1], para[2], inchi, smiles),
                 )
+                if len(plotden) > 0:
+                    for row in plotden:
+                        print(row)
+                        cur.execute(
+                            """
+                            INSERT INTO gnnmodel_thermomldendata 
+                            (inchi, T, den_tml, den_gnn, den_ra) 
+                            VALUES (?,?,?,?,?)
+                            """,
+                            (inchi, row[0], row[1], row[2], row[3]),
+                        )
+                if len(plotvp) > 0:
+                    for row in plotvp:
+                        print(row)
+                        cur.execute(
+                            """
+                            INSERT INTO gnnmodel_thermomlvpdata 
+                            (inchi, T, vp_tml, vp_gnn, vp_ra) 
+                            VALUES (?,?,?,?,?)
+                            """,
+                            (inchi, row[0], row[1], row[2], row[3]),
+                        )
+            else:
+                data.append(result[0])
     with open("./static/mydata.csv", "w", encoding="UTF-8") as f:
         writer = csv.writer(f, delimiter="|")
 
@@ -293,7 +256,7 @@ def update_database():
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
     config = get_config()
-    config.hidden_dim = 64
+    config.hidden_dim = 128
     model = PNApcsaftL(
         pna_params=PnaconvsParams(
             propagation_depth=2,
@@ -306,7 +269,9 @@ def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     )
     model.to("cpu")
 
-    checkpoint = torch.load(osp.join(dataset_dir, "model.ckpt"), map_location="cpu")
+    checkpoint = torch.load(
+        osp.join(dataset_dir, "model.ckpt"), map_location="cpu", weights_only=False
+    )
     model.load_state_dict(checkpoint["state_dict"])
 
     model.eval()

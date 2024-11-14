@@ -34,3 +34,5 @@ langchain-google-genai
 langchain-community
 unstructured
 jq
+teqp
+PCSAFTsuperanc

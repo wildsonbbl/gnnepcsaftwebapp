@@ -13,8 +13,7 @@ import torch
 from gnnepcsaft.configs.default import get_config
 from gnnepcsaft.data.graph import from_InChI, inchitosmiles, smilestoinchi
 from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
-from gnnepcsaft.train.models import PnaconvsParams, PNApcsaftL, ReadoutMLPParams
-from gnnepcsaft.train.utils import calc_deg, rhovp_data
+from gnnepcsaft.train.utils import calc_deg, create_model, rhovp_data
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rdkit import Chem
@@ -204,7 +203,8 @@ def update_database():
                   ROUND(m, 2), \
                   ROUND(sigma,2), \
                   ROUND(e, 2), \
-                  inchi\
+                  inchi, \
+                  smiles \
                 FROM gnnmodel_gnnepcsaftpara WHERE inchi=?",
                 (inchi,),
             )
@@ -224,7 +224,6 @@ def update_database():
                 )
                 if len(plotden) > 0:
                     for row in plotden:
-                        print(row)
                         cur.execute(
                             """
                             INSERT INTO gnnmodel_thermomldendata 
@@ -235,7 +234,6 @@ def update_database():
                         )
                 if len(plotvp) > 0:
                     for row in plotvp:
-                        print(row)
                         cur.execute(
                             """
                             INSERT INTO gnnmodel_thermomlvpdata 
@@ -256,17 +254,15 @@ def update_database():
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
     config = get_config()
+    config.model = "PNAL"
+    config.propagation_depth = 2
     config.hidden_dim = 128
-    model = PNApcsaftL(
-        pna_params=PnaconvsParams(
-            propagation_depth=2,
-            pre_layers=1,
-            post_layers=3,
-            deg=deg,
-        ),
-        mlp_params=ReadoutMLPParams(num_mlp_layers=1, num_para=3),
-        config=config,
-    )
+    config.num_mlp_layers = 1
+    config.pre_layers = 1
+    config.post_layers = 3
+    config.skip_connections = False
+    config.add_self_loops = False
+    model = create_model(config, deg)
     model.to("cpu")
 
     checkpoint = torch.load(

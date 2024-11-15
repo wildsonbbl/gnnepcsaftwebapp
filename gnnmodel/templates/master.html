@@ -22,12 +22,7 @@
     {% progressive_web_app_meta %}
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="//cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
-    <script src='/static/js/myidb.js'></script>
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.0.1/3Dmol-min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
-            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
-            crossorigin="anonymous"></script>
+    <script src='/static/js/myidb.js' async></script>
   </head>
   <body class="mt-1">
     <div class="container-fluid bg-light text-dark">
@@ -36,9 +31,9 @@
           <a class="nav-link link-light" href={% url "estimator" %}>RELOAD</a>
         </li>
         <li class="nav-item">
-          <button class="btn" id="installApp"></button>
+          <button class="btn" id="installApp" aria-label="Install Button"></button>
         </li>
-        <script src="/static/js/install.js"></script>
+        <script src="/static/js/install.js" async></script>
       </ul>
       <div class="row mt-3">
         <div class="col-md text-center">

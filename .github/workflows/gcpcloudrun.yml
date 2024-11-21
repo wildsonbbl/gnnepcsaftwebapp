@@ -22,5 +22,3 @@ jobs:
         with:
           service: "gnnepcsaftwebapp"
           image: "docker.io/wildsonbbl/gnnepcsaft:v2"
-      - name: "Use output"
-        run: 'curl "${{ steps.Deploy.outputs.url }}"'

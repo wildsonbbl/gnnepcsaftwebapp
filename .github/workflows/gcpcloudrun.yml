@@ -16,7 +16,7 @@ jobs:
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
-          credentials_json: ${{ secrets.GCP_KEY }}
+          credentials_json: ${{ secrets.GCP_KEY2 }}
       - id: "Deploy"
         uses: "google-github-actions/deploy-cloudrun@v2"
         with:

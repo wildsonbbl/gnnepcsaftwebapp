@@ -108,7 +108,24 @@
            );
            v.render();
            v.zoomTo();
-           
+
+           function reset(){
+            v.removeAllLabels();
+            v.setStyle({}, {stick: {color: 'spectrum', radius:0.1,}, sphere: {color: 'spectrum', scale:0.333,},});
+            v.render();
+           }
+
+           function addlabel(){
+            v.addPropertyLabels('atom',
+            {not:{elem:'H'}}, 
+            {fontColor: ' black ', 
+            font: ' sans-serif ', 
+            fontSize: 28, 
+            showBackground:false, 
+            alignment: ' center '});
+            v.render();
+           }
+
           </script>
           <div class="btn-group btn-group-sm"
                role="group"
@@ -124,7 +141,7 @@
             <input class=" btn btn-outline-secondary"
                    type="button"
                    value="Add Labels"
-                   onclick="v.addPropertyLabels('atom',{}, {fontColor: ' black ', font: ' sans-serif ', fontSize: 28, showBackground:false, alignment: ' center '});v.render(); ">
+                   onclick="addlabel();">
           </div>
           <div class="btn-group btn-group-sm"
                role="group"
@@ -132,7 +149,7 @@
             <input class="btn btn-outline-secondary"
                    type="button"
                    value="Reset"
-                   onclick="v.removeAllLabels();v.setStyle({}, {stick: {color: 'spectrum', radius:0.1,}, sphere: {color: 'spectrum', scale:0.333,},}) ;v.render();">
+                   onclick="reset();">
             <input class="btn btn-outline-secondary"
                    type="button"
                    value="Recenter"

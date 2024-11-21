@@ -16,8 +16,7 @@ from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
 from gnnepcsaft.train.utils import calc_deg, create_model, rhovp_data
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
-from rdkit import Chem
-from rdkit.Chem import AllChem
+from rdkit.Chem import AllChem as Chem
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
@@ -128,11 +127,14 @@ def plotmol(inchi: str) -> str:
 
     mol = Chem.MolFromInchi(inchi)
     mol = Chem.AddHs(mol)
-    params = AllChem.ETKDGv3()
+    params = Chem.ETKDGv3()
     params.randomSeed = 0xF00D
-    AllChem.EmbedMolecule(mol, params)
-    mol = Chem.RemoveHs(mol, implicitOnly=False)
-    imgmol = Chem.MolToMolBlock(mol)
+    Chem.EmbedMolecule(mol, params)
+    Chem.MMFFOptimizeMolecule(
+        mol, maxIters=1000, nonBondedThresh=100, ignoreInterfragInteractions=False
+    )
+    # mol = Chem.RemoveHs(mol, implicitOnly=False)
+    imgmol = Chem.MolToV3KMolBlock(mol)
     return imgmol
 
 

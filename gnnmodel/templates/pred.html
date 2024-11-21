@@ -52,18 +52,18 @@
             </tbody>
           </table>
         </div>
-        <div class="col-md-4 mt-2 ">
-          {% if plotden %}
+        {% if plotden %}
+          <div class="col-md-4 mt-2 ">
             <div id="den_plot" alt="Density plot"></div>
             <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
-          {% endif %}
-        </div>
-        <div class="col-md-4 mt-2 ">
-          {% if plotvp %}
+          </div>
+        {% endif %}
+        {% if plotvp %}
+          <div class="col-md-4 mt-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
-          {% endif %}
-        </div>
+          </div>
+        {% endif %}
       {% else %}
         <div class="col-md">
           <ul>
@@ -102,13 +102,33 @@
            let data =`{{mol_data}}`;
            v.addModel( data, "sdf" );
            v.setStyle({}, {
-             stick: {color: 'spectrum', radius:0.1,},
+             stick: {color: 'spectrum', radius:0.2,},
              sphere: {color: 'spectrum', scale:0.333,},
            }
            );
            v.render();
            v.zoomTo();
-           
+
+           function reset(){
+            v.removeAllLabels();
+            v.setStyle({}, {
+              stick: {color: 'spectrum', radius:0.2,}, 
+              sphere: {color: 'spectrum', scale:0.333,},
+            });
+            v.render();
+           }
+
+           function addlabel(){
+            v.addPropertyLabels('atom',
+            {not:{elem:'H'}}, 
+            {fontColor: ' black ', 
+            font: ' sans-serif ', 
+            fontSize: 28, 
+            showBackground:false, 
+            alignment: ' center '});
+            v.render();
+           }
+
           </script>
           <div class="btn-group btn-group-sm"
                role="group"
@@ -124,7 +144,7 @@
             <input class=" btn btn-outline-secondary"
                    type="button"
                    value="Add Labels"
-                   onclick="v.addPropertyLabels('atom',{}, {fontColor: ' black ', font: ' sans-serif ', fontSize: 28, showBackground:false, alignment: ' center '});v.render(); ">
+                   onclick="addlabel();">
           </div>
           <div class="btn-group btn-group-sm"
                role="group"
@@ -132,7 +152,7 @@
             <input class="btn btn-outline-secondary"
                    type="button"
                    value="Reset"
-                   onclick="v.removeAllLabels();v.setStyle({}, {stick: {color: 'spectrum', radius:0.1,}, sphere: {color: 'spectrum', scale:0.333,},}) ;v.render();">
+                   onclick="reset();">
             <input class="btn btn-outline-secondary"
                    type="button"
                    value="Recenter"

@@ -27,7 +27,7 @@ torch_geometric
 torchmetrics
 lightning
 fontawesomefree
-https://github.com/wildsonbbl/gnnepcsaft/archive/refs/heads/main.zip
+gnnepcsaft
 pillow
 langchain
 langchain-google-genai
@@ -36,3 +36,5 @@ unstructured
 jq
 teqp
 PCSAFTsuperanc
+feos
+si-units

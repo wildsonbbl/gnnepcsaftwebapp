@@ -10,52 +10,41 @@ from urllib.request import HTTPError, urlopen
 
 import numpy as np
 import torch
-from gnnepcsaft.configs.default import get_config
-from gnnepcsaft.data.graph import from_InChI, inchitosmiles, smilestoinchi
-from gnnepcsaft.data.graphdataset import Ramirez, ThermoMLDataset
-from gnnepcsaft.train.utils import calc_deg, create_model, rhovp_data
+from gnnepcsaft.data.graph import assoc_number, from_InChI, inchitosmiles, smilestoinchi
+from gnnepcsaft.data.graphdataset import ThermoMLDataset
+from gnnepcsaft.train.models import PNApcsaftL
+from gnnepcsaft.train.utils import rhovp_data
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from rdkit.Chem import AllChem as Chem
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
-deg = calc_deg("ramirez", file_dir)
 device = torch.device("cpu")
 
 
 def make_datasets(_dataset_dir):
     "make datasets."
-    dt = Ramirez(_dataset_dir + "/ramirez2022")
-    _ra_data = {}
-    for gh in dt:
-        _ra_data[gh.InChI] = gh.para
     dt = ThermoMLDataset(_dataset_dir + "/thermoml")
     _tml_data = {}
     for gh in dt:
         _tml_data[gh.InChI] = [prop.numpy() for prop in [gh.rho, gh.vp]]
-    return _ra_data, _tml_data
+    return _tml_data
 
 
-ra_data, tml_data = make_datasets(dataset_dir)
+tml_data = make_datasets(dataset_dir)
 
 
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list, list]:
+def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list]:
     "Organize data for plotting."
     plotden, plotvp = [], []
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
-        ra_rho, ra_vp = np.ndarray, np.ndarray
         pred_rho, pred_vp = rhovp_data(para, rho, vp)
-        ra = False
-        if inchi in ra_data:
-            ra = True
-            para = ra_data[inchi].squeeze().numpy()
-            ra_rho, ra_vp = rhovp_data(para, rho, vp)
         # plot rho data
-        if ~np.all(rho == np.zeros_like(rho)):
-            idx_p = abs(rho[:, 1] - 101325) < 15_000
+        if rho.shape[0] > 2:
+            idx_p = abs(rho[:, 1] - 101325) < 1_000
             rho = rho[idx_p]
             pred_rho = pred_rho[idx_p]
 
@@ -69,27 +58,8 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list, list]:
                     ],
                     -1,
                 )
-                if ra:
-                    plotden = np.concatenate(
-                        [
-                            plotden,
-                            ra_rho[idx_p][idx][:, np.newaxis],
-                        ],
-                        -1,
-                    )
-                else:
-                    plotden = np.concatenate(
-                        [
-                            plotden,
-                            np.full(
-                                (plotden.shape[0], 1),
-                                np.nan,
-                            ),
-                        ],
-                        -1,
-                    )
         # plot vp data
-        if ~np.all(vp == np.zeros_like(vp)) and vp.shape[0] > 1:
+        if vp.shape[0] > 2:
             idx = np.argsort(vp[:, 0], 0)
             plotvp = np.stack(
                 [
@@ -99,25 +69,6 @@ def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list, list]:
                 ],
                 -1,
             )
-            if ra:
-                plotvp = np.concatenate(
-                    [
-                        plotvp,
-                        ra_vp[idx][:, np.newaxis] / 1000,
-                    ],
-                    -1,
-                )
-            else:
-                plotvp = np.concatenate(
-                    [
-                        plotvp,
-                        np.full(
-                            (plotvp.shape[0], 1),
-                            np.nan,
-                        ),
-                    ],
-                    -1,
-                )
 
     return plotden, plotvp
 
@@ -202,9 +153,14 @@ def update_database():
             cur = con.cursor()
             cur.execute(
                 "SELECT \
-                  ROUND(m, 2), \
-                  ROUND(sigma,2), \
-                  ROUND(e, 2), \
+                  ROUND(m, 4), \
+                  ROUND(sigma, 4), \
+                  ROUND(e, 4), \
+                  ROUND(k_ab, 4), \
+                  ROUND(e_ab, 4), \
+                  ROUND(mu, 4), \
+                  ROUND(na, 4), \
+                  ROUND(nb, 4), \
                   inchi, \
                   smiles \
                 FROM gnnmodel_gnnepcsaftpara WHERE inchi=?",
@@ -219,67 +175,76 @@ def update_database():
                 cur.execute(
                     """
                     INSERT INTO gnnmodel_gnnepcsaftpara 
-                    (m, sigma, e, inchi, smiles) 
-                    VALUES (?,?,?,?,?)
+                    (m, sigma, e, k_ab, e_ab, mu, na, nb, inchi, smiles) 
+                    VALUES (?,?,?,?,?,?,?,?,?,?)
                     """,
-                    (para[0], para[1], para[2], inchi, smiles),
+                    (
+                        para[0],
+                        para[1],
+                        para[2],
+                        para[3],
+                        para[4],
+                        para[5],
+                        para[6],
+                        para[7],
+                        inchi,
+                        smiles,
+                    ),
                 )
                 if len(plotden) > 0:
                     for row in plotden:
                         cur.execute(
                             """
                             INSERT INTO gnnmodel_thermomldendata 
-                            (inchi, T, den_tml, den_gnn, den_ra) 
-                            VALUES (?,?,?,?,?)
+                            (inchi, T, den_tml, den_gnn) 
+                            VALUES (?,?,?,?)
                             """,
-                            (inchi, row[0], row[1], row[2], row[3]),
+                            (inchi, row[0], row[1], row[2]),
                         )
                 if len(plotvp) > 0:
                     for row in plotvp:
                         cur.execute(
                             """
                             INSERT INTO gnnmodel_thermomlvpdata 
-                            (inchi, T, vp_tml, vp_gnn, vp_ra) 
-                            VALUES (?,?,?,?,?)
+                            (inchi, T, vp_tml, vp_gnn) 
+                            VALUES (?,?,?,?)
                             """,
-                            (inchi, row[0], row[1], row[2], row[3]),
+                            (inchi, row[0], row[1], row[2]),
                         )
             else:
                 data.append(result[0])
     with open("./static/mydata.csv", "w", encoding="UTF-8") as f:
         writer = csv.writer(f, delimiter="|")
 
-        writer.writerow(["m", "sigma", "e", "inchi", "smiles"])
+        writer.writerow(
+            ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]
+        )
         writer.writerows(data)
 
 
 def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
     "Predict ePC-SAFT parameters."
-    config = get_config()
-    config.model = "PNAL"
-    config.propagation_depth = 2
-    config.hidden_dim = 128
-    config.num_mlp_layers = 1
-    config.pre_layers = 1
-    config.post_layers = 3
-    config.skip_connections = False
-    config.add_self_loops = False
-    model = create_model(config, deg)
-    model.to("cpu")
-
-    checkpoint = torch.load(
-        osp.join(dataset_dir, "model.ckpt"), map_location="cpu", weights_only=False
+    msigmae_model = PNApcsaftL.load_from_checkpoint(
+        osp.join(dataset_dir, "esper_msigmae.ckpt"), device
     )
-    model.load_state_dict(checkpoint["state_dict"])
+    assoc_model = PNApcsaftL.load_from_checkpoint(
+        osp.join(dataset_dir, "esper_assoc.ckpt"), device
+    )
 
-    model.eval()
+    msigmae_model.eval()
+    assoc_model.eval()
 
     inchi = checking_inchi(query)
 
     try:
         graph = from_InChI(inchi).to(device)
         with torch.no_grad():
-            pred = model.forward(graph)[0]
+            msigmae = msigmae_model.model.pred_with_bounds(graph)[0]
+            assoc = 10 ** (
+                assoc_model.model.pred_with_bounds(graph)[0] * torch.tensor([-1.0, 1.0])
+            )
+            munanb = torch.tensor((0,) + assoc_number(inchi), dtype=torch.float32)
+            pred = torch.hstack([msigmae, assoc, munanb])
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
         print(e)

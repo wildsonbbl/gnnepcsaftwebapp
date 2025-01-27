@@ -18,6 +18,11 @@ available_params = [
     "Segment number",
     "Segment diameter (Å)",
     "Dispersion energy (K)",
+    "Association volume",
+    "Association energy (K)",
+    "mu",
+    "na",
+    "nb",
 ]
 
 
@@ -41,25 +46,34 @@ def estimator(request):
                 pred, output, inchi = prediction(query)
                 comp = db_update(pred, inchi)
             comp = comp[0]
-            pred = torch.tensor([comp.m, comp.sigma, comp.e])
+            pred = torch.tensor(
+                [
+                    comp.m,
+                    comp.sigma,
+                    comp.e,
+                    comp.k_ab,
+                    comp.e_ab,
+                    comp.mu,
+                    comp.na,
+                    comp.nb,
+                ]
+            )
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
-                plotvp = {"T": [], "TML": [], "GNN": [], "RA": []}
+                plotvp = {"T": [], "TML": [], "GNN": []}
                 for row in alldata:
                     plotvp["T"].append(row.T)
                     plotvp["TML"].append(row.vp_tml)
                     plotvp["GNN"].append(row.vp_gnn)
-                    plotvp["RA"].append(row.vp_ra)
                 plotvp = json.dumps(plotvp)
 
             alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
-                plotden = {"T": [], "TML": [], "GNN": [], "RA": []}
+                plotden = {"T": [], "TML": [], "GNN": []}
                 for row in alldata:
                     plotden["T"].append(row.T)
                     plotden["TML"].append(row.den_tml)
                     plotden["GNN"].append(row.den_gnn)
-                    plotden["RA"].append(row.den_ra)
                 plotden = json.dumps(plotden)
 
             molimg = plotmol(inchi)
@@ -76,7 +90,7 @@ def estimator(request):
         "form": form,
         "predicted_para": (
             [
-                (paraname, round(para.item(), 2))
+                (paraname, round(para.item(), 4))
                 for para, paraname in zip(pred, available_params)
             ]
             if output

@@ -80,10 +80,11 @@ def plotmol(inchi: str) -> str:
     mol = Chem.AddHs(mol)
     params = Chem.ETKDGv3()
     params.randomSeed = 0xF00D
-    Chem.EmbedMolecule(mol, params)
-    Chem.MMFFOptimizeMolecule(
-        mol, maxIters=1000, nonBondedThresh=100, ignoreInterfragInteractions=False
-    )
+    result = Chem.EmbedMolecule(mol, params)
+    if result == 0:
+        Chem.MMFFOptimizeMolecule(
+            mol, maxIters=1000, nonBondedThresh=100, ignoreInterfragInteractions=False
+        )
     # mol = Chem.RemoveHs(mol, implicitOnly=False)
     imgmol = Chem.MolToV3KMolBlock(mol)
     return imgmol

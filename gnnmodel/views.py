@@ -20,9 +20,9 @@ available_params = [
     "Dispersion energy (K)",
     "Association volume",
     "Association energy (K)",
-    "mu",
-    "na",
-    "nb",
+    "Dipole moment (D)*",
+    "Number of association site A",
+    "Number of association site B",
 ]
 
 

@@ -111,7 +111,7 @@ WSGI_APPLICATION = "webapp.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "mydatabase",
+        "NAME": BASE_DIR / "mydatabase",
     }
 }
 
@@ -200,7 +200,7 @@ PWA_APP_ORIENTATION = "any"
 PWA_APP_START_URL = "/"
 PWA_APP_STATUS_BAR_COLOR = "default"
 # Open and read the icons.JSON file
-with open("icons.json", "r", encoding="UTF-8") as file:
+with open(BASE_DIR / "icons.json", "r", encoding="UTF-8") as file:
     data = json.load(file)
 PWA_APP_ICONS = data["icons"]
 PWA_APP_ICONS_APPLE = data["icons"]

@@ -2,10 +2,8 @@
 import json
 import os.path as osp
 
-import torch
 from django.conf import settings
 from django.shortcuts import render
-from markdown import markdown
 
 from .forms import InChIorSMILESinput
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData, db_update
@@ -46,18 +44,16 @@ def estimator(request):
                 pred, output, inchi = prediction(query)
                 comp = db_update(pred, inchi)
             comp = comp[0]
-            pred = torch.tensor(
-                [
-                    comp.m,
-                    comp.sigma,
-                    comp.e,
-                    comp.k_ab,
-                    comp.e_ab,
-                    comp.mu,
-                    comp.na,
-                    comp.nb,
-                ]
-            )
+            pred = [
+                comp.m,
+                comp.sigma,
+                comp.e,
+                comp.k_ab,
+                comp.e_ab,
+                comp.mu,
+                comp.na,
+                comp.nb,
+            ]
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
                 plotvp = {"T": [], "TML": [], "GNN": []}
@@ -90,7 +86,7 @@ def estimator(request):
         "form": form,
         "predicted_para": (
             [
-                (paraname, round(para.item(), 4))
+                (paraname, round(para, 4))
                 for para, paraname in zip(pred, available_params)
             ]
             if output
@@ -116,24 +112,3 @@ def homepage(request):
 def authorpage(request):
     "handle request"
     return render(request, "author.html")
-
-
-def description(request):
-    "handle request"
-
-    html_output = ""
-
-    with open(
-        osp.join(file_dir, "templates/description.txt"), "r", encoding="utf-8"
-    ) as file:
-        inchi = file.readline()
-
-    if inchi != "":
-        html_output = markdown("Temporary disabled")
-
-        with open(
-            osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
-        ) as file:
-            file.write("")
-
-    return render(request, "description.html", {"output": html_output})

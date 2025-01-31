@@ -1,38 +1,52 @@
 "Module for utils like plotting data."
 import csv
-import os
 import os.path as osp
 import re
 import sqlite3 as lite
-import textwrap
-from urllib.parse import quote
-from urllib.request import HTTPError, urlopen
 
 import numpy as np
-import torch
-from gnnepcsaft.data.graph import assoc_number, from_InChI, inchitosmiles, smilestoinchi
-from gnnepcsaft.data.graphdataset import ThermoMLDataset
-from gnnepcsaft.train.models import PNApcsaftL
-from gnnepcsaft.train.utils import rhovp_data
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_google_genai import ChatGoogleGenerativeAI
+import onnxruntime as ort
+import polars as pl
+from gnnepcsaft.data.ogb_utils import smiles2graph
+from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
+from gnnepcsaft.epcsaft.utils import pure_den_feos, pure_vp_feos
 from rdkit.Chem import AllChem as Chem
+
+ort.set_default_logger_severity(3)
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
-device = torch.device("cpu")
 
 
-def make_datasets(_dataset_dir):
-    "make datasets."
-    dt = ThermoMLDataset(_dataset_dir + "/thermoml")
+def make_dataset():
+    "Make dict dataset for inference."
+    data = pl.read_parquet(osp.join(dataset_dir, "thermoml/raw/pure.parquet"))
+    inchis = data.unique("inchi1")["inchi1"].to_list()
     _tml_data = {}
-    for gh in dt:
-        _tml_data[gh.InChI] = [prop.numpy() for prop in [gh.rho, gh.vp]]
+    for inchi in inchis:
+        try:
+            molw = mw(inchi)
+        except (TypeError, ValueError) as e:
+            print(f"Error for InChI:\n {inchi}", e, sep="\n\n", end="\n\n")
+            continue
+        vp = (
+            data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 3)
+            .select("TK", "PPa", "phase", "tp", "m")
+            .to_numpy()
+        )
+        rho = (
+            data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 1)
+            .select("TK", "PPa", "phase", "tp", "m")
+            .to_numpy()
+        )
+
+        rho[:, -1] *= 1000 / molw  # convert to mol/ m³
+
+        _tml_data[inchi] = (rho, vp)
     return _tml_data
 
 
-tml_data = make_datasets(dataset_dir)
+tml_data = make_dataset()
 
 
 # pylint: disable=R0914
@@ -88,59 +102,6 @@ def plotmol(inchi: str) -> str:
     # mol = Chem.RemoveHs(mol, implicitOnly=False)
     imgmol = Chem.MolToV3KMolBlock(mol)
     return imgmol
-
-
-def resume_mol(inchi: str):
-    "Describe the molecule with google's gemini."
-
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-pro", google_api_key=os.environ["API_KEY"]
-    )
-
-    url = (
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
-        + quote(inchi, safe="")
-    )
-    try:
-        with urlopen(url) as ans:
-            ans = ans.read().decode("utf8").rstrip()
-    except (TypeError, HTTPError, ValueError):
-        ans = "no data available."
-
-    query = """
-            You are a chemistry expert who is given this InChI {inchi} to analyse.
-            Make sure to answer each one of the bellow questions. 
-            To be able to do that you are gonna need to take into account all the 
-            organic groups known in chemistry, 
-            the difference between a Lewis acid and base, the concept of a 
-            hydrogen bond, a hydrogen bond donor
-            and hydrogen bond acceptor. Once you have all this 
-            information gathered, you will be able to answer. You can use
-            the passage bellow as reference.
-
-            QUESTIONS: '
-            First, describe the molecule with this InChI in detail.
-            
-            Then, answer the following questions about this molecule with 
-            a detailed explanation of the answer:
-            
-               - Is it a Lewis acid or base or both? 
-               - Can it do hydrogen bonds? 
-               - Is it a hydrogen bond donor or acceptor?'
-               
-            PASSAGE: '{ans}'
-
-            """
-    query = textwrap.dedent(query)
-
-    prompt = ChatPromptTemplate.from_template(query)
-
-    # pylint: disable=E1131
-    chain = prompt | llm
-    # pylint: enable=E1131
-    response = chain.invoke({"inchi": inchi, "ans": ans})
-
-    return response.content
 
 
 def update_database():
@@ -223,29 +184,46 @@ def update_database():
         writer.writerows(data)
 
 
-def prediction(query: str) -> tuple[torch.Tensor, bool, str]:
+def prediction(query: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
-    msigmae_model = PNApcsaftL.load_from_checkpoint(
-        osp.join(dataset_dir, "esper_msigmae.ckpt"), device
-    )
-    assoc_model = PNApcsaftL.load_from_checkpoint(
-        osp.join(dataset_dir, "esper_assoc.ckpt"), device
-    )
-
-    msigmae_model.eval()
-    assoc_model.eval()
-
+    msigmae_onnx = ort.InferenceSession(osp.join(dataset_dir, "msigmae_6.onnx"))
+    assoc_onnx = ort.InferenceSession(osp.join(dataset_dir, "assoc.onnx"))
     inchi = checking_inchi(query)
-
     try:
-        graph = from_InChI(inchi).to(device)
-        with torch.no_grad():
-            msigmae = msigmae_model.model.pred_with_bounds(graph)[0]
-            assoc = 10 ** (
-                assoc_model.model.pred_with_bounds(graph)[0] * torch.tensor([-1.0, 1.0])
+        graph = smiles2graph(query)
+        na, nb = assoc_number(inchi)
+        x, edge_index, edge_attr = (
+            graph["node_feat"],
+            graph["edge_index"],
+            graph["edge_feat"],
+        )
+
+        assoc = (
+            10
+            ** (
+                assoc_onnx.run(
+                    None,
+                    {
+                        "x": x,
+                        "edge_index": edge_index,
+                        "edge_attr": edge_attr,
+                    },
+                )[0][0]
+                * np.asarray([-1.0, 1.0])
             )
-            munanb = torch.tensor((0,) + assoc_number(inchi), dtype=torch.float32)
-            pred = torch.hstack([msigmae, assoc, munanb])
+        ).round(decimals=4)
+        if na == 0 and nb == 0:
+            assoc *= 0
+        msigmae = msigmae_onnx.run(
+            None,
+            {
+                "x": x,
+                "edge_index": edge_index,
+                "edge_attr": edge_attr,
+            },
+        )[0].round(decimals=4)[0]
+        munanb = np.asarray([0.0, na, nb])
+        pred = np.hstack([msigmae, assoc, munanb])
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
         print(e)
@@ -267,3 +245,24 @@ def checking_inchi(query: str) -> str:
             print(e)
             print("error for query:", query)
     return inchi
+
+
+def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
+    """Calculates density and vapor pressure with ePC-SAFT"""
+    parameters = np.abs(parameters)
+    den = []
+    if rho.shape[0] > 0:
+        for state in rho:
+            den += [pure_den_feos(parameters, state)]
+    den = np.asarray(den)
+
+    vpl = []
+    if vp.shape[0] > 0:
+        for state in vp:
+            try:
+                vpl += [pure_vp_feos(parameters, state)]
+            except (AssertionError, RuntimeError):
+                vpl += [np.nan]
+    vp = np.asarray(vpl)
+
+    return den, vp

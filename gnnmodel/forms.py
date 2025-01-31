@@ -4,7 +4,8 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from gnnepcsaft.data.graph import from_InChI, from_smiles
+from gnnepcsaft.data.ogb_utils import smiles2graph
+from gnnepcsaft.data.rdkit_util import inchitosmiles
 
 
 class BootstrapForm(forms.Form):
@@ -33,12 +34,9 @@ class InChIorSMILESinput(BootstrapForm):
         inchi_check = re.search("^InChI=", data)
 
         if inchi_check:
-            gh_fn = from_InChI
-        else:
-            gh_fn = from_smiles
-
+            data = inchitosmiles(data, False, False)
         try:
-            gh_fn(data)
+            smiles2graph(data)
         except (ValueError, TypeError, AttributeError, IndexError) as e:
             raise ValidationError(_("Invalid InChI/SMILES.")) from e
         return data

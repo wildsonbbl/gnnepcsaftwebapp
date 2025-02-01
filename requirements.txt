@@ -3,6 +3,7 @@ numpy
 psycopg2-binary
 python-dotenv
 rdkit
+polars
 django-debug-toolbar
 django-bootstrap-v5
 django-pwa
@@ -11,8 +12,8 @@ gunicorn
 fontawesomefree
 gnnepcsaft
 jq
-teqp
-PCSAFTsuperanc
+#teqp
+#PCSAFTsuperanc
 feos
 si-units
 onnxruntime

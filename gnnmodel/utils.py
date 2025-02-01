@@ -6,11 +6,14 @@ import sqlite3 as lite
 
 import numpy as np
 import onnxruntime as ort
-import polars as pl
+from django.conf import settings
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.utils import pure_den_feos, pure_vp_feos
 from rdkit.Chem import AllChem as Chem
+
+# lazy import
+# import polars as pl
 
 ort.set_default_logger_severity(3)
 
@@ -20,6 +23,8 @@ dataset_dir = osp.join(file_dir, "data")
 
 def make_dataset():
     "Make dict dataset for inference."
+    import polars as pl  # # pylint: disable = C0415
+
     data = pl.read_parquet(osp.join(dataset_dir, "thermoml/raw/pure.parquet"))
     inchis = data.unique("inchi1")["inchi1"].to_list()
     _tml_data = {}
@@ -46,12 +51,10 @@ def make_dataset():
     return _tml_data
 
 
-tml_data = make_dataset()
-
-
 # pylint: disable=R0914
 def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list]:
     "Organize data for plotting."
+    tml_data = make_dataset()
     plotden, plotvp = [], []
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
@@ -108,6 +111,7 @@ def update_database():
     "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
     workdir = "/workspaces/webapp/gnnepcsaftwebapp"  # set mannualy
     con = lite.connect(osp.join(workdir, "mydatabase"))
+    tml_data = make_dataset()
 
     data = []
     for inchi in tml_data:
@@ -186,8 +190,8 @@ def update_database():
 
 def prediction(query: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
-    msigmae_onnx = ort.InferenceSession(osp.join(dataset_dir, "msigmae_6.onnx"))
-    assoc_onnx = ort.InferenceSession(osp.join(dataset_dir, "assoc.onnx"))
+    msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_6.onnx")
+    assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc.onnx")
     inchi = checking_inchi(query)
     try:
         graph = smiles2graph(query)

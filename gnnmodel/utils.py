@@ -2,7 +2,6 @@
 import csv
 import os.path as osp
 import re
-import sqlite3 as lite
 
 import numpy as np
 import onnxruntime as ort
@@ -11,6 +10,8 @@ from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.utils import pure_den_feos, pure_vp_feos
 from rdkit.Chem import AllChem as Chem
+
+from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 
 # lazy import
 # import polars as pl
@@ -107,78 +108,66 @@ def plotmol(inchi: str) -> str:
     return imgmol
 
 
-def update_database():
-    "fn to update database with epcsaft parameters, plotden, plotvp and plotmol"
-    workdir = "/workspaces/webapp/gnnepcsaftwebapp"  # set mannualy
-    con = lite.connect(osp.join(workdir, "mydatabase"))
+def update_database(app, schema_editor):
+    "fn to update database with epcsaft parameters, plotden, plotvp"
     tml_data = make_dataset()
 
     data = []
     for inchi in tml_data:
-        with con:
-            cur = con.cursor()
-            cur.execute(
-                "SELECT \
-                  ROUND(m, 4), \
-                  ROUND(sigma, 4), \
-                  ROUND(e, 4), \
-                  ROUND(k_ab, 4), \
-                  ROUND(e_ab, 4), \
-                  ROUND(mu, 4), \
-                  ROUND(na, 4), \
-                  ROUND(nb, 4), \
-                  inchi, \
-                  smiles \
-                FROM gnnmodel_gnnepcsaftpara WHERE inchi=?",
-                (inchi,),
-            )
+        try:
             smiles = inchitosmiles(inchi, False, False)
-            result = cur.fetchall()
-            if len(result) == 0:
-                para, _, _ = prediction(inchi)
-                plotden, plotvp = plotdata(para, inchi)
-                para = para.tolist()
-                cur.execute(
-                    """
-                    INSERT INTO gnnmodel_gnnepcsaftpara 
-                    (m, sigma, e, k_ab, e_ab, mu, na, nb, inchi, smiles) 
-                    VALUES (?,?,?,?,?,?,?,?,?,?)
-                    """,
-                    (
-                        para[0],
-                        para[1],
-                        para[2],
-                        para[3],
-                        para[4],
-                        para[5],
-                        para[6],
-                        para[7],
-                        inchi,
-                        smiles,
-                    ),
-                )
-                if len(plotden) > 0:
-                    for row in plotden:
-                        cur.execute(
-                            """
-                            INSERT INTO gnnmodel_thermomldendata 
-                            (inchi, T, den_tml, den_gnn) 
-                            VALUES (?,?,?,?)
-                            """,
-                            (inchi, row[0], row[1], row[2]),
-                        )
-                if len(plotvp) > 0:
-                    for row in plotvp:
-                        cur.execute(
-                            """
-                            INSERT INTO gnnmodel_thermomlvpdata 
-                            (inchi, T, vp_tml, vp_gnn) 
-                            VALUES (?,?,?,?)
-                            """,
-                            (inchi, row[0], row[1], row[2]),
-                        )
-            else:
-                data.append(result[0])
+            para, _, _ = prediction(smiles)
+        except ValueError as e:
+            print(e, inchi)
+            continue
+        if para[0] is None:
+            continue
+        new_comp = GnnepcsaftPara(
+            inchi=inchi,
+            smiles=smiles,
+            m=para[0],
+            sigma=para[1],
+            e=para[2],
+            k_ab=para[3],
+            e_ab=para[4],
+            mu=para[5],
+            na=para[6],
+            nb=para[7],
+        )
+        data.append(
+            [
+                para[0],
+                para[1],
+                para[2],
+                para[3],
+                para[4],
+                para[5],
+                para[6],
+                para[7],
+                inchi,
+                smiles,
+            ]
+        )
+        new_comp.save()
+        plotden, plotvp = plotdata(para, inchi)
+        for row in plotden:
+            new_comp = ThermoMLDenData(
+                inchi=inchi,
+                T=row[0],
+                den_tml=row[1],
+                den_gnn=row[2],
+            )
+            new_comp.save()
+
+        for row in plotvp:
+            new_comp = ThermoMLVPData(
+                inchi=inchi,
+                T=row[0],
+                vp_tml=row[1],
+                vp_gnn=row[2],
+            )
+            new_comp.save()
+
     with open("./static/mydata.csv", "w", encoding="UTF-8") as f:
         writer = csv.writer(f, delimiter="|")
 
@@ -188,13 +177,13 @@ def update_database():
         writer.writerows(data)
 
 
-def prediction(query: str) -> tuple[np.ndarray, bool, str]:
+def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
     msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
     assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
-    inchi = checking_inchi(query)
+    inchi = checking_inchi(smiles)
     try:
-        graph = smiles2graph(query)
+        graph = smiles2graph(smiles)
         na, nb = assoc_number(inchi)
         x, edge_index, edge_attr = (
             graph["node_feat"],
@@ -230,8 +219,8 @@ def prediction(query: str) -> tuple[np.ndarray, bool, str]:
         pred = np.hstack([msigmae, assoc, munanb])
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
-        print(e)
-        print("error for query:", query)
+        print("\n\n", e)
+        print("error for query:", smiles)
         pred = [None]
         output = False
 
@@ -245,7 +234,7 @@ def checking_inchi(query: str) -> str:
     if not inchi_check:
         try:
             inchi = smilestoinchi(query)
-        except (ValueError, TypeError, AttributeError, IndexError) as e:
+        except ValueError as e:
             print(e)
             print("error for query:", query)
     return inchi

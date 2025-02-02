@@ -190,8 +190,8 @@ def update_database():
 
 def prediction(query: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
-    msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_6.onnx")
-    assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc.onnx")
+    msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
+    assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
     inchi = checking_inchi(query)
     try:
         graph = smiles2graph(query)

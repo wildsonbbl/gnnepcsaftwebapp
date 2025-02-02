@@ -108,7 +108,7 @@ def plotmol(inchi: str) -> str:
     return imgmol
 
 
-def update_database(app, schema_editor):
+def update_database(app, schema_editor):  # pylint: disable=W0613
     "fn to update database with epcsaft parameters, plotden, plotvp"
     tml_data = make_dataset()
 

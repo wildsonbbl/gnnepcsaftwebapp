@@ -75,10 +75,6 @@ def estimator(request):
             molimg = plotmol(inchi)
             output = True
 
-            with open(
-                osp.join(file_dir, "templates/description.txt"), "w", encoding="utf-8"
-            ) as file:
-                file.write(inchi)
     else:
         form = InChIorSMILESinput()
 

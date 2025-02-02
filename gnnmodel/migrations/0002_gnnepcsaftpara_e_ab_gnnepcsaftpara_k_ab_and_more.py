@@ -2,42 +2,45 @@
 
 from django.db import migrations, models
 
+from ..utils import update_database
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('gnnmodel', '0001_initial'),
+        ("gnnmodel", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='gnnepcsaftpara',
-            name='e_ab',
+            model_name="gnnepcsaftpara",
+            name="e_ab",
             field=models.FloatField(default=0),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='gnnepcsaftpara',
-            name='k_ab',
+            model_name="gnnepcsaftpara",
+            name="k_ab",
             field=models.FloatField(default=0),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='gnnepcsaftpara',
-            name='mu',
+            model_name="gnnepcsaftpara",
+            name="mu",
             field=models.FloatField(default=0),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='gnnepcsaftpara',
-            name='na',
+            model_name="gnnepcsaftpara",
+            name="na",
             field=models.IntegerField(default=0),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='gnnepcsaftpara',
-            name='nb',
+            model_name="gnnepcsaftpara",
+            name="nb",
             field=models.IntegerField(default=0),
             preserve_default=False,
         ),
+        migrations.RunPython(update_database),
     ]

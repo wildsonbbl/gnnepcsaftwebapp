@@ -51,6 +51,7 @@
               {% endfor %}
             </tbody>
           </table>
+          <p class="text-dark">* Not estimated</p>
         </div>
         {% if plotden %}
           <div class="col-md-4 mt-2 ">
@@ -80,11 +81,6 @@
               <a href="https://doi.org/10.1002/jcc.26842"
                  target="_blank"
                  class="text-decoration-none">ThermoML Archive</a>
-            </li>
-            <li>
-              <a href="https://doi.org/10.1002/aic.17722"
-                 target="_blank"
-                 class="text-decoration-none">Ramírez-Vélez et al. (2022)</a>
             </li>
           </small>
         </div>
@@ -158,14 +154,6 @@
                    value="Recenter"
                    onclick="v.zoomTo(1.2, 1000);">
           </div>
-        </div>
-      </div>
-      <div class="row my-3" id="AIDescription">
-        <div class="col-sm align-items-center d-flex justify-content-center">
-          <a href="{% url "description" %}"
-             target="_blank"
-             class="btn btn-outline-secondary text-dark"
-             type="button">Click for AI generated molecule description</a>
         </div>
       </div>
     {% endif %}

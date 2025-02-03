@@ -5,3 +5,9 @@ webapp-secret*.yaml
 **media/images**
 gha-creds-*.json
 **.env
+**venv
+**node_modules
+**out
+**__pycache__
+**build
+**dist

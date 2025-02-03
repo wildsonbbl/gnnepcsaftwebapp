@@ -1,5 +1,6 @@
 function getplot(dataname, xlegendpos, ytitle, id) {
   var alldata = JSON.parse(dataname);
+
   var trace1 = {
     x: alldata["T"],
     y: alldata["TML"],
@@ -19,17 +20,6 @@ function getplot(dataname, xlegendpos, ytitle, id) {
     type: "scatter",
     name: "GNNePCSAFT",
   };
-
-  var trace3 = {
-    x: alldata["T"],
-    y: alldata["RA"],
-    mode: "lines",
-    type: "scatter",
-    name: "Ramírez-Vélez et al. (2022)",
-  };
-  if (!alldata["RA"][0]) {
-    trace3 = {};
-  }
 
   var layout = {
     font: {
@@ -78,7 +68,7 @@ function getplot(dataname, xlegendpos, ytitle, id) {
     showlegend: true,
   };
 
-  var plot_data = [trace1, trace2, trace3];
+  var plot_data = [trace1, trace2];
 
   Plotly.newPlot(id, plot_data, layout, {
     responsive: true,

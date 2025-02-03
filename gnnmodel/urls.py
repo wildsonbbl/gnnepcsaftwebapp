@@ -7,5 +7,4 @@ urlpatterns = [
     path("", views.estimator, name="estimator"),
     # path("", views.homepage, name="homepage"),
     # path("author/", views.authorpage, name="author"),
-    path("description/", views.description, name="description"),
 ]

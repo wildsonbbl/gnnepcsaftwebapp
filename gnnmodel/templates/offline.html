@@ -4,7 +4,9 @@
 {% endblock title %}
 {% block content %}
   <div class="row">
-    <h3 class="text-center">Offline Mode</h3>
+    <h3 class="text-center">
+      Offline Mode (Try <a class="link-dark" href={% url "estimator" %}>RELOAD</a>)
+    </h3>
   </div>
   <div class="row" id="formRow">
     <form action="" method="post" id="submitQuery">
@@ -49,6 +51,26 @@
           <tr>
             <td>Dispersion energy (K)</td>
             <td id="e"></td>
+          </tr>
+          <tr>
+            <td>Association Volume</td>
+            <td id="k_ab"></td>
+          </tr>
+          <tr>
+            <td>Association energy (K)</td>
+            <td id="e_ab"></td>
+          </tr>
+          <tr>
+            <td>Dipole moment (D)</td>
+            <td id="mu"></td>
+          </tr>
+          <tr>
+            <td>Number of association site A</td>
+            <td id="na"></td>
+          </tr>
+          <tr>
+            <td>Number of association site B</td>
+            <td id="nb"></td>
           </tr>
           <tr>
             <td>InChI</td>

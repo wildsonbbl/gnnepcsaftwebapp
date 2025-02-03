@@ -3,6 +3,14 @@
 import os
 import sys
 
+# pylint: disable = W0611
+import bootstrap5
+import debug_toolbar
+import feos
+import gunicorn
+import pwa
+import whitenoise
+
 
 def main():
     """Run administrative tasks."""

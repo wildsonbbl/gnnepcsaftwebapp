@@ -9,24 +9,23 @@ class GnnepcsaftPara(models.Model):
     m = models.FloatField()
     sigma = models.FloatField()
     e = models.FloatField()
+    k_ab = models.FloatField()
+    e_ab = models.FloatField()
+    mu = models.FloatField()
+    na = models.IntegerField()
+    nb = models.IntegerField()
 
 
 class ThermoMLDenData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted density data."
     inchi = models.CharField(max_length=255)
-    T = models.FloatField()  # Temperature
-    den_tml = models.FloatField()
-    den_gnn = models.FloatField(null=True)
-    den_ra = models.FloatField(null=True)
+    den = models.JSONField()
 
 
 class ThermoMLVPData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted vapor pressure data."
     inchi = models.CharField(max_length=255)
-    T = models.FloatField()  # Temperature
-    vp_tml = models.FloatField()
-    vp_gnn = models.FloatField(null=True)
-    vp_ra = models.FloatField(null=True)
+    vp = models.JSONField()
 
 
 def db_update(pred, inchi):
@@ -37,6 +36,11 @@ def db_update(pred, inchi):
         m=pred[0],
         sigma=pred[1],
         e=pred[2],
+        k_ab=pred[3],
+        e_ab=pred[4],
+        mu=pred[5],
+        na=pred[6],
+        nb=pred[7],
     )
     new_comp.save()
     return [new_comp]

@@ -27,14 +27,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "ABCDEFG")
+SECRET_KEY = os.getenv("GNNEPCSAFT_SECRET_KEY", "ABCDEFG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DEBUG")
+DEBUG = os.getenv("GNNEPCSAFT_DEBUG", "false").lower() == "true"
 
 ALLOWED_HOSTS = [
-    os.getenv("DOMAIN_NAME", "*"),
-    os.getenv("DJANGO_ALLOWED_HOSTS", "*"),
+    os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
+    os.getenv("GNNEPCSAFT_ALLOWED_HOSTS", "*"),
 ]
 
 
@@ -111,7 +111,7 @@ WSGI_APPLICATION = "webapp.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "mydatabase",
+        "NAME": BASE_DIR / "mydatabase",
     }
 }
 
@@ -172,8 +172,8 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://*." + os.getenv("DOMAIN_NAME", "*"),
-    "http://*." + os.getenv("DOMAIN_NAME", "*"),
+    "https://*." + os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
+    "http://*." + os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
 ]
 
 
@@ -200,7 +200,7 @@ PWA_APP_ORIENTATION = "any"
 PWA_APP_START_URL = "/"
 PWA_APP_STATUS_BAR_COLOR = "default"
 # Open and read the icons.JSON file
-with open("icons.json", "r", encoding="UTF-8") as file:
+with open(BASE_DIR / "icons.json", "r", encoding="UTF-8") as file:
     data = json.load(file)
 PWA_APP_ICONS = data["icons"]
 PWA_APP_ICONS_APPLE = data["icons"]

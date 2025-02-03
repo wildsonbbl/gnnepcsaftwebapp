@@ -206,20 +206,17 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
             graph["edge_feat"],
         )
 
-        assoc = (
-            10
-            ** (
-                assoc_onnx.run(
-                    None,
-                    {
-                        "x": x,
-                        "edge_index": edge_index,
-                        "edge_attr": edge_attr,
-                    },
-                )[0][0]
-                * np.asarray([-1.0, 1.0])
-            )
-        ).round(decimals=4)
+        assoc = 10 ** (
+            assoc_onnx.run(
+                None,
+                {
+                    "x": x,
+                    "edge_index": edge_index,
+                    "edge_attr": edge_attr,
+                },
+            )[0][0]
+            * np.asarray([-1.0, 1.0])
+        )
         if na == 0 and nb == 0:
             assoc *= 0
         msigmae = msigmae_onnx.run(
@@ -229,9 +226,9 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
                 "edge_index": edge_index,
                 "edge_attr": edge_attr,
             },
-        )[0].round(decimals=4)[0]
+        )[0][0]
         munanb = np.asarray([0.0, na, nb])
-        pred = np.hstack([msigmae, assoc, munanb])
+        pred = np.hstack([msigmae, assoc, munanb]).round(decimals=4)
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
         print("\n\n", e)

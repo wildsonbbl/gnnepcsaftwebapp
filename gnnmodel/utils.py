@@ -7,6 +7,8 @@ import re
 import numpy as np
 import onnxruntime as ort
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import pure_den_feos, pure_vp_feos
@@ -231,10 +233,7 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
         pred = np.hstack([msigmae, assoc, munanb]).round(decimals=4)
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
-        print("\n\n", e)
-        print("error for query:", smiles)
-        pred = [None]
-        output = False
+        raise ValidationError(_("Invalid InChI/SMILES.")) from e
 
     return pred, output, inchi
 

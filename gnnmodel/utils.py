@@ -54,9 +54,8 @@ def make_dataset():
 
 
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list]:
+def plotdata(para: np.ndarray, inchi: str, tml_data: dict) -> tuple[list, list]:
     "Organize data for plotting."
-    tml_data = make_dataset()
     plotden, plotvp = None, None
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
@@ -108,7 +107,13 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     tml_data = make_dataset()
 
     data = []
+    count = 1
+    total = len(tml_data)
     for inchi in tml_data:
+        print(f"Updating database with epcsaft parameters: {count}/{total}")
+        count += 1
+        if count == 10:
+            break
         try:
             smiles = inchitosmiles(inchi, False, False)
             para, _, _ = prediction(smiles)
@@ -160,7 +165,11 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     "fn to update database with plotden, plotvp"
     tml_data = make_dataset()
 
+    count = 1
+    total = len(tml_data)
     for inchi in tml_data:
+        print(f"Updating database with thermoml data: {count}/{total}")
+        count += 1
         comp = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
         if len(comp) == 0:
             continue
@@ -177,7 +186,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
                 comp.nb,
             ]
         )
-        plotden, plotvp = plotdata(para, inchi)
+        plotden, plotvp = plotdata(para, inchi, tml_data)
         if plotden:
             new_comp = ThermoMLDenData(inchi=inchi, den=json.dumps(plotden))
             new_comp.save()

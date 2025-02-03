@@ -168,20 +168,20 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     for inchi in tml_data:
         print(f"Updating database with thermoml data: {count}/{total}")
         count += 1
-        comp = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
-        if len(comp) == 0:
+        molecule = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
+        if len(molecule) == 0:
             continue
-        comp = comp[0]
+        molecule = molecule[0]
         para = np.asarray(
             [
-                comp.m,
-                comp.sigma,
-                comp.e,
-                comp.k_ab,
-                comp.e_ab,
-                comp.mu,
-                comp.na,
-                comp.nb,
+                molecule.m,
+                molecule.sigma,
+                molecule.e,
+                molecule.k_ab,
+                molecule.e_ab,
+                molecule.mu,
+                molecule.na,
+                molecule.nb,
             ]
         )
         plotden, plotvp = plotdata(para, inchi, tml_data)

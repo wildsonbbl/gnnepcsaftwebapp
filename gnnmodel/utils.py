@@ -9,7 +9,7 @@ import onnxruntime as ort
 from django.conf import settings
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
-from gnnepcsaft.epcsaft.utils import pure_den_feos, pure_vp_feos
+from gnnepcsaft.epcsaft.epcsaft_feos import pure_den_feos, pure_vp_feos
 from rdkit.Chem import AllChem as Chem
 
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData

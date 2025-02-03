@@ -18,6 +18,11 @@ submitQuery.addEventListener("submit", (event) => {
               document.getElementById("m").innerHTML = "";
               document.getElementById("sigma").innerHTML = "";
               document.getElementById("e").innerHTML = "";
+              document.getElementById("k_ab").innerHTML = "";
+              document.getElementById("e_ab").innerHTML = "";
+              document.getElementById("mu").innerHTML = "";
+              document.getElementById("na").innerHTML = "";
+              document.getElementById("nb").innerHTML = "";
               document.getElementById("inchi").innerHTML = "";
               document.getElementById("smiles").innerHTML = "";
             } else {

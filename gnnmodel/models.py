@@ -19,19 +19,13 @@ class GnnepcsaftPara(models.Model):
 class ThermoMLDenData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted density data."
     inchi = models.CharField(max_length=255)
-    T = models.FloatField()  # Temperature
-    den_tml = models.FloatField()
-    den_gnn = models.FloatField(null=True)
-    den_ra = models.FloatField(null=True)
+    den = models.JSONField()
 
 
 class ThermoMLVPData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted vapor pressure data."
     inchi = models.CharField(max_length=255)
-    T = models.FloatField()  # Temperature
-    vp_tml = models.FloatField()
-    vp_gnn = models.FloatField(null=True)
-    vp_ra = models.FloatField(null=True)
+    vp = models.JSONField()
 
 
 def db_update(pred, inchi):

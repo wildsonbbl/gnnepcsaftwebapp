@@ -22,6 +22,9 @@ ort.set_default_logger_severity(3)
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
 
+msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
+assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
+
 
 def make_dataset():
     "Make dict dataset for inference."
@@ -104,14 +107,12 @@ def plotmol(inchi: str) -> str:
 
 def para_update_database(app, schema_editor):  # pylint: disable=W0613
     "fn to update database with epcsaft parameters"
+    from tqdm import tqdm  # pylint: disable=C0415
+
     tml_data = make_dataset()
 
     data = []
-    count = 1
-    total = len(tml_data)
-    for inchi in tml_data:
-        print(f"Updating database with epcsaft parameters: {count}/{total}")
-        count += 1
+    for inchi in tqdm(tml_data):
         try:
             smiles = inchitosmiles(inchi, False, False)
             para, _, _ = prediction(smiles)
@@ -161,13 +162,11 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
 
 def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     "fn to update database with plotden, plotvp"
+    from tqdm import tqdm  # pylint: disable=C0415
+
     tml_data = make_dataset()
 
-    count = 1
-    total = len(tml_data)
-    for inchi in tml_data:
-        print(f"Updating database with thermoml data: {count}/{total}")
-        count += 1
+    for inchi in tqdm(tml_data):
         molecule = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
         if len(molecule) == 0:
             continue
@@ -196,8 +195,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
 
 def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
-    msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
-    assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
+
     inchi = checking_inchi(smiles)
     try:
         graph = smiles2graph(smiles)

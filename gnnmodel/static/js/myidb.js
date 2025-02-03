@@ -13,7 +13,8 @@ async function makingdb() {
       alasql(
         'ATTACH INDEXEDDB DATABASE myidatabase; \
          USE myidatabase; \
-         SELECT m, sigma, e, k_a, e_ab, mu, na, nb, inchi, smiles \
+         SELECT ROUND(m, 4) as m, ROUND(sigma, 4) as sigma, ROUND(e, 4) as e, \
+          ROUND(k_ab, 4) as k_ab, ROUND(e_ab, 4) as e_ab, mu, na, nb, inchi, smiles \
          INTO gnnepcsaftparameters \
          FROM CSV("/static/mydata.csv", {headers:true, separator: "|"});',
         [],

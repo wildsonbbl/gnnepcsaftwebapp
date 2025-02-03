@@ -112,8 +112,6 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     for inchi in tml_data:
         print(f"Updating database with epcsaft parameters: {count}/{total}")
         count += 1
-        if count == 10:
-            break
         try:
             smiles = inchitosmiles(inchi, False, False)
             para, _, _ = prediction(smiles)

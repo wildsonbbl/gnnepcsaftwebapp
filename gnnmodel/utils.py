@@ -1,5 +1,6 @@
 "Module for utils like plotting data."
 import csv
+import json
 import os.path as osp
 import re
 
@@ -56,37 +57,31 @@ def make_dataset():
 def plotdata(para: np.ndarray, inchi: str) -> tuple[list, list]:
     "Organize data for plotting."
     tml_data = make_dataset()
-    plotden, plotvp = [], []
+    plotden, plotvp = None, None
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
         pred_rho, pred_vp = rhovp_data(para, rho, vp)
         # plot rho data
         if rho.shape[0] > 2:
             idx_p = abs(rho[:, 1] - 101325) < 1_000
-            rho = rho[idx_p]
+            rho: np.ndarray = rho[idx_p]
             pred_rho = pred_rho[idx_p]
 
-            if rho.shape[0] > 1:
+            if rho.shape[0] > 2:
                 idx = np.argsort(rho[:, 0], 0)
-                plotden = np.stack(
-                    [
-                        rho[idx, 0],
-                        rho[idx, -1],
-                        pred_rho[idx],
-                    ],
-                    -1,
-                )
+                plotden = {
+                    "T": rho[idx, 0].tolist(),
+                    "TML": rho[idx, -1].tolist(),
+                    "GNN": pred_rho[idx].tolist(),
+                }
         # plot vp data
         if vp.shape[0] > 2:
             idx = np.argsort(vp[:, 0], 0)
-            plotvp = np.stack(
-                [
-                    vp[idx, 0],
-                    vp[idx, -1] / 1000,  # Pressure in kPa
-                    pred_vp[idx] / 1000,
-                ],
-                -1,
-            )
+            plotvp = {
+                "T": vp[idx, 0].tolist(),
+                "TML": (vp[idx, -1] / 1000).tolist(),  # Pressure in kPa
+                "GNN": (pred_vp[idx] / 1000).tolist(),
+            }
 
     return plotden, plotvp
 
@@ -108,8 +103,8 @@ def plotmol(inchi: str) -> str:
     return imgmol
 
 
-def update_database(app, schema_editor):  # pylint: disable=W0613
-    "fn to update database with epcsaft parameters, plotden, plotvp"
+def para_update_database(app, schema_editor):  # pylint: disable=W0613
+    "fn to update database with epcsaft parameters"
     tml_data = make_dataset()
 
     data = []
@@ -149,32 +144,47 @@ def update_database(app, schema_editor):  # pylint: disable=W0613
             ]
         )
         new_comp.save()
-        plotden, plotvp = plotdata(para, inchi)
-        for row in plotden:
-            new_comp = ThermoMLDenData(
-                inchi=inchi,
-                T=row[0],
-                den_tml=row[1],
-                den_gnn=row[2],
-            )
-            new_comp.save()
-
-        for row in plotvp:
-            new_comp = ThermoMLVPData(
-                inchi=inchi,
-                T=row[0],
-                vp_tml=row[1],
-                vp_gnn=row[2],
-            )
-            new_comp.save()
-
-    with open("./static/mydata.csv", "w", encoding="UTF-8") as f:
+    with open(
+        settings.BASE_DIR / "gnnmodel/static/mydata.csv", "w", encoding="UTF-8"
+    ) as f:
         writer = csv.writer(f, delimiter="|")
 
         writer.writerow(
             ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]
         )
         writer.writerows(data)
+    print("Updated database with epcsaft parameters")
+
+
+def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
+    "fn to update database with plotden, plotvp"
+    tml_data = make_dataset()
+
+    for inchi in tml_data:
+        comp = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
+        if len(comp) == 0:
+            continue
+        comp = comp[0]
+        para = np.asarray(
+            [
+                comp.m,
+                comp.sigma,
+                comp.e,
+                comp.k_ab,
+                comp.e_ab,
+                comp.mu,
+                comp.na,
+                comp.nb,
+            ]
+        )
+        plotden, plotvp = plotdata(para, inchi)
+        if plotden:
+            new_comp = ThermoMLDenData(inchi=inchi, den=json.dumps(plotden))
+            new_comp.save()
+        if plotvp:
+            new_comp = ThermoMLVPData(inchi=inchi, vp=json.dumps(plotvp))
+            new_comp.save()
+    print("Updated database with plotden, plotvp")
 
 
 def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:

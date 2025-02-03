@@ -1,5 +1,4 @@
 "request handler."
-import json
 import os.path as osp
 
 from django.conf import settings
@@ -56,21 +55,11 @@ def estimator(request):
             ]
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
-                plotvp = {"T": [], "TML": [], "GNN": []}
-                for row in alldata:
-                    plotvp["T"].append(row.T)
-                    plotvp["TML"].append(row.vp_tml)
-                    plotvp["GNN"].append(row.vp_gnn)
-                plotvp = json.dumps(plotvp)
+                plotvp = alldata[0].vp
 
             alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
-                plotden = {"T": [], "TML": [], "GNN": []}
-                for row in alldata:
-                    plotden["T"].append(row.T)
-                    plotden["TML"].append(row.den_tml)
-                    plotden["GNN"].append(row.den_gnn)
-                plotden = json.dumps(plotden)
+                plotden = alldata[0].den
 
             molimg = plotmol(inchi)
             output = True

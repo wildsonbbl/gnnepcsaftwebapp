@@ -151,7 +151,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     with open(
         settings.BASE_DIR / "gnnmodel/static/mydata.csv", "w", encoding="UTF-8"
     ) as f:
-        writer = csv.writer(f, delimiter="|")
+        writer = csv.writer(f, delimiter="|", lineterminator="\n")
 
         writer.writerow(
             ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]

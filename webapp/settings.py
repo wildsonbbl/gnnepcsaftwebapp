@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("GNNEPCSAFT_SECRET_KEY", "ABCDEFG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.getenv("GNNEPCSAFT_DEBUG", "false").lower() == "true" else False
+DEBUG = os.getenv("GNNEPCSAFT_DEBUG", "false").lower() == "true"
 
 ALLOWED_HOSTS = [
     os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),

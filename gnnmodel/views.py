@@ -5,7 +5,7 @@ from django.conf import settings
 from django.shortcuts import render
 
 from .forms import InChIorSMILESinput
-from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData, db_update
+from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 from .utils import checking_inchi, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
@@ -41,18 +41,19 @@ def estimator(request):
             comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
             if len(comp) == 0:
                 pred, output, inchi = prediction(query)
-                comp = db_update(pred, inchi)
-            comp = comp[0]
-            pred = [
-                comp.m,
-                comp.sigma,
-                comp.e,
-                comp.k_ab,
-                comp.e_ab,
-                comp.mu,
-                comp.na,
-                comp.nb,
-            ]
+                pred = pred.tolist()
+            else:
+                comp = comp[0]
+                pred = [
+                    comp.m,
+                    comp.sigma,
+                    comp.e,
+                    comp.k_ab,
+                    comp.e_ab,
+                    comp.mu,
+                    comp.na,
+                    comp.nb,
+                ]
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
                 plotvp = alldata[0].vp

@@ -2,6 +2,7 @@ const { app, BrowserWindow, shell } = require("electron");
 const { spawn } = require("child_process");
 const controller = new AbortController();
 const { signal } = controller;
+const path = require("path");
 
 if (require("electron-squirrel-startup")) app.quit();
 
@@ -43,8 +44,12 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
+  const appPath = path.join(
+    process.resourcesPath,
+    "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+  );
   const djangoBackend = spawn(
-    `.\\gnnepcsaftwebapp\\gnnepcsaftwebapp.exe`,
+    appPath,
     ["runserver", "--noreload", "localhost:19770"],
     { signal }
   );

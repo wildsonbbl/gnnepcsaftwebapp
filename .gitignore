@@ -11,3 +11,4 @@ gha-creds-*.json
 **__pycache__
 **build
 **dist
+**windows

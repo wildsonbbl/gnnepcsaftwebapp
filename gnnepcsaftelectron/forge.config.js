@@ -1,6 +1,5 @@
 const { FusesPlugin } = require("@electron-forge/plugin-fuses");
 const { FuseV1Options, FuseVersion } = require("@electron/fuses");
-const afterExtract = require("./afterExtract");
 
 module.exports = {
   packagerConfig: {

@@ -41,11 +41,11 @@ jobs:
           manage.py
       - name: Package electron app
         run: |
-          cd gnnepcsafteletron
+          cd gnnepcsaftelectron
           npm install
           npm run make
           cd ..
-          cp gnnepcsafteletron/out/make/zip/win32/x64/*.zip .
+          cp gnnepcsaftelectron/out/make/zip/win32/x64/*.zip .
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "*.zip"

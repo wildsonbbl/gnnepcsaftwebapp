@@ -14,7 +14,7 @@
         <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a> and copy the SMILES
         right clicking on the 2D panel.
       </p>
-      <form action="" method="post">
+      <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
         <div class="row">
           <div class="my-1">
@@ -29,6 +29,22 @@
         </div>
       </form>
     </div>
+    <div id="loadingIndicator"
+         style="display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(255, 255, 255, 0.8);
+                z-index: 9999;
+                justify-content: center;
+                align-items: center">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+    </div>
+    <script src='/static/js/loading.js'></script>
     <div class="row" id="results">
       {% if output %}
         <script src="static/js/plotly-2.35.2.min.js" charset="utf-8"></script>

@@ -1,0 +1,51 @@
+name: Package electron app for windows
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-docker:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.13.1
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
+          python -m pip install -r requirements.txt
+      - name: Download models from HuggingFace
+        run: |
+          git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
+          cp hfdata/*.onnx* ./gnnmodel/static
+      - name: Package webapp
+        run: |
+          python manage.py collectstatic --no-input
+          python manage.py migrate --no-input
+          pyinstaller --distpath ./windows/dist --workpath ./windows/build `
+          -D -n gnnepcsaftwebapp --additional-hooks-dir="./hooks" --noconfirm --clean `
+          --add-data="./icons.json:." `
+          --add-data="./mydatabase:." `
+          --add-data="./gnnmodel/templates:./gnnmodel/templates" `
+          --add-data="./productionfiles:./productionfiles" `
+          --exclude-module="polars" `
+          manage.py
+      - name: Package electron app
+        run: |
+          cd gnnepcsafteletron
+          npm install
+          npm run make
+          cd ..
+          cp gnnepcsafteletron/out/make/zip/win32/x64/*.zip .
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "*.zip"

@@ -7,7 +7,7 @@ on:
       - "v*"
 
 jobs:
-  build-docker:
+  electron-app-build:
     runs-on: windows-latest
     permissions:
       contents: write
@@ -27,7 +27,7 @@ jobs:
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
           cp hfdata/*.onnx* ./gnnmodel/static
-      - name: Package webapp
+      - name: Package Web App with PyInstaller
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
@@ -39,16 +39,16 @@ jobs:
           --add-data="./productionfiles:./productionfiles" `
           --exclude-module="polars" `
           manage.py
-      - name: Package electron app
+      - name: Package Electron App with Squirrel
         run: |
           cd gnnepcsaftelectron
           npm install
           npm run make
           cd ..
-          cp gnnepcsaftelectron/out/make/zip/win32/x64/*.zip .
+          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/* .
       - uses: ncipollo/release-action@v1
         with:
-          artifacts: "*.zip"
-          tag: v1.0.0
+          artifacts: "*Setup.exe"
           allowUpdates: true
           updateOnlyUnreleased: true
+          removeArtifacts: false

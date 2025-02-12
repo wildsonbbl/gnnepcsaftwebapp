@@ -6,14 +6,15 @@ module.exports = {
   packagerConfig: {
     asar: true,
     name: "GNNePCSAFT",
-    afterExtract: ["./afterExtract.js"],
     icon: "./storelogo_scale_400_hf3_icon.ico",
+    extraResource: ["../windows/dist/gnnepcsaftwebapp"],
   },
   rebuildConfig: {},
   makers: [
     {
-      name: "@electron-forge/maker-zip",
-      platforms: ["darwin", "win32"],
+      name: "@electron-forge/maker-squirrel",
+      iconUrl:
+        "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/gnnepcsaftelectron/storelogo_scale_400_hf3_icon.ico",
     },
   ],
   plugins: [

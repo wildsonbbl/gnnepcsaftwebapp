@@ -50,3 +50,5 @@ jobs:
         with:
           artifacts: "*.zip"
           tag: v1.0.0
+          allowUpdates: true
+          updateOnlyUnreleased: true

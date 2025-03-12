@@ -1,4 +1,5 @@
 "Django forms."
+
 import re
 
 from django import forms
@@ -19,6 +20,7 @@ class BootstrapForm(forms.Form):
 
 class InChIorSMILESinput(BootstrapForm):
     "Form to receive InChI/SMILES from user."
+
     query = forms.CharField(
         label="Type/Paste InChI or SMILES",
         strip=True,

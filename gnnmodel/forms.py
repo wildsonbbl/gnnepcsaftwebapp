@@ -16,6 +16,7 @@ class BootstrapForm(forms.Form):
         super().__init__(*args, **kwargs)
         for visible in self.visible_fields():
             visible.field.widget.attrs["class"] = "form-control"
+            visible.field.widget.attrs["aria-label"] = "Type/Paste InChI or SMILES"
 
 
 class InChIorSMILESinput(BootstrapForm):

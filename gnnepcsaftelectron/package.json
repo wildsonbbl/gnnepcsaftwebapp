@@ -1,6 +1,6 @@
 {
   "name": "gnnepcsaft",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Electron app to estimate ePC-SAFT parameters with GNNePCSAFT",
   "main": "main.js",
   "scripts": {

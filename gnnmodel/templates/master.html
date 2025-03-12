@@ -19,6 +19,7 @@
     <link href="{% static 'fontawesomefree/css/brands.css' %}"
           rel="stylesheet"
           type="text/css" />
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
     {% progressive_web_app_meta %}
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="//cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
@@ -28,36 +29,16 @@
     <div class="container-fluid bg-light text-dark">
       <ul class="nav bg-dark ">
         <li class="nav-item">
-          <a class="nav-link link-light" href={% url "estimator" %}>RELOAD</a>
+          <a class="nav-link link-light" href={% url "estimator" %}>HOME</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
         </li>
         <li class="nav-item">
           <button class="btn" id="installApp" aria-label="Install Button"></button>
         </li>
         <script src="/static/js/install.js" async></script>
       </ul>
-      <div class="row mt-3">
-        <div class="col-md text-center">
-          <h3>GNNePCSAFT</h3>
-          <p>
-            A simple app with a pretrained
-            <a class="text-decoration-none"
-               href="https://github.com/wildsonbbl/gnnepcsaft"
-               target="_blank">GNNePCSAFT model</a>
-            to estimate
-            <abbr title="electrolyte Perturbed Chain Statistical Associating Fluid Theory">ePC-SAFT</abbr>
-            parameters. Parameters can be used with
-            <a class="text-decoration-none"
-               href="https://github.com/feos-org/feos"
-               target="_blank">FEOS</a>
-            package,
-            <a class="text-decoration-none"
-               href="https://dwsim.org/"
-               target="_blank">DWSIM</a>
-            or  any other implementation of the
-            <abbr title="Equation of State">EoS</abbr>.
-          </p>
-        </div>
-      </div>
       <div class="row">
         {% block content %}
         {% endblock content %}

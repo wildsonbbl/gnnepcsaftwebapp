@@ -3,13 +3,13 @@
   GNNePCSAFT
 {% endblock title %}
 {% block content %}
-  <div class="col-md">
+  <div class="col-lg">
     <div class="row" id="queryForm">
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
-        <div class="row my-5 justify-content-md-center">
-          <div class="col-md-3">{{ form.query }}</div>
-          <div class="col-md-3">
+        <div class="row my-5 justify-content-center">
+          <div class="col-sm-3">{{ form.query }}</div>
+          <div class="col-sm-3">
             <input type="submit"
                    value="Analyse SMILES/InChI"
                    class="form-control btn-outline-primary" />
@@ -23,11 +23,11 @@
       </div>
     </div>
     <script src='/static/js/loading.js'></script>
-    <div class="row" id="results">
+    <div class="row justify-content-center" id="results">
       {% if output %}
         <script src="static/js/plotly-2.35.2.min.js" charset="utf-8"></script>
         <script src='static/js/plot.js'></script>
-        <div class="col-md-4 mt-2 text-success">
+        <div class="col-lg-4 mt-2 text-success">
           <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
           <table class="table table-hover">
             <thead>
@@ -46,45 +46,38 @@
             </tbody>
           </table>
           <p class="text-dark">* Not estimated</p>
+          {% if plotden or plotvp %}
+            <p>
+              **
+              <a href="https://doi.org/10.1002/jcc.26842"
+                 target="_blank"
+                 class="text-decoration-none">ThermoML Archive</a>
+            </p>
+          {% endif %}
         </div>
         {% if plotden %}
-          <div class="col-md-4 mt-2 ">
+          <div class="col-lg-4 mt-2 ">
             <div id="den_plot" alt="Density plot"></div>
             <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
-          <div class="col-md-4 mt-2 ">
+          <div class="col-lg-4 mt-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
       {% else %}
-        <div class="col-md">
+        <div class="col-lg">
           <ul>
             {% for error in form.query.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
           </ul>
         </div>
       {% endif %}
     </div>
-    <div class="row justify-content-md-center" id="plotReference">
-      {% if plotden or plotvp %}
-        <div class="col-md-4">
-          <small>
-            <ul>
-              <li>
-                <a href="https://doi.org/10.1002/jcc.26842"
-                   target="_blank"
-                   class="text-decoration-none">ThermoML Archive</a>
-              </li>
-            </ul>
-          </small>
-        </div>
-      {% endif %}
-    </div>
     {% if output %}
-      <div class="row my-3 mx-1 justify-content-md-center" id="3dmol">
-        <div class="col-md-4 d-grid border border-dark">
+      <div class="row my-3 mx-1 justify-content-center" id="3dmol">
+        <div class="col-lg-6 d-grid border border-dark">
           <div id="molplot" class="molplot-style"></div>
           <script src="static/js/3Dmol-min.js"></script>
           <script>

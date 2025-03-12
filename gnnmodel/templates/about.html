@@ -1,0 +1,38 @@
+{% extends "master.html" %}
+{% block title %}
+  ABOUT
+{% endblock title %}
+{% block content %}
+  <div class="row mt-3">
+    <div class="col-md text-center">
+      <h3>GNNePCSAFT</h3>
+      <p>
+        This app uses a
+        <a class="text-decoration-none"
+           href="https://github.com/wildsonbbl/gnnepcsaft"
+           target="_blank">GNNePCSAFT model</a>
+        to estimate
+        <abbr title="electrolyte Perturbed Chain Statistical Associating Fluid Theory">ePC-SAFT</abbr>
+        parameters. Parameters can be used with
+        <a class="text-decoration-none"
+           href="https://github.com/feos-org/feos"
+           target="_blank">FEOS</a>
+        package,
+        <a class="text-decoration-none"
+           href="https://dwsim.org/"
+           target="_blank">DWSIM</a>
+        or  any other implementation of the
+        <abbr title="Equation of State">EoS</abbr>.
+      </p>
+      <p>
+        You can find
+        <abbr title="International Chemical Identifier">InChI</abbr> and
+        <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
+        <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
+        you can build your own molecule at
+        <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a> and copy the SMILES
+        right clicking on the 2D panel.
+      </p>
+    </div>
+  </div>
+{% endblock content %}

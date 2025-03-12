@@ -6,7 +6,7 @@ function getplot(dataname, xlegendpos, ytitle, id) {
     y: alldata["TML"],
     mode: "markers",
     type: "scatter",
-    name: "ThermoML Archive",
+    name: "ThermoML Archive**",
     marker: {
       symbol: "x",
       color: "black",

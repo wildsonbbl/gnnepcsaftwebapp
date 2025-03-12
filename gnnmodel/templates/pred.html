@@ -3,53 +3,31 @@
   GNNePCSAFT
 {% endblock title %}
 {% block content %}
-  <div class="col-md">
+  <div class="col-lg">
     <div class="row" id="queryForm">
-      <p>
-        You can find
-        <abbr title="International Chemical Identifier">InChI</abbr> and
-        <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
-        <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
-        you can build your own molecule at
-        <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a> and copy the SMILES
-        right clicking on the 2D panel.
-      </p>
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
-        <div class="row">
-          <div class="my-1">
-            <label for="id_query" class="form-label">Type/Paste InChI or SMILES:</label>
-            {{ form.query }}
-          </div>
-          <div class="md my-1">
+        <div class="row my-5 justify-content-center">
+          <div class="col-sm-3">{{ form.query }}</div>
+          <div class="col-sm-3">
             <input type="submit"
-                   value="Click to estimate ePC-SAFT parameters"
+                   value="Analyse SMILES/InChI"
                    class="form-control btn-outline-primary" />
           </div>
         </div>
       </form>
-    </div>
-    <div id="loadingIndicator"
-         style="display: none;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(255, 255, 255, 0.8);
-                z-index: 9999;
-                justify-content: center;
-                align-items: center">
-      <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+      <div id="loadingIndicator" class="loading-indicator">
+        <div class="spinner-border" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
       </div>
+      <script src='/static/js/loading.js'></script>
     </div>
-    <script src='/static/js/loading.js'></script>
-    <div class="row" id="results">
+    <div class="row justify-content-center" id="results">
       {% if output %}
         <script src="static/js/plotly-2.35.2.min.js" charset="utf-8"></script>
         <script src='static/js/plot.js'></script>
-        <div class="col-md-4 mt-2 text-success">
+        <div class="col-lg-4 mt-2 text-success">
           <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
           <table class="table table-hover">
             <thead>
@@ -68,44 +46,39 @@
             </tbody>
           </table>
           <p class="text-dark">* Not estimated</p>
+          {% if plotden or plotvp %}
+            <p>
+              **
+              <a href="https://doi.org/10.1002/jcc.26842"
+                 target="_blank"
+                 class="text-decoration-none">ThermoML Archive</a>
+            </p>
+          {% endif %}
         </div>
         {% if plotden %}
-          <div class="col-md-4 mt-2 ">
+          <div class="col-lg-4 mt-2 ">
             <div id="den_plot" alt="Density plot"></div>
             <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
-          <div class="col-md-4 mt-2 ">
+          <div class="col-lg-4 mt-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
       {% else %}
-        <div class="col-md">
+        <div class="col-lg">
           <ul>
             {% for error in form.query.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
           </ul>
         </div>
       {% endif %}
     </div>
-    <div class="row justify-content-md-center" id="plotReference">
-      {% if plotden or plotvp %}
-        <div class="col-md-4">
-          <small>
-            <li>
-              <a href="https://doi.org/10.1002/jcc.26842"
-                 target="_blank"
-                 class="text-decoration-none">ThermoML Archive</a>
-            </li>
-          </small>
-        </div>
-      {% endif %}
-    </div>
     {% if output %}
-      <div class="row my-3 mx-1 justify-content-md-center" id="3dmol">
-        <div class="col-md-4 d-grid border border-dark">
-          <div id="molplot" style="width: 100%; height: 250px; position: relative"></div>
+      <div class="row my-3 mx-1 justify-content-center" id="3dmol">
+        <div class="col-lg-6 d-grid border border-dark">
+          <div id="molplot" class="molplot-style"></div>
           <script src="static/js/3Dmol-min.js"></script>
           <script>
            let element = document.querySelector('#molplot');

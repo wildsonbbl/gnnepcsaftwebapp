@@ -12,8 +12,11 @@ module.exports = {
   makers: [
     {
       name: "@electron-forge/maker-squirrel",
-      iconUrl:
-        "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/gnnepcsaftelectron/storelogo_scale_400_hf3_icon.ico",
+      config: {
+        setupIcon: "./storelogo_scale_400_hf3_icon.ico",
+        iconUrl:
+          "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/gnnepcsaftelectron/storelogo_scale_400_hf3_icon.ico",
+      },
     },
   ],
   plugins: [

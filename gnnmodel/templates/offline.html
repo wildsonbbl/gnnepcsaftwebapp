@@ -3,33 +3,33 @@
   Offline Mode
 {% endblock title %}
 {% block content %}
-  <div class="row">
+  <div class="row my-2">
     <h3 class="text-center">
-      Offline Mode (Try <a class="link-dark" href={% url "estimator" %}>RELOAD</a>)
+      Offline Mode (Try to <a class="link-dark" href={% url "estimator" %}>reload</a>)
     </h3>
   </div>
   <div class="row" id="formRow">
     <form action="" method="post" id="submitQuery">
-      <div class="row">
-        <div class="my-1">
-          <label for="id_query" class="form-label">Type/Paste InChI or SMILES:</label>
+      <div class="row my-2 justify-content-md-center">
+        <div class="col-md-3">
           <input type="text"
                  name="query"
                  value="CCO"
                  class="form-control"
                  required
-                 id="id_query">
+                 id="id_query"
+                 aria-label="Type/Paste InChI or SMILES">
         </div>
-        <div class="md my-1">
+        <div class="col-md-3">
           <input type="submit"
-                 value="Click to estimate ePC-SAFT parameters"
+                 value="Analyse SMILES/InChI"
                  class="form-control btn-outline-primary" />
         </div>
       </div>
     </form>
   </div>
-  <div class="row" id="outputRow">
-    <div class="col-md-4 text-success">
+  <div class="row justify-content-md-center" id="outputRow">
+    <div class="col-md text-success">
       <h3 id="output"></h3>
       <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
       <table class="table table-hover">

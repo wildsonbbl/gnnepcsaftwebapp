@@ -1,4 +1,5 @@
 "request handler."
+
 import os.path as osp
 
 from django.conf import settings
@@ -98,3 +99,8 @@ def homepage(request):
 def authorpage(request):
     "handle request"
     return render(request, "author.html")
+
+
+def about(request):
+    "handle request"
+    return render(request, "about.html")

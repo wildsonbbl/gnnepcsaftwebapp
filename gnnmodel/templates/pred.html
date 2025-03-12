@@ -5,25 +5,13 @@
 {% block content %}
   <div class="col-md">
     <div class="row" id="queryForm">
-      <p>
-        You can find
-        <abbr title="International Chemical Identifier">InChI</abbr> and
-        <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> at
-        <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">pubchem</a> or
-        you can build your own molecule at
-        <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a> and copy the SMILES
-        right clicking on the 2D panel.
-      </p>
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
         <div class="row">
-          <div class="my-1">
-            <label for="id_query" class="form-label">Type/Paste InChI or SMILES:</label>
-            {{ form.query }}
-          </div>
+          <div class="md my-5">{{ form.query }}</div>
           <div class="md my-1">
             <input type="submit"
-                   value="Click to estimate ePC-SAFT parameters"
+                   value="Analyse SMILES/InChI"
                    class="form-control btn-outline-primary" />
           </div>
         </div>

@@ -11,7 +11,7 @@ const createWindow = async () => {
   await waitForDjangoServer(djangoBackend);
 
   const win = new BrowserWindow({
-    width: 600,
+    width: 768,
     height: 600,
     titleBarStyle: "default",
   });

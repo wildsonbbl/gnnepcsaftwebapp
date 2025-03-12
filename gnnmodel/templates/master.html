@@ -13,6 +13,7 @@
     <meta name="description" content="GNNePCSAFT webapp.">
     <meta name="keywords" content="HTML, Django, CSS, GNNePCSAFT">
     <meta name="author" content="Wildson B B Lima">
+    <meta charset="utf-8">
     <link href="{% static 'fontawesomefree/css/fontawesome.css' %}"
           rel="stylesheet"
           type="text/css" />
@@ -34,9 +35,7 @@
         <li class="nav-item">
           <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
         </li>
-        <li class="nav-item">
-          <button class="btn" id="installApp" aria-label="Install Button"></button>
-        </li>
+        <li class="nav-item" id="installButton"></li>
         <script src="/static/js/install.js" async></script>
       </ul>
       <div class="row">

@@ -4,16 +4,11 @@
 {% load bootstrap5 %}
 <html lang="en">
   <head>
-    <title>
-      {% block title %}
-      {% endblock title %}
-    </title>
-    {% bootstrap_css %} {% bootstrap_javascript %}
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="GNNePCSAFT webapp.">
     <meta name="keywords" content="HTML, Django, CSS, GNNePCSAFT">
     <meta name="author" content="Wildson B B Lima">
-    <meta charset="utf-8">
     <link href="{% static 'fontawesomefree/css/fontawesome.css' %}"
           rel="stylesheet"
           type="text/css" />
@@ -21,10 +16,15 @@
           rel="stylesheet"
           type="text/css" />
     <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
+    {% bootstrap_css %} {% bootstrap_javascript %}
     {% progressive_web_app_meta %}
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="https://cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
     <script src='/static/js/myidb.js' async></script>
+    <title>
+      {% block title %}
+      {% endblock title %}
+    </title>
   </head>
   <body class="mt-1">
     <div class="container-fluid bg-light text-dark">

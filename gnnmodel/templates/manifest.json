@@ -464,37 +464,37 @@
   "screenshots": [
     {
       "src": "/static/images/icons/Screenshot-wide.png",
-      "sizes": "2047x2732",
+      "sizes": "2560x1600",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
       "src": "/static/images/icons/Screenshot-wide-2.png",
-      "sizes": "2047x2732",
+      "sizes": "2560x1600",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
       "src": "/static/images/icons/Screenshot-wide-3.png",
-      "sizes": "2047x2732",
+      "sizes": "2560x1600",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
       "src": "/static/images/icons/Screenshot-narrow.png",
-      "sizes": "1170x2532",
+      "sizes": "1290x2796",
       "type": "image/png",
       "form_factor": "narrow"
     },
     {
       "src": "/static/images/icons/Screenshot-narrow-2.png",
-      "sizes": "1170x2532",
+      "sizes": "1290x2796",
       "type": "image/png",
       "form_factor": "narrow"
     },
     {
       "src": "/static/images/icons/Screenshot-narrow-3.png",
-      "sizes": "1170x2532",
+      "sizes": "1290x2796",
       "type": "image/png",
       "form_factor": "narrow"
     }

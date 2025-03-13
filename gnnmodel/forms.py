@@ -44,3 +44,32 @@ class InChIorSMILESinput(forms.Form):
         except ValueError as e:
             raise ValidationError(_("Invalid InChI/SMILES.")) from e
         return data
+
+
+class PlotConfigForm(forms.Form):
+    "Form to receive plot config."
+
+    custom_plot = forms.BooleanField(
+        label="Custom Plot",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={"class": "form-control form-check-input"}),
+    )
+    temp_min = forms.FloatField(
+        label="Minimum Temperature (K)",
+        required=False,
+        initial=300.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+    temp_max = forms.FloatField(
+        label="Maximum Temperature (K)",
+        required=False,
+        initial=400.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+    pressure = forms.FloatField(
+        label="Pressure (Pa)",
+        required=False,
+        initial=101325.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )

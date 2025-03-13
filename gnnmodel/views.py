@@ -5,9 +5,9 @@ import os.path as osp
 from django.conf import settings
 from django.shortcuts import render
 
-from .forms import InChIorSMILESinput
+from .forms import InChIorSMILESinput, PlotConfigForm
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import checking_inchi, plotmol, prediction
+from .utils import checking_inchi, custom_plot, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
 images_dir = osp.join(settings.MEDIA_ROOT, "images")
@@ -32,8 +32,10 @@ def estimator(request):
     query = ""
     output = False
     plotden, plotvp, molimg = "", "", ""
+    custom_plots = []
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
+        plot_config = PlotConfigForm(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
@@ -65,12 +67,22 @@ def estimator(request):
 
             molimg = plotmol(inchi)
             output = True
+            plot_config.full_clean()
+            if plot_config.cleaned_data["custom_plot"]:
+                custom_plots = custom_plot(
+                    pred,
+                    plot_config.cleaned_data["temp_min"],
+                    plot_config.cleaned_data["temp_max"],
+                    plot_config.cleaned_data["pressure"],
+                )
 
     else:
         form = InChIorSMILESinput()
+        plot_config = PlotConfigForm()
 
     context = {
         "form": form,
+        "plot_config": plot_config,
         "predicted_para": (
             [
                 (paraname, round(para, 4))
@@ -86,6 +98,7 @@ def estimator(request):
         "den_data": plotden,
         "vp_data": plotvp,
         "mol_data": molimg,
+        "custom_plots": custom_plots,
     }
 
     return render(request, "pred.html", context)

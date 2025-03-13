@@ -8,11 +8,12 @@
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
         <div class="row my-5 justify-content-center">
-          <div class="col-md-3">{{ form.query }}</div>
-          <div class="col-md-3">
+          <div class="col-md-3 my-1">{{ form.query }}</div>
+          <div class="col-md-3 my-1">
             <input type="submit"
                    value="Analyse SMILES/InChI"
                    class="form-control btn-outline-primary" />
+            <div class="form-control my-1">{{ plot_config }}</div>
           </div>
         </div>
       </form>
@@ -67,6 +68,12 @@
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
+        {% for dataname, xlegendpos, ytitle, id in custom_plots %}
+          <div class="col-lg-4 mt-2 ">
+            <div id="{{ id }}_2" alt="{{ ytitle }}"></div>
+            <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+          </div>
+        {% endfor %}
       {% else %}
         <div class="col-lg">
           <ul>

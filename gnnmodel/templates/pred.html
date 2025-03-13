@@ -80,41 +80,8 @@
         <div class="col-lg-6 d-grid border border-dark">
           <div id="molplot" class="molplot-style"></div>
           <script src="static/js/3Dmol-min.js"></script>
-          <script>
-           let element = document.querySelector('#molplot');
-           let config = { backgroundColor: '#f8f9fa' };
-           let v = $3Dmol.createViewer( element, config );
-           let data =`{{mol_data}}`;
-           v.addModel( data, "sdf" );
-           v.setStyle({}, {
-             stick: {color: 'spectrum', radius:0.2,},
-             sphere: {color: 'spectrum', scale:0.333,},
-           }
-           );
-           v.render();
-           v.zoomTo();
-
-           function reset(){
-            v.removeAllLabels();
-            v.setStyle({}, {
-              stick: {color: 'spectrum', radius:0.2,}, 
-              sphere: {color: 'spectrum', scale:0.333,},
-            });
-            v.render();
-           }
-
-           function addlabel(){
-            v.addPropertyLabels('atom',
-            {not:{elem:'H'}}, 
-            {fontColor: ' black ', 
-            font: ' sans-serif ', 
-            fontSize: 28, 
-            showBackground:false, 
-            alignment: ' center '});
-            v.render();
-           }
-
-          </script>
+          <script src="static/js/plotmol.js"></script>
+          <script>loadmol(`{{mol_data}}`);</script>
           <div class="btn-group btn-group-sm"
                role="group"
                aria-label="Buttons for 3Dmol">

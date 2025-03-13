@@ -9,17 +9,7 @@ from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import inchitosmiles, smilestoinchi
 
 
-class BootstrapForm(forms.Form):
-    "To add bootstrap class to django form"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs["class"] = "form-control"
-            visible.field.widget.attrs["aria-label"] = "Type/Paste InChI or SMILES"
-
-
-class InChIorSMILESinput(BootstrapForm):
+class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
     query = forms.CharField(
@@ -28,6 +18,9 @@ class InChIorSMILESinput(BootstrapForm):
         empty_value="InChI or SMILES",
         required=True,
         initial="CCO",
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "aria-label": "Type/Paste InChI or SMILES"}
+        ),
     )
 
     def clean_query(self):

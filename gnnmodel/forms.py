@@ -46,15 +46,9 @@ class InChIorSMILESinput(forms.Form):
         return data
 
 
-class PlotConfigForm(forms.Form):
-    "Form to receive plot config."
+class CustomPlotConfigForm(forms.Form):
+    "Form to receive custom plot config."
 
-    custom_plot = forms.BooleanField(
-        label="Custom Plot",
-        required=False,
-        initial=False,
-        widget=forms.CheckboxInput(attrs={"class": "form-control form-check-input"}),
-    )
     temp_min = forms.FloatField(
         label="Minimum Temperature (K)",
         required=False,
@@ -72,4 +66,20 @@ class PlotConfigForm(forms.Form):
         required=False,
         initial=101325.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+
+
+class CustomPlotCheckForm(forms.Form):
+    "Form to check custom plot."
+
+    custom_plot = forms.BooleanField(
+        label="Custom Plot",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Custom Plot",
+            }
+        ),
     )

@@ -5,7 +5,7 @@ import os.path as osp
 from django.conf import settings
 from django.shortcuts import render
 
-from .forms import InChIorSMILESinput, PlotConfigForm
+from .forms import CustomPlotCheckForm, CustomPlotConfigForm, InChIorSMILESinput
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 from .utils import checking_inchi, custom_plot, plotmol, prediction
 
@@ -35,7 +35,8 @@ def estimator(request):
     custom_plots = []
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
-        plot_config = PlotConfigForm(request.POST)
+        plot_config = CustomPlotConfigForm(request.POST)
+        plot_check = CustomPlotCheckForm(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
@@ -68,7 +69,8 @@ def estimator(request):
             molimg = plotmol(inchi)
             output = True
             plot_config.full_clean()
-            if plot_config.cleaned_data["custom_plot"]:
+            plot_check.full_clean()
+            if plot_check.cleaned_data["custom_plot"]:
                 custom_plots = custom_plot(
                     pred,
                     plot_config.cleaned_data["temp_min"],
@@ -78,11 +80,13 @@ def estimator(request):
 
     else:
         form = InChIorSMILESinput()
-        plot_config = PlotConfigForm()
+        plot_config = CustomPlotConfigForm()
+        plot_check = CustomPlotCheckForm()
 
     context = {
         "form": form,
         "plot_config": plot_config,
+        "plot_check": plot_check,
         "predicted_para": (
             [
                 (paraname, round(para, 4))

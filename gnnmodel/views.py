@@ -8,8 +8,10 @@ from django.shortcuts import render
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
+    HlvCheckForm,
     InChIorSMILESinput,
     RhoCheckForm,
+    SlvCheckForm,
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
@@ -45,6 +47,8 @@ def estimator(request):
         plot_checkbox = CustomPlotCheckForm(request.POST)
         rho_checkbox = RhoCheckForm(request.POST)
         vp_checkbox = VPCheckForm(request.POST)
+        h_lv_checkbox = HlvCheckForm(request.POST)
+        s_lv_checkbox = SlvCheckForm(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
@@ -78,8 +82,11 @@ def estimator(request):
             output = True
             plot_config.full_clean()
             plot_checkbox.full_clean()
+
             rho_checkbox.full_clean()
             vp_checkbox.full_clean()
+            h_lv_checkbox.full_clean()
+            s_lv_checkbox.full_clean()
             if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
                 custom_plots = custom_plot(
                     pred,
@@ -89,6 +96,8 @@ def estimator(request):
                     [
                         rho_checkbox.cleaned_data["rho_checkbox"],
                         vp_checkbox.cleaned_data["vp_checkbox"],
+                        h_lv_checkbox.cleaned_data["h_lv_checkbox"],
+                        s_lv_checkbox.cleaned_data["s_lv_checkbox"],
                     ],
                 )
 
@@ -98,11 +107,19 @@ def estimator(request):
         plot_checkbox = CustomPlotCheckForm()
         rho_checkbox = RhoCheckForm()
         vp_checkbox = VPCheckForm()
+        h_lv_checkbox = HlvCheckForm()
+        s_lv_checkbox = SlvCheckForm()
 
     context = {
         "form": form,
         "plot_config": plot_config,
-        "plot_checkboxes": [plot_checkbox, rho_checkbox, vp_checkbox],
+        "plot_checkboxes": [
+            plot_checkbox,
+            rho_checkbox,
+            vp_checkbox,
+            h_lv_checkbox,
+            s_lv_checkbox,
+        ],
         "predicted_para": (
             [
                 (paraname, round(para, 4))

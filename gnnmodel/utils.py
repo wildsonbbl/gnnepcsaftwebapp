@@ -12,7 +12,13 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
-from gnnepcsaft.epcsaft.epcsaft_feos import pure_den_feos, pure_vp_feos
+from gnnepcsaft.epcsaft.epcsaft_feos import (
+    phase_diagram_feos,
+    pure_den_feos,
+    pure_h_lv_feos,
+    pure_s_lv_feos,
+    pure_vp_feos,
+)
 from rdkit.Chem import AllChem as Chem
 
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
@@ -292,15 +298,25 @@ def custom_plot(
     pressure: float
     pressure in Pa
     checkboxes: list
-    list with checks to plot in the order [density, vapor pressure, ...]
+    list with checks to plot in the order [density, vapor pressure, enthalpy, entropy]
     """
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
     states = np.stack((temp_range, p_range), 1)
-    prop_fns = [pure_den_feos, pure_vp_feos]  # more prop later
-    prop_ids = ["den_plot", "vp_plot"]
-    prop_names = ["Density (mol / m³)", "Vapor pressure (Pa)"]
-    xlegendpos = [0, 0]
+    prop_fns = [
+        pure_den_feos,
+        pure_vp_feos,
+        pure_h_lv_feos,
+        pure_s_lv_feos,
+    ]  # more prop later
+    prop_ids = ["den_plot", "vp_plot", "h_lv_plot", "s_lv_plot"]
+    prop_names = [
+        "Density (mol / m³)",
+        "Vapor pressure (Pa)",
+        "Enthalpy of vaporization (kJ/mol)",
+        "Entropy of vaporization (J/mol/K)",
+    ]
+    xlegendpos = [0, 0, 0, 0]
     all_plots = []
 
     for prop_fn, prop_id, prop_name, xpos, checkbox in zip(

@@ -118,3 +118,37 @@ class VPCheckForm(forms.Form):
             }
         ),
     )
+
+
+class HlvCheckForm(forms.Form):
+    "Form to check enthalpy of vaporization."
+
+    h_lv_checkbox = forms.BooleanField(
+        label="Enthalpy of vaporization (kJ/mol)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Enthalpy of vaporization (kJ/mol)",
+            }
+        ),
+    )
+
+
+class SlvCheckForm(forms.Form):
+    "Form to check entropy of vaporization."
+
+    s_lv_checkbox = forms.BooleanField(
+        label="Entropy of vaporization (J/mol/K)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Entropy of vaporization (J/mol/K)",
+            }
+        ),
+    )

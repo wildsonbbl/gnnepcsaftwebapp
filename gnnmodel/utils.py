@@ -273,18 +273,26 @@ def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
     return den, vp
 
 
-def custom_plot(parameters: list, temp_min: float, temp_max: float, pressure: float):
+def custom_plot(
+    parameters: list,
+    temp_min: float,
+    temp_max: float,
+    pressure: float,
+    checkboxes: list,
+):
     """
     Custom plot function for ePC-SAFT parameters."
     args:
     parameters: list
     list with ePC-SAFT parameters
-    temp_min: floatrt
+    temp_min: float
     minimum temperature in Kelvin
     temp_max: float
     maximum temperature in Kelvin
     pressure: float
     pressure in Pa
+    checkboxes: list
+    list with checks to plot in the order [density, vapor pressure, ...]
     """
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
@@ -295,17 +303,22 @@ def custom_plot(parameters: list, temp_min: float, temp_max: float, pressure: fl
     xlegendpos = [0, 0]
     all_plots = []
 
-    for prop_fn, prop_id, prop_name, xpos in zip(
-        prop_fns, prop_ids, prop_names, xlegendpos
+    for prop_fn, prop_id, prop_name, xpos, checkbox in zip(
+        prop_fns,
+        prop_ids,
+        prop_names,
+        xlegendpos,
+        checkboxes,
     ):
-        plot_data = {"T": [], "GNN": [], "TML": []}
-        for state in states:
-            try:
+        if checkbox:
+            plot_data = {"T": [], "GNN": [], "TML": []}
+            for state in states:
+                try:
 
-                prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
-                plot_data["T"].append(state[0])
-                plot_data["GNN"].append(prop)
-            except (AssertionError, RuntimeError) as e:
-                print(e)
-        all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
+                    prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
+                    plot_data["T"].append(state[0])
+                    plot_data["GNN"].append(prop)
+                except (AssertionError, RuntimeError) as e:
+                    print(e)
+            all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
     return all_plots

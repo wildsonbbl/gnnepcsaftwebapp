@@ -5,7 +5,13 @@ import os.path as osp
 from django.conf import settings
 from django.shortcuts import render
 
-from .forms import CustomPlotCheckForm, CustomPlotConfigForm, InChIorSMILESinput
+from .forms import (
+    CustomPlotCheckForm,
+    CustomPlotConfigForm,
+    InChIorSMILESinput,
+    RhoCheckForm,
+    VPCheckForm,
+)
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 from .utils import checking_inchi, custom_plot, plotmol, prediction
 
@@ -36,7 +42,9 @@ def estimator(request):
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
         plot_config = CustomPlotConfigForm(request.POST)
-        plot_check = CustomPlotCheckForm(request.POST)
+        plot_checkbox = CustomPlotCheckForm(request.POST)
+        rho_checkbox = RhoCheckForm(request.POST)
+        vp_checkbox = VPCheckForm(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
@@ -69,24 +77,32 @@ def estimator(request):
             molimg = plotmol(inchi)
             output = True
             plot_config.full_clean()
-            plot_check.full_clean()
-            if plot_check.cleaned_data["custom_plot"]:
+            plot_checkbox.full_clean()
+            rho_checkbox.full_clean()
+            vp_checkbox.full_clean()
+            if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
                 custom_plots = custom_plot(
                     pred,
                     plot_config.cleaned_data["temp_min"],
                     plot_config.cleaned_data["temp_max"],
                     plot_config.cleaned_data["pressure"],
+                    [
+                        rho_checkbox.cleaned_data["rho_checkbox"],
+                        vp_checkbox.cleaned_data["vp_checkbox"],
+                    ],
                 )
 
     else:
         form = InChIorSMILESinput()
         plot_config = CustomPlotConfigForm()
-        plot_check = CustomPlotCheckForm()
+        plot_checkbox = CustomPlotCheckForm()
+        rho_checkbox = RhoCheckForm()
+        vp_checkbox = VPCheckForm()
 
     context = {
         "form": form,
         "plot_config": plot_config,
-        "plot_check": plot_check,
+        "plot_checkboxes": [plot_checkbox, rho_checkbox, vp_checkbox],
         "predicted_para": (
             [
                 (paraname, round(para, 4))

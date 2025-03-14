@@ -4,6 +4,7 @@ import os.path as osp
 
 from django.conf import settings
 from django.shortcuts import render
+from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos
 
 from .forms import (
     CustomPlotCheckForm,
@@ -29,6 +30,8 @@ available_params = [
     "Dipole moment (D)*",
     "Number of association site A",
     "Number of association site B",
+    "Critical temperature (K)",
+    "Critical pressure (Bar)",
 ]
 
 
@@ -70,6 +73,9 @@ def estimator(request):
                     comp.na,
                     comp.nb,
                 ]
+            critical_points = critical_points_feos(pred)
+            pred.append(critical_points[0])
+            pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
             if len(alldata) > 0:
                 plotvp = alldata[0].vp
@@ -83,11 +89,11 @@ def estimator(request):
             plot_config.full_clean()
             plot_checkbox.full_clean()
 
-            rho_checkbox.full_clean()
-            vp_checkbox.full_clean()
-            h_lv_checkbox.full_clean()
-            s_lv_checkbox.full_clean()
             if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
+                rho_checkbox.full_clean()
+                vp_checkbox.full_clean()
+                h_lv_checkbox.full_clean()
+                s_lv_checkbox.full_clean()
                 custom_plots = custom_plot(
                     pred,
                     plot_config.cleaned_data["temp_min"],

@@ -208,37 +208,37 @@ PWA_APP_SPLASH_SCREEN = data["icons"]
 PWA_APP_SCREENSHOTS = [
     {
         "src": "/static/images/icons/Screenshot-wide.png",
-        "sizes": "1920x1020",
+        "sizes": "2560x1600",
         "type": "image/png",
         "form_factor": "wide",
     },
     {
         "src": "/static/images/icons/Screenshot-wide-2.png",
-        "sizes": "1920x1020",
+        "sizes": "2560x1600",
         "type": "image/png",
         "form_factor": "wide",
     },
     {
         "src": "/static/images/icons/Screenshot-wide-3.png",
-        "sizes": "1920x1020",
+        "sizes": "2560x1600",
         "type": "image/png",
         "form_factor": "wide",
     },
     {
         "src": "/static/images/icons/Screenshot-narrow.png",
-        "sizes": "1080x2340",
+        "sizes": "1290x2796",
         "type": "image/png",
         "form_factor": "narrow",
     },
     {
         "src": "/static/images/icons/Screenshot-narrow-2.png",
-        "sizes": "1080x2340",
+        "sizes": "1290x2796",
         "type": "image/png",
         "form_factor": "narrow",
     },
     {
         "src": "/static/images/icons/Screenshot-narrow-3.png",
-        "sizes": "1080x2340",
+        "sizes": "1290x2796",
         "type": "image/png",
         "form_factor": "narrow",
     },

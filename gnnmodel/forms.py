@@ -9,17 +9,7 @@ from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import inchitosmiles, smilestoinchi
 
 
-class BootstrapForm(forms.Form):
-    "To add bootstrap class to django form"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for visible in self.visible_fields():
-            visible.field.widget.attrs["class"] = "form-control"
-            visible.field.widget.attrs["aria-label"] = "Type/Paste InChI or SMILES"
-
-
-class InChIorSMILESinput(BootstrapForm):
+class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
     query = forms.CharField(
@@ -28,6 +18,9 @@ class InChIorSMILESinput(BootstrapForm):
         empty_value="InChI or SMILES",
         required=True,
         initial="CCO",
+        widget=forms.TextInput(
+            attrs={"class": "form-control", "aria-label": "Type/Paste InChI or SMILES"}
+        ),
     )
 
     def clean_query(self):
@@ -51,3 +44,42 @@ class InChIorSMILESinput(BootstrapForm):
         except ValueError as e:
             raise ValidationError(_("Invalid InChI/SMILES.")) from e
         return data
+
+
+class CustomPlotConfigForm(forms.Form):
+    "Form to receive custom plot config."
+
+    temp_min = forms.FloatField(
+        label="Minimum Temperature (K)",
+        required=False,
+        initial=300.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+    temp_max = forms.FloatField(
+        label="Maximum Temperature (K)",
+        required=False,
+        initial=400.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+    pressure = forms.FloatField(
+        label="Pressure (Pa)",
+        required=False,
+        initial=101325.0,
+        widget=forms.NumberInput(attrs={"class": "form-control"}),
+    )
+
+
+class CustomPlotCheckForm(forms.Form):
+    "Form to check custom plot."
+
+    custom_plot = forms.BooleanField(
+        label="Custom Plot",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Custom Plot",
+            }
+        ),
+    )

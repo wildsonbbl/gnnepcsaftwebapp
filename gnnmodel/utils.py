@@ -1,4 +1,5 @@
 "Module for utils like plotting data."
+
 import csv
 import json
 import os.path as osp
@@ -270,3 +271,41 @@ def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
     vp = np.asarray(vpl)
 
     return den, vp
+
+
+def custom_plot(parameters: list, temp_min: float, temp_max: float, pressure: float):
+    """
+    Custom plot function for ePC-SAFT parameters."
+    args:
+    parameters: list
+    list with ePC-SAFT parameters
+    temp_min: floatrt
+    minimum temperature in Kelvin
+    temp_max: float
+    maximum temperature in Kelvin
+    pressure: float
+    pressure in Pa
+    """
+    temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
+    p_range = np.asarray([pressure] * 100, dtype=np.float64)
+    states = np.stack((temp_range, p_range), 1)
+    prop_fns = [pure_den_feos, pure_vp_feos]  # more prop later
+    prop_ids = ["den_plot", "vp_plot"]
+    prop_names = ["Density (mol / m³)", "Vapor pressure (Pa)"]
+    xlegendpos = [0, 0]
+    all_plots = []
+
+    for prop_fn, prop_id, prop_name, xpos in zip(
+        prop_fns, prop_ids, prop_names, xlegendpos
+    ):
+        plot_data = {"T": [], "GNN": [], "TML": []}
+        for state in states:
+            try:
+
+                prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
+                plot_data["T"].append(state[0])
+                plot_data["GNN"].append(prop)
+            except (AssertionError, RuntimeError) as e:
+                print(e)
+        all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
+    return all_plots

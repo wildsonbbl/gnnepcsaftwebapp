@@ -8,11 +8,24 @@
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
         <div class="row my-5 justify-content-center">
-          <div class="col-md-3">{{ form.query }}</div>
-          <div class="col-md-3">
+          <div class="col-md-3 my-1">{{ form.query }}</div>
+          <div class="col-md-3 my-1">
             <input type="submit"
                    value="Analyse SMILES/InChI"
                    class="form-control btn-outline-primary" />
+            <button class="form-control my-1 btn-outline-secondary"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#AdvancedOptions"
+                    aria-expanded="false"
+                    aria-controls="AdvancedOptions">Advanced Options</button>
+            <div class="collapse" id="AdvancedOptions">
+              <div class="form-check form-switch">
+                {{ plot_check.custom_plot }}
+                <label for="id_custom_plot" class="form-check-label">{{ plot_check.custom_plot.label }}</label>
+              </div>
+              <div class="form-control my-1">{{ plot_config }}</div>
+            </div>
           </div>
         </div>
       </form>
@@ -67,6 +80,12 @@
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
+        {% for dataname, xlegendpos, ytitle, id in custom_plots %}
+          <div class="col-lg-4 mt-2 ">
+            <div id="{{ id }}_2" alt="{{ ytitle }}"></div>
+            <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+          </div>
+        {% endfor %}
       {% else %}
         <div class="col-lg">
           <ul>
@@ -80,41 +99,8 @@
         <div class="col-lg-6 d-grid border border-dark">
           <div id="molplot" class="molplot-style"></div>
           <script src="static/js/3Dmol-min.js"></script>
-          <script>
-           let element = document.querySelector('#molplot');
-           let config = { backgroundColor: '#f8f9fa' };
-           let v = $3Dmol.createViewer( element, config );
-           let data =`{{mol_data}}`;
-           v.addModel( data, "sdf" );
-           v.setStyle({}, {
-             stick: {color: 'spectrum', radius:0.2,},
-             sphere: {color: 'spectrum', scale:0.333,},
-           }
-           );
-           v.render();
-           v.zoomTo();
-
-           function reset(){
-            v.removeAllLabels();
-            v.setStyle({}, {
-              stick: {color: 'spectrum', radius:0.2,}, 
-              sphere: {color: 'spectrum', scale:0.333,},
-            });
-            v.render();
-           }
-
-           function addlabel(){
-            v.addPropertyLabels('atom',
-            {not:{elem:'H'}}, 
-            {fontColor: ' black ', 
-            font: ' sans-serif ', 
-            fontSize: 28, 
-            showBackground:false, 
-            alignment: ' center '});
-            v.render();
-           }
-
-          </script>
+          <script src="static/js/plotmol.js"></script>
+          <script>loadmol(`{{mol_data}}`);</script>
           <div class="btn-group btn-group-sm"
                role="group"
                aria-label="Buttons for 3Dmol">

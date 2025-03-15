@@ -2,7 +2,6 @@
 
 import os.path as osp
 
-from django.conf import settings
 from django.shortcuts import render
 from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos, phase_diagram_feos
 
@@ -20,7 +19,6 @@ from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 from .utils import custom_plot, get_inchi, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
-images_dir = osp.join(settings.MEDIA_ROOT, "images")
 
 available_params = [
     "Segment number",

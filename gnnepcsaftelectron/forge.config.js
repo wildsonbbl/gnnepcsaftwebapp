@@ -6,7 +6,7 @@ module.exports = {
     asar: true,
     name: "GNNePCSAFT",
     icon: "./storelogo_scale_400_hf3_icon.ico",
-    extraResource: ["../windows/dist/gnnepcsaftwebapp"],
+    extraResource: ["../apppkg/dist/gnnepcsaftwebapp"],
   },
   rebuildConfig: {},
   makers: [

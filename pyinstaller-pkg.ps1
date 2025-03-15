@@ -1,4 +1,4 @@
-pyinstaller --distpath ./windows/dist --workpath ./windows/build `
+pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build `
   -D -n gnnepcsaftwebapp --additional-hooks-dir="./hooks" --noconfirm --clean `
   --add-data="./icons.json:." `
   --add-data="./mydatabase:." `

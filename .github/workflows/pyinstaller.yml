@@ -37,5 +37,5 @@ jobs:
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
-          pyinstaller-pkg.ps1
+          ./pyinstaller-pkg.ps1
           ./windows/dist/gnnepcsaftwebapp/gnnepcsaftwebapp.exe check

@@ -36,7 +36,7 @@ jobs:
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
-          pyinstaller-pkg.ps1
+          ./pyinstaller-pkg.ps1
       - name: Package Electron App with Squirrel
         run: |
           cd gnnepcsaftelectron

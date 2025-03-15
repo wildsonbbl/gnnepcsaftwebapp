@@ -206,7 +206,7 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
-    inchi = checking_inchi(smiles)
+    inchi = get_inchi(smiles)
     try:
         graph = smiles2graph(smiles)
         na, nb = assoc_number(inchi)
@@ -247,7 +247,7 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     return pred, output, inchi
 
 
-def checking_inchi(query: str) -> str:
+def get_inchi(query: str) -> str:
     "Check if query is inchi and return an inchi."
     inchi_check = re.search("^InChI=", query)
     inchi = query

@@ -17,7 +17,7 @@ from .forms import (
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import checking_inchi, custom_plot, plotmol, prediction
+from .utils import custom_plot, get_inchi, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
 images_dir = osp.join(settings.MEDIA_ROOT, "images")

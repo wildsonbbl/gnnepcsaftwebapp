@@ -35,7 +35,7 @@ available_params = [
 
 
 # Create your views here.
-def estimator(request):
+def estimator(request):  # pylint: disable=R0914
     "handle request"
 
     pred = None

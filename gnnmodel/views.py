@@ -150,10 +150,16 @@ def get_main_plots_data(inchi):
     "get main plot data"
 
     alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    plotvp = alldata[0].vp
+    if len(alldata) > 0:
+        plotvp = alldata[0].vp
+    else:
+        plotvp = ""
 
     alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    plotden = alldata[0].den
+    if len(alldata) > 0:
+        plotden = alldata[0].den
+    else:
+        plotden = ""
 
     molimg = plotmol(inchi)
     return plotden, plotvp, molimg

@@ -4,13 +4,14 @@ import os.path as osp
 
 from django.conf import settings
 from django.shortcuts import render
-from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos
+from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos, phase_diagram_feos
 
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
     HlvCheckForm,
     InChIorSMILESinput,
+    PhaseDiagramCheckForm,
     RhoCheckForm,
     SlvCheckForm,
     VPCheckForm,
@@ -42,7 +43,7 @@ def estimator(request):
     pred = None
     query = ""
     output = False
-    plotden, plotvp, molimg = "", "", ""
+    plotden, plotvp, molimg, phase_diagrams = "", "", "", ""
     custom_plots = []
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
@@ -52,6 +53,7 @@ def estimator(request):
         vp_checkbox = VPCheckForm(request.POST)
         h_lv_checkbox = HlvCheckForm(request.POST)
         s_lv_checkbox = SlvCheckForm(request.POST)
+        phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
 
         if form.is_valid():
             query = form.cleaned_data["query"]
@@ -94,6 +96,7 @@ def estimator(request):
                 vp_checkbox.full_clean()
                 h_lv_checkbox.full_clean()
                 s_lv_checkbox.full_clean()
+                phase_diagram_checkbox.full_clean()
                 custom_plots = custom_plot(
                     pred,
                     plot_config.cleaned_data["temp_min"],
@@ -106,6 +109,19 @@ def estimator(request):
                         s_lv_checkbox.cleaned_data["s_lv_checkbox"],
                     ],
                 )
+                if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
+                    phase_diagrams_all_data = phase_diagram_feos(
+                        pred, [plot_config.cleaned_data["temp_min"]]
+                    )
+                    phase_diagrams = [
+                        phase_diagrams_all_data.get("temperature", [0]),
+                        phase_diagrams_all_data.get(
+                            "pressure",
+                            phase_diagrams_all_data.get("pressure vapor", [0]),
+                        ),
+                        phase_diagrams_all_data["density liquid"],
+                        phase_diagrams_all_data["density vapor"],
+                    ]
 
     else:
         form = InChIorSMILESinput()
@@ -115,6 +131,7 @@ def estimator(request):
         vp_checkbox = VPCheckForm()
         h_lv_checkbox = HlvCheckForm()
         s_lv_checkbox = SlvCheckForm()
+        phase_diagram_checkbox = PhaseDiagramCheckForm()
 
     context = {
         "form": form,
@@ -125,6 +142,7 @@ def estimator(request):
             vp_checkbox,
             h_lv_checkbox,
             s_lv_checkbox,
+            phase_diagram_checkbox,
         ],
         "predicted_para": (
             [
@@ -142,6 +160,7 @@ def estimator(request):
         "vp_data": plotvp,
         "mol_data": molimg,
         "custom_plots": custom_plots,
+        "phase_diagrams": phase_diagrams,
     }
 
     return render(request, "pred.html", context)

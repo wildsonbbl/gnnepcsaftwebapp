@@ -51,18 +51,21 @@ class CustomPlotConfigForm(forms.Form):
 
     temp_min = forms.FloatField(
         label="Minimum Temperature (K)",
+        min_value=1.0,
         required=False,
         initial=300.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     temp_max = forms.FloatField(
         label="Maximum Temperature (K)",
+        min_value=1.0,
         required=False,
         initial=400.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     pressure = forms.FloatField(
         label="Pressure (Pa)",
+        min_value=1.0,
         required=False,
         initial=101325.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
@@ -149,6 +152,23 @@ class SlvCheckForm(forms.Form):
             attrs={
                 "class": "form-check-input",
                 "aria-label": "Entropy of vaporization (J/mol/K)",
+            }
+        ),
+    )
+
+
+class PhaseDiagramCheckForm(forms.Form):
+    "Form to check phase diagram."
+
+    phase_diagram_checkbox = forms.BooleanField(
+        label="Phase diagrams",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Phase diagrams",
             }
         ),
     )

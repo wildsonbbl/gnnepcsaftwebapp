@@ -83,6 +83,19 @@
             <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
+        {% if phase_diagrams %}
+          <div class="col-lg-4 mt-2 ">
+            <div id="t_rho_diagram" alt="T-rho diagram"></div>
+          </div>
+          <div class="col-lg-4 mt-2 ">
+            <div id="p_rho_diagram" alt="P-rho diagram"></div>
+          </div>
+          <script>
+            var phase_diagram_data = {{ phase_diagrams }};
+            get_phase_diagram(phase_diagram_data, 0, "Temperature (K)", 0, "t_rho_diagram");
+            get_phase_diagram(phase_diagram_data, 0, "Pressure (Pa)", 1, "p_rho_diagram");
+          </script>
+        {% endif %}
       {% else %}
         <div class="col-lg">
           <ul>

@@ -16,7 +16,7 @@ from .forms import (
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import custom_plot, get_inchi, plotmol, prediction
+from .utils import custom_plot, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
 
@@ -55,11 +55,9 @@ def estimator(request):
         ) = get_forms(request)
 
         if form.is_valid():
-            query = form.cleaned_data["query"]
-            inchi = get_inchi(query)
+            smiles, inchi = form.cleaned_data["query"]
 
-            pred = get_pred(query, inchi)
-
+            pred = get_pred(smiles, inchi)
             plotden, plotvp, molimg = get_main_plots_data(inchi)
             output = True
 

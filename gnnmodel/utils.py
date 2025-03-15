@@ -3,7 +3,6 @@
 import csv
 import json
 import os.path as osp
-import re
 
 import numpy as np
 import onnxruntime as ort
@@ -204,7 +203,7 @@ def prediction(smiles: str) -> np.ndarray:
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
-    inchi = get_inchi(smiles)
+    inchi = smilestoinchi(smiles)
 
     graph = smiles2graph(smiles)
     na, nb = assoc_number(inchi)
@@ -240,15 +239,6 @@ def prediction(smiles: str) -> np.ndarray:
     pred = np.clip(pred, lower_bounds, upper_bounds)
 
     return pred
-
-
-def get_inchi(query: str) -> str:
-    "Check if query is inchi and return an inchi."
-    inchi_check = re.search("^InChI=", query)
-    inchi = query
-    if not inchi_check:
-        inchi = smilestoinchi(query)
-    return inchi
 
 
 def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):

@@ -1,10 +1,12 @@
-name: Package electron app for windows
+name: PyInstaller check up
 
 on:
   workflow_dispatch:
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
+    paths:
+      - "**.py"
 
 jobs:
   electron-app-build:
@@ -14,10 +16,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.13.1
       - name: Set up Python 3.10.16
         uses: actions/setup-python@v5
         with:
@@ -37,16 +35,4 @@ jobs:
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
           pyinstaller-pkg.ps1
-      - name: Package Electron App with Squirrel
-        run: |
-          cd gnnepcsaftelectron
-          npm install
-          npm run make
-          cd ..
-          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/* .
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts: "*Setup.exe"
-          allowUpdates: true
-          updateOnlyUnreleased: true
-          removeArtifacts: false
+          ./windows/dist/gnnepcsaftwebapp/gnnepcsaftwebapp.exe check

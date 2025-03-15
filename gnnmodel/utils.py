@@ -203,6 +203,8 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
 
 def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
+    lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
+    upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
     inchi = checking_inchi(smiles)
     try:
@@ -236,7 +238,8 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
             },
         )[0][0]
         munanb = np.asarray([0.0, na, nb])
-        pred = np.hstack([msigmae, assoc, munanb]).round(decimals=4)
+        pred = np.hstack([msigmae, assoc, munanb])
+        pred = np.clip(pred, lower_bounds, upper_bounds)
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
         raise ValidationError(_("Invalid InChI/SMILES.")) from e

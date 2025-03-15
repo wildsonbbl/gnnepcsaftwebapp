@@ -75,7 +75,10 @@ def estimator(request):
                     comp.na,
                     comp.nb,
                 ]
-            critical_points = critical_points_feos(pred)
+            try:
+                critical_points = critical_points_feos(pred)
+            except RuntimeError:
+                critical_points = [0.0, 0.0]
             pred.append(critical_points[0])
             pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
             alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
@@ -110,18 +113,21 @@ def estimator(request):
                     ],
                 )
                 if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
-                    phase_diagrams_all_data = phase_diagram_feos(
-                        pred, [plot_config.cleaned_data["temp_min"]]
-                    )
-                    phase_diagrams = [
-                        phase_diagrams_all_data.get("temperature", [0]),
-                        phase_diagrams_all_data.get(
-                            "pressure",
-                            phase_diagrams_all_data.get("pressure vapor", [0]),
-                        ),
-                        phase_diagrams_all_data["density liquid"],
-                        phase_diagrams_all_data["density vapor"],
-                    ]
+                    try:
+                        phase_diagrams_all_data = phase_diagram_feos(
+                            pred, [plot_config.cleaned_data["temp_min"]]
+                        )
+                        phase_diagrams = [
+                            phase_diagrams_all_data.get("temperature", [0]),
+                            phase_diagrams_all_data.get(
+                                "pressure",
+                                phase_diagrams_all_data.get("pressure vapor", [0]),
+                            ),
+                            phase_diagrams_all_data["density liquid"],
+                            phase_diagrams_all_data["density vapor"],
+                        ]
+                    except RuntimeError:
+                        phase_diagrams = ""
 
     else:
         form = InChIorSMILESinput()

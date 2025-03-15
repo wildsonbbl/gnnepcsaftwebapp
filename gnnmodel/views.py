@@ -205,18 +205,22 @@ def get_custom_plots_data(
     h_lv_checkbox.full_clean()
     s_lv_checkbox.full_clean()
     phase_diagram_checkbox.full_clean()
-    custom_plots = custom_plot(
-        pred,
-        plot_config.cleaned_data["temp_min"],
-        plot_config.cleaned_data["temp_max"],
-        plot_config.cleaned_data["pressure"],
-        [
-            rho_checkbox.cleaned_data["rho_checkbox"],
-            vp_checkbox.cleaned_data["vp_checkbox"],
-            h_lv_checkbox.cleaned_data["h_lv_checkbox"],
-            s_lv_checkbox.cleaned_data["s_lv_checkbox"],
-        ],
-    )
+    try:
+        custom_plots = custom_plot(
+            pred,
+            plot_config.cleaned_data["temp_min"],
+            plot_config.cleaned_data["temp_max"],
+            plot_config.cleaned_data["pressure"],
+            [
+                rho_checkbox.cleaned_data["rho_checkbox"],
+                vp_checkbox.cleaned_data["vp_checkbox"],
+                h_lv_checkbox.cleaned_data["h_lv_checkbox"],
+                s_lv_checkbox.cleaned_data["s_lv_checkbox"],
+            ],
+        )
+    except RuntimeError as err:
+        print(err)
+        custom_plots = []
     phase_diagrams = ""
     if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
         try:
@@ -234,6 +238,7 @@ def get_custom_plots_data(
             ]
         except RuntimeError as err:
             print(err)
+            phase_diagrams = ""
     return phase_diagrams, custom_plots
 
 

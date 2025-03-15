@@ -247,11 +247,7 @@ def get_inchi(query: str) -> str:
     inchi_check = re.search("^InChI=", query)
     inchi = query
     if not inchi_check:
-        try:
-            inchi = smilestoinchi(query)
-        except ValueError as e:
-            print(e)
-            print("error for query:", query)
+        inchi = smilestoinchi(query)
     return inchi
 
 

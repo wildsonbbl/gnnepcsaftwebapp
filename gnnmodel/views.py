@@ -104,6 +104,9 @@ def estimator(request):  # pylint: disable=R0914
             if output
             else [(None, None)]
         ),
+        "mol_identifiers": (
+            [("InChI", inchi), ("SMILES", smiles)] if output else [(None, None)]
+        ),
         "output": output,
         "plotden": plotden != "",
         "plotvp": plotvp != "",

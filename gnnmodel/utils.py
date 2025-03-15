@@ -3,13 +3,10 @@
 import csv
 import json
 import os.path as osp
-import re
 
 import numpy as np
 import onnxruntime as ort
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import (
@@ -123,7 +120,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     for inchi in tqdm(tml_data):
         try:
             smiles = inchitosmiles(inchi, False, False)
-            para, _, _ = prediction(smiles)
+            para = prediction(smiles)
         except ValueError as e:
             print(e, inchi)
             continue
@@ -201,35 +198,23 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     print("Updated database with plotden, plotvp")
 
 
-def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
+def prediction(smiles: str) -> np.ndarray:
     "Predict ePC-SAFT parameters."
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
-    inchi = checking_inchi(smiles)
-    try:
-        graph = smiles2graph(smiles)
-        na, nb = assoc_number(inchi)
-        x, edge_index, edge_attr = (
-            graph["node_feat"],
-            graph["edge_index"],
-            graph["edge_feat"],
-        )
+    inchi = smilestoinchi(smiles)
 
-        assoc = 10 ** (
-            assoc_onnx.run(
-                None,
-                {
-                    "x": x,
-                    "edge_index": edge_index,
-                    "edge_attr": edge_attr,
-                },
-            )[0][0]
-            * np.asarray([-1.0, 1.0])
-        )
-        if na == 0 and nb == 0:
-            assoc *= 0
-        msigmae = msigmae_onnx.run(
+    graph = smiles2graph(smiles)
+    na, nb = assoc_number(inchi)
+    x, edge_index, edge_attr = (
+        graph["node_feat"],
+        graph["edge_index"],
+        graph["edge_feat"],
+    )
+
+    assoc = 10 ** (
+        assoc_onnx.run(
             None,
             {
                 "x": x,
@@ -237,48 +222,47 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
                 "edge_attr": edge_attr,
             },
         )[0][0]
-        munanb = np.asarray([0.0, na, nb])
-        pred = np.hstack([msigmae, assoc, munanb])
-        pred = np.clip(pred, lower_bounds, upper_bounds)
-        output = True
-    except (ValueError, TypeError, AttributeError, IndexError) as e:
-        raise ValidationError(_("Invalid InChI/SMILES.")) from e
+        * np.asarray([-1.0, 1.0])
+    )
+    if na == 0 and nb == 0:
+        assoc *= 0
+    msigmae = msigmae_onnx.run(
+        None,
+        {
+            "x": x,
+            "edge_index": edge_index,
+            "edge_attr": edge_attr,
+        },
+    )[0][0]
+    munanb = np.asarray([0.0, na, nb])
+    pred = np.hstack([msigmae, assoc, munanb])
+    pred = np.clip(pred, lower_bounds, upper_bounds)
 
-    return pred, output, inchi
-
-
-def checking_inchi(query: str) -> str:
-    "Check if query is inchi and return an inchi."
-    inchi_check = re.search("^InChI=", query)
-    inchi = query
-    if not inchi_check:
-        try:
-            inchi = smilestoinchi(query)
-        except ValueError as e:
-            print(e)
-            print("error for query:", query)
-    return inchi
+    return pred
 
 
 def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
     """Calculates density and vapor pressure with ePC-SAFT"""
-    parameters = np.abs(parameters)
-    den = []
+
+    all_pred_den = []
     if rho.shape[0] > 0:
         for state in rho:
-            den += [pure_den_feos(parameters, state)]
-    den = np.asarray(den)
+            try:
+                all_pred_den += [pure_den_feos(parameters, state)]
+            except (AssertionError, RuntimeError):
+                all_pred_den += [np.nan]
+    all_pred_den = np.asarray(all_pred_den)
 
-    vpl = []
+    all_pred_vp = []
     if vp.shape[0] > 0:
         for state in vp:
             try:
-                vpl += [pure_vp_feos(parameters, state)]
+                all_pred_vp += [pure_vp_feos(parameters, state)]
             except (AssertionError, RuntimeError):
-                vpl += [np.nan]
-    vp = np.asarray(vpl)
+                all_pred_vp += [np.nan]
+    all_pred_vp = np.asarray(all_pred_vp)
 
-    return den, vp
+    return all_pred_den, all_pred_vp
 
 
 def custom_plot(
@@ -333,9 +317,11 @@ def custom_plot(
             for state in states:
                 try:
 
-                    prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
+                    prop_for_state = prop_fn(
+                        np.asarray(parameters, dtype=np.float64), state
+                    )
                     plot_data["T"].append(state[0])
-                    plot_data["GNN"].append(prop)
+                    plot_data["GNN"].append(prop_for_state)
                 except (AssertionError, RuntimeError) as e:
                     print(e)
             all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))

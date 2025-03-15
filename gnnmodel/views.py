@@ -2,7 +2,6 @@
 
 import os.path as osp
 
-from django.conf import settings
 from django.shortcuts import render
 from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos, phase_diagram_feos
 
@@ -17,10 +16,9 @@ from .forms import (
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import checking_inchi, custom_plot, plotmol, prediction
+from .utils import custom_plot, plotmol, prediction
 
 file_dir = osp.dirname(__file__)
-images_dir = osp.join(settings.MEDIA_ROOT, "images")
 
 available_params = [
     "Segment number",
@@ -37,97 +35,45 @@ available_params = [
 
 
 # Create your views here.
-def estimator(request):
+def estimator(request):  # pylint: disable=R0914
     "handle request"
 
     pred = None
-    query = ""
     output = False
     plotden, plotvp, molimg, phase_diagrams = "", "", "", ""
     custom_plots = []
     if request.method == "POST":
-        form = InChIorSMILESinput(request.POST)
-        plot_config = CustomPlotConfigForm(request.POST)
-        plot_checkbox = CustomPlotCheckForm(request.POST)
-        rho_checkbox = RhoCheckForm(request.POST)
-        vp_checkbox = VPCheckForm(request.POST)
-        h_lv_checkbox = HlvCheckForm(request.POST)
-        s_lv_checkbox = SlvCheckForm(request.POST)
-        phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
+        (
+            form,
+            plot_config,
+            plot_checkbox,
+            rho_checkbox,
+            vp_checkbox,
+            h_lv_checkbox,
+            s_lv_checkbox,
+            phase_diagram_checkbox,
+        ) = get_forms(request)
 
         if form.is_valid():
-            query = form.cleaned_data["query"]
-            inchi = checking_inchi(query)
-            # pylint: disable=E1101
-            comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()
-            if len(comp) == 0:
-                pred, output, inchi = prediction(query)
-                pred = pred.tolist()
-            else:
-                comp = comp[0]
-                pred = [
-                    comp.m,
-                    comp.sigma,
-                    comp.e,
-                    comp.k_ab,
-                    comp.e_ab,
-                    comp.mu,
-                    comp.na,
-                    comp.nb,
-                ]
-            try:
-                critical_points = critical_points_feos(pred)
-            except RuntimeError:
-                critical_points = [0.0, 0.0]
-            pred.append(critical_points[0])
-            pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
-            alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
-            if len(alldata) > 0:
-                plotvp = alldata[0].vp
+            smiles, inchi = form.cleaned_data["query"]
 
-            alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()
-            if len(alldata) > 0:
-                plotden = alldata[0].den
-
-            molimg = plotmol(inchi)
+            pred = get_pred(smiles, inchi)
+            plotden, plotvp, molimg = get_main_plots_data(inchi)
             output = True
-            plot_config.full_clean()
-            plot_checkbox.full_clean()
 
+            plot_checkbox.full_clean()
             if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
-                rho_checkbox.full_clean()
-                vp_checkbox.full_clean()
-                h_lv_checkbox.full_clean()
-                s_lv_checkbox.full_clean()
-                phase_diagram_checkbox.full_clean()
-                custom_plots = custom_plot(
+                phase_diagrams, custom_plots = get_custom_plots_data(
                     pred,
-                    plot_config.cleaned_data["temp_min"],
-                    plot_config.cleaned_data["temp_max"],
-                    plot_config.cleaned_data["pressure"],
-                    [
-                        rho_checkbox.cleaned_data["rho_checkbox"],
-                        vp_checkbox.cleaned_data["vp_checkbox"],
-                        h_lv_checkbox.cleaned_data["h_lv_checkbox"],
-                        s_lv_checkbox.cleaned_data["s_lv_checkbox"],
-                    ],
+                    plot_config,
+                    (
+                        rho_checkbox,
+                        vp_checkbox,
+                        h_lv_checkbox,
+                        s_lv_checkbox,
+                        phase_diagram_checkbox,
+                    ),
                 )
-                if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
-                    try:
-                        phase_diagrams_all_data = phase_diagram_feos(
-                            pred, [plot_config.cleaned_data["temp_min"]]
-                        )
-                        phase_diagrams = [
-                            phase_diagrams_all_data.get("temperature", [0]),
-                            phase_diagrams_all_data.get(
-                                "pressure",
-                                phase_diagrams_all_data.get("pressure vapor", [0]),
-                            ),
-                            phase_diagrams_all_data["density liquid"],
-                            phase_diagrams_all_data["density vapor"],
-                        ]
-                    except RuntimeError:
-                        phase_diagrams = ""
 
     else:
         form = InChIorSMILESinput()
@@ -158,7 +104,9 @@ def estimator(request):
             if output
             else [(None, None)]
         ),
-        "query": query,
+        "mol_identifiers": (
+            [("InChI", inchi), ("SMILES", smiles)] if output else [(None, None)]
+        ),
         "output": output,
         "plotden": plotden != "",
         "plotvp": plotvp != "",
@@ -170,6 +118,129 @@ def estimator(request):
     }
 
     return render(request, "pred.html", context)
+
+
+def get_pred(query, inchi):
+    "get prediction"
+    comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
+    if len(comp) == 0:
+        pred = prediction(query)
+        pred = pred.tolist()
+    else:
+        comp = comp[0]
+        pred = [
+            comp.m,
+            comp.sigma,
+            comp.e,
+            comp.k_ab,
+            comp.e_ab,
+            comp.mu,
+            comp.na,
+            comp.nb,
+        ]
+    try:
+        critical_points = critical_points_feos(pred)
+    except RuntimeError:
+        critical_points = [0.0, 0.0]
+    pred.append(critical_points[0])
+    pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
+    return pred
+
+
+def get_main_plots_data(inchi):
+    "get main plot data"
+
+    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
+    if len(alldata) > 0:
+        plotvp = alldata[0].vp
+    else:
+        plotvp = ""
+
+    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
+    if len(alldata) > 0:
+        plotden = alldata[0].den
+    else:
+        plotden = ""
+
+    molimg = plotmol(inchi)
+    return plotden, plotvp, molimg
+
+
+def get_forms(request):
+    "get forms"
+    form = InChIorSMILESinput(request.POST)
+    plot_config = CustomPlotConfigForm(request.POST)
+    plot_checkbox = CustomPlotCheckForm(request.POST)
+    rho_checkbox = RhoCheckForm(request.POST)
+    vp_checkbox = VPCheckForm(request.POST)
+    h_lv_checkbox = HlvCheckForm(request.POST)
+    s_lv_checkbox = SlvCheckForm(request.POST)
+    phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
+    return (
+        form,
+        plot_config,
+        plot_checkbox,
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+    )
+
+
+def get_custom_plots_data(
+    pred: list,
+    plot_config: CustomPlotConfigForm,
+    checkboxes: tuple[
+        RhoCheckForm, VPCheckForm, HlvCheckForm, SlvCheckForm, PhaseDiagramCheckForm
+    ],
+) -> tuple[str, list[dict]]:
+    "get custom plots data"
+
+    rho_checkbox, vp_checkbox, h_lv_checkbox, s_lv_checkbox, phase_diagram_checkbox = (
+        checkboxes
+    )
+    plot_config.full_clean()
+    rho_checkbox.full_clean()
+    vp_checkbox.full_clean()
+    h_lv_checkbox.full_clean()
+    s_lv_checkbox.full_clean()
+    phase_diagram_checkbox.full_clean()
+    try:
+        custom_plots = custom_plot(
+            pred,
+            plot_config.cleaned_data["temp_min"],
+            plot_config.cleaned_data["temp_max"],
+            plot_config.cleaned_data["pressure"],
+            [
+                rho_checkbox.cleaned_data["rho_checkbox"],
+                vp_checkbox.cleaned_data["vp_checkbox"],
+                h_lv_checkbox.cleaned_data["h_lv_checkbox"],
+                s_lv_checkbox.cleaned_data["s_lv_checkbox"],
+            ],
+        )
+    except RuntimeError as err:
+        print(err)
+        custom_plots = []
+    phase_diagrams = ""
+    if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
+        try:
+            phase_diagrams_all_data = phase_diagram_feos(
+                pred, [plot_config.cleaned_data["temp_min"]]
+            )
+            phase_diagrams = [
+                phase_diagrams_all_data.get("temperature", [0]),
+                phase_diagrams_all_data.get(
+                    "pressure",
+                    phase_diagrams_all_data.get("pressure vapor", [0]),
+                ),
+                phase_diagrams_all_data["density liquid"],
+                phase_diagrams_all_data["density vapor"],
+            ]
+        except RuntimeError as err:
+            print(err)
+            phase_diagrams = ""
+    return phase_diagrams, custom_plots
 
 
 def homepage(request):

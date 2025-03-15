@@ -33,6 +33,26 @@
       </div>
       <script src='/static/js/loading.js'></script>
     </div>
+    <div class="row" id="mol_identifiers">
+      {% if output %}
+        <div class="table-responsive text-dark">
+          <table class="table table-hover">
+            <tbody>
+              {% for mol_id, id in mol_identifiers %}
+                <tr>
+                  <td>
+                    <small>{{ mol_id }}</small>
+                  </td>
+                  <td>
+                    <small>{{ id }}</small>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
     <div class="row justify-content-center" id="results">
       {% if output %}
         <script src="static/js/plotly-2.35.2.min.js" charset="utf-8"></script>
@@ -104,8 +124,8 @@
         </div>
       {% endif %}
     </div>
-    {% if output %}
-      <div class="row my-3 mx-1 justify-content-center" id="3dmol">
+    <div class="row my-3 mx-1 justify-content-center" id="3dmol">
+      {% if output %}
         <div class="col-lg-6 d-grid border border-dark">
           <div id="molplot" class="molplot-style"></div>
           <script src="static/js/3Dmol-min.js"></script>
@@ -140,7 +160,7 @@
                    onclick="v.zoomTo(1.2, 1000);">
           </div>
         </div>
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
   </div>
 {% endblock content %}

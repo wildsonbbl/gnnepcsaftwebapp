@@ -51,18 +51,21 @@ class CustomPlotConfigForm(forms.Form):
 
     temp_min = forms.FloatField(
         label="Minimum Temperature (K)",
+        min_value=1.0,
         required=False,
         initial=300.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     temp_max = forms.FloatField(
         label="Maximum Temperature (K)",
+        min_value=1.0,
         required=False,
         initial=400.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     pressure = forms.FloatField(
         label="Pressure (Pa)",
+        min_value=1.0,
         required=False,
         initial=101325.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
@@ -72,14 +75,100 @@ class CustomPlotConfigForm(forms.Form):
 class CustomPlotCheckForm(forms.Form):
     "Form to check custom plot."
 
-    custom_plot = forms.BooleanField(
+    custom_plot_checkbox = forms.BooleanField(
         label="Custom Plot",
+        label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
                 "aria-label": "Custom Plot",
+            }
+        ),
+    )
+
+
+class RhoCheckForm(forms.Form):
+    "Form to check density."
+
+    rho_checkbox = forms.BooleanField(
+        label="Density (mol / m³)",
+        label_suffix="",
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Density (mol / m³)",
+            }
+        ),
+    )
+
+
+class VPCheckForm(forms.Form):
+    "Form to check vapor pressure."
+
+    vp_checkbox = forms.BooleanField(
+        label="Vapor pressure (Pa)",
+        label_suffix="",
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Vapor pressure (Pa)",
+            }
+        ),
+    )
+
+
+class HlvCheckForm(forms.Form):
+    "Form to check enthalpy of vaporization."
+
+    h_lv_checkbox = forms.BooleanField(
+        label="Enthalpy of vaporization (kJ/mol)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Enthalpy of vaporization (kJ/mol)",
+            }
+        ),
+    )
+
+
+class SlvCheckForm(forms.Form):
+    "Form to check entropy of vaporization."
+
+    s_lv_checkbox = forms.BooleanField(
+        label="Entropy of vaporization (J/mol/K)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Entropy of vaporization (J/mol/K)",
+            }
+        ),
+    )
+
+
+class PhaseDiagramCheckForm(forms.Form):
+    "Form to check phase diagram."
+
+    phase_diagram_checkbox = forms.BooleanField(
+        label="Phase diagrams",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Phase diagrams",
             }
         ),
     )

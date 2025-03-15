@@ -12,7 +12,12 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
-from gnnepcsaft.epcsaft.epcsaft_feos import pure_den_feos, pure_vp_feos
+from gnnepcsaft.epcsaft.epcsaft_feos import (
+    pure_den_feos,
+    pure_h_lv_feos,
+    pure_s_lv_feos,
+    pure_vp_feos,
+)
 from rdkit.Chem import AllChem as Chem
 
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
@@ -198,6 +203,8 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
 
 def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
     "Predict ePC-SAFT parameters."
+    lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
+    upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
     inchi = checking_inchi(smiles)
     try:
@@ -231,7 +238,8 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
             },
         )[0][0]
         munanb = np.asarray([0.0, na, nb])
-        pred = np.hstack([msigmae, assoc, munanb]).round(decimals=4)
+        pred = np.hstack([msigmae, assoc, munanb])
+        pred = np.clip(pred, lower_bounds, upper_bounds)
         output = True
     except (ValueError, TypeError, AttributeError, IndexError) as e:
         raise ValidationError(_("Invalid InChI/SMILES.")) from e
@@ -273,39 +281,62 @@ def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
     return den, vp
 
 
-def custom_plot(parameters: list, temp_min: float, temp_max: float, pressure: float):
+def custom_plot(
+    parameters: list,
+    temp_min: float,
+    temp_max: float,
+    pressure: float,
+    checkboxes: list,
+):
     """
     Custom plot function for ePC-SAFT parameters."
     args:
     parameters: list
     list with ePC-SAFT parameters
-    temp_min: floatrt
+    temp_min: float
     minimum temperature in Kelvin
     temp_max: float
     maximum temperature in Kelvin
     pressure: float
     pressure in Pa
+    checkboxes: list
+    list with checks to plot in the order [density, vapor pressure, enthalpy, entropy]
     """
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
     states = np.stack((temp_range, p_range), 1)
-    prop_fns = [pure_den_feos, pure_vp_feos]  # more prop later
-    prop_ids = ["den_plot", "vp_plot"]
-    prop_names = ["Density (mol / m³)", "Vapor pressure (Pa)"]
-    xlegendpos = [0, 0]
+    prop_fns = [
+        pure_den_feos,
+        pure_vp_feos,
+        pure_h_lv_feos,
+        pure_s_lv_feos,
+    ]  # more prop later
+    prop_ids = ["den_plot", "vp_plot", "h_lv_plot", "s_lv_plot"]
+    prop_names = [
+        "Liquid Density (mol / m³)",
+        "Vapor pressure (Pa)",
+        "Enthalpy of vaporization (kJ/mol)",
+        "Entropy of vaporization (J/mol/K)",
+    ]
+    xlegendpos = [0, 0, 0, 0]
     all_plots = []
 
-    for prop_fn, prop_id, prop_name, xpos in zip(
-        prop_fns, prop_ids, prop_names, xlegendpos
+    for prop_fn, prop_id, prop_name, xpos, checkbox in zip(
+        prop_fns,
+        prop_ids,
+        prop_names,
+        xlegendpos,
+        checkboxes,
     ):
-        plot_data = {"T": [], "GNN": [], "TML": []}
-        for state in states:
-            try:
+        if checkbox:
+            plot_data = {"T": [], "GNN": [], "TML": []}
+            for state in states:
+                try:
 
-                prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
-                plot_data["T"].append(state[0])
-                plot_data["GNN"].append(prop)
-            except (AssertionError, RuntimeError) as e:
-                print(e)
-        all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
+                    prop = prop_fn(np.asarray(parameters, dtype=np.float64), state)
+                    plot_data["T"].append(state[0])
+                    plot_data["GNN"].append(prop)
+                except (AssertionError, RuntimeError) as e:
+                    print(e)
+            all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
     return all_plots

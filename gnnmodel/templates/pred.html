@@ -20,10 +20,7 @@
                     aria-expanded="false"
                     aria-controls="AdvancedOptions">Advanced Options</button>
             <div class="collapse" id="AdvancedOptions">
-              <div class="form-check form-switch">
-                {{ plot_check.custom_plot }}
-                <label for="id_custom_plot" class="form-check-label">{{ plot_check.custom_plot.label }}</label>
-              </div>
+              {% for checkbox in plot_checkboxes %}<div class="form-check form-switch">{{ checkbox }}</div>{% endfor %}
               <div class="form-control my-1">{{ plot_config }}</div>
             </div>
           </div>
@@ -71,7 +68,7 @@
         {% if plotden %}
           <div class="col-lg-4 mt-2 ">
             <div id="den_plot" alt="Density plot"></div>
-            <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
+            <script>getplot("{{den_data|escapejs}}",0,"Liquid Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
@@ -82,10 +79,23 @@
         {% endif %}
         {% for dataname, xlegendpos, ytitle, id in custom_plots %}
           <div class="col-lg-4 mt-2 ">
-            <div id="{{ id }}_2" alt="{{ ytitle }}"></div>
+            <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
             <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
+        {% if phase_diagrams %}
+          <div class="col-lg-4 mt-2 ">
+            <div id="t_rho_diagram" alt="T-rho diagram"></div>
+          </div>
+          <div class="col-lg-4 mt-2 ">
+            <div id="p_rho_diagram" alt="P-rho diagram"></div>
+          </div>
+          <script>
+            var phase_diagram_data = {{ phase_diagrams }};
+            get_phase_diagram(phase_diagram_data, 0, "Temperature (K)", 0, "t_rho_diagram");
+            get_phase_diagram(phase_diagram_data, 0, "Pressure (Pa)", 1, "p_rho_diagram");
+          </script>
+        {% endif %}
       {% else %}
         <div class="col-lg">
           <ul>

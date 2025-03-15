@@ -8,8 +8,6 @@ import re
 import numpy as np
 import onnxruntime as ort
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import (
@@ -259,23 +257,26 @@ def get_inchi(query: str) -> str:
 
 def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
     """Calculates density and vapor pressure with ePC-SAFT"""
-    parameters = np.abs(parameters)
-    den = []
+
+    all_pred_den = []
     if rho.shape[0] > 0:
         for state in rho:
-            den += [pure_den_feos(parameters, state)]
-    den = np.asarray(den)
+            try:
+                all_pred_den += [pure_den_feos(parameters, state)]
+            except (AssertionError, RuntimeError):
+                all_pred_den += [np.nan]
+    all_pred_den = np.asarray(all_pred_den)
 
-    vpl = []
+    all_pred_vp = []
     if vp.shape[0] > 0:
         for state in vp:
             try:
-                vpl += [pure_vp_feos(parameters, state)]
+                all_pred_vp += [pure_vp_feos(parameters, state)]
             except (AssertionError, RuntimeError):
-                vpl += [np.nan]
-    vp = np.asarray(vpl)
+                all_pred_vp += [np.nan]
+    all_pred_vp = np.asarray(all_pred_vp)
 
-    return den, vp
+    return all_pred_den, all_pred_vp
 
 
 def custom_plot(

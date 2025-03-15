@@ -123,7 +123,7 @@ def get_pred(query, inchi):
     "get prediction"
     comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
     if len(comp) == 0:
-        pred, _, _ = prediction(query)
+        pred = prediction(query)
         pred = pred.tolist()
     else:
         comp = comp[0]

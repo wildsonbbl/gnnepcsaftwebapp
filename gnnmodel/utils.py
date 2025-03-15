@@ -123,7 +123,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     for inchi in tqdm(tml_data):
         try:
             smiles = inchitosmiles(inchi, False, False)
-            para, _, _ = prediction(smiles)
+            para = prediction(smiles)
         except ValueError as e:
             print(e, inchi)
             continue
@@ -201,35 +201,23 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     print("Updated database with plotden, plotvp")
 
 
-def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
+def prediction(smiles: str) -> np.ndarray:
     "Predict ePC-SAFT parameters."
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 
     inchi = get_inchi(smiles)
-    try:
-        graph = smiles2graph(smiles)
-        na, nb = assoc_number(inchi)
-        x, edge_index, edge_attr = (
-            graph["node_feat"],
-            graph["edge_index"],
-            graph["edge_feat"],
-        )
 
-        assoc = 10 ** (
-            assoc_onnx.run(
-                None,
-                {
-                    "x": x,
-                    "edge_index": edge_index,
-                    "edge_attr": edge_attr,
-                },
-            )[0][0]
-            * np.asarray([-1.0, 1.0])
-        )
-        if na == 0 and nb == 0:
-            assoc *= 0
-        msigmae = msigmae_onnx.run(
+    graph = smiles2graph(smiles)
+    na, nb = assoc_number(inchi)
+    x, edge_index, edge_attr = (
+        graph["node_feat"],
+        graph["edge_index"],
+        graph["edge_feat"],
+    )
+
+    assoc = 10 ** (
+        assoc_onnx.run(
             None,
             {
                 "x": x,
@@ -237,14 +225,23 @@ def prediction(smiles: str) -> tuple[np.ndarray, bool, str]:
                 "edge_attr": edge_attr,
             },
         )[0][0]
-        munanb = np.asarray([0.0, na, nb])
-        pred = np.hstack([msigmae, assoc, munanb])
-        pred = np.clip(pred, lower_bounds, upper_bounds)
-        output = True
-    except (ValueError, TypeError, AttributeError, IndexError) as e:
-        raise ValidationError(_("Invalid InChI/SMILES.")) from e
+        * np.asarray([-1.0, 1.0])
+    )
+    if na == 0 and nb == 0:
+        assoc *= 0
+    msigmae = msigmae_onnx.run(
+        None,
+        {
+            "x": x,
+            "edge_index": edge_index,
+            "edge_attr": edge_attr,
+        },
+    )[0][0]
+    munanb = np.asarray([0.0, na, nb])
+    pred = np.hstack([msigmae, assoc, munanb])
+    pred = np.clip(pred, lower_bounds, upper_bounds)
 
-    return pred, output, inchi
+    return pred
 
 
 def get_inchi(query: str) -> str:

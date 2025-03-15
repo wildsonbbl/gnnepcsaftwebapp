@@ -25,6 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+          powershell $env:Path = "C:\Users\runneradmin\.local\bin;$env:Path"
           uv pip install --system pyinstaller
           uv pip install --system -r requirements.txt
       - name: Download models from HuggingFace

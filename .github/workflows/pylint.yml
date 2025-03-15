@@ -9,7 +9,7 @@ on:
       - "**.py"
 
 jobs:
-  build:
+  pylint-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:

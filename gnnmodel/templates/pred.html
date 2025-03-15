@@ -68,7 +68,7 @@
         {% if plotden %}
           <div class="col-lg-4 mt-2 ">
             <div id="den_plot" alt="Density plot"></div>
-            <script>getplot("{{den_data|escapejs}}",0,"Density (mol / m³)","den_plot");</script>
+            <script>getplot("{{den_data|escapejs}}",0,"Liquid Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
@@ -79,7 +79,7 @@
         {% endif %}
         {% for dataname, xlegendpos, ytitle, id in custom_plots %}
           <div class="col-lg-4 mt-2 ">
-            <div id="{{ id }}_2" alt="{{ ytitle }}"></div>
+            <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
             <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}

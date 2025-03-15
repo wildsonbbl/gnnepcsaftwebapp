@@ -13,7 +13,6 @@ from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import (
-    phase_diagram_feos,
     pure_den_feos,
     pure_h_lv_feos,
     pure_s_lv_feos,
@@ -311,7 +310,7 @@ def custom_plot(
     ]  # more prop later
     prop_ids = ["den_plot", "vp_plot", "h_lv_plot", "s_lv_plot"]
     prop_names = [
-        "Density (mol / m³)",
+        "Liquid Density (mol / m³)",
         "Vapor pressure (Pa)",
         "Enthalpy of vaporization (kJ/mol)",
         "Entropy of vaporization (J/mol/K)",

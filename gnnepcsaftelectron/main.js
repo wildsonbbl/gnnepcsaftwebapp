@@ -4,6 +4,7 @@ const controller = new AbortController();
 const { signal } = controller;
 const path = require("path");
 const log = require("electron-log/main");
+const fetch = require("node-fetch");
 // Optional, initialize the logger for any renderer process
 log.initialize();
 
@@ -22,7 +23,7 @@ const createWindow = async () => {
 
   win.loadFile(path.join(__dirname, "index.html")); //from loading.io
 
-  // await waitForDjangoServer(djangoBackend);
+  await waitForDjangoServer();
 
   win.loadURL("http://localhost:19770");
 
@@ -79,37 +80,21 @@ const startDjangoServer = () => {
   return djangoBackend;
 };
 
-const waitForDjangoServer = (djangoBackend) => {
+const waitForDjangoServer = () => {
   return new Promise((resolve, reject) => {
-    const onData = (data) => {
-      const text = data.toString();
-      log.info(text);
-      if (text.includes("Starting development server")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      } else if (text.includes("Django")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      } else if (text.includes("development server")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      } else if (text.includes("webapp.settings")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      } else if (text.includes("server at http://localhost:19770")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      } else {
-        // Do nothing
-        log.info("Waiting for Django server to start...");
-      }
-    };
-    djangoBackend.stdout.on("data", onData);
-    // Optionally add a timeout or error handling here if needed.
+    const interval = setInterval(() => {
+      fetch("http://localhost:19770")
+        .then((response) => {
+          if (response.status === 200) {
+            clearInterval(interval);
+            log.info("Django server is running");
+            resolve();
+          }
+        })
+        .catch((error) => {
+          log.info("Django server is not running");
+          log.error(error.message);
+        });
+    }, 1000);
   });
 };

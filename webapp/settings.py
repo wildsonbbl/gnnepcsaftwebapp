@@ -182,10 +182,7 @@ PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
 
 PWA_APP_NAME = "GNNePCSAFT"
 PWA_APP_ID = "/"
-PWA_APP_DESCRIPTION = "A simple web app with a pretrained \
-GNNePCSAFT model to estimate ePC-SAFT parameters. \
-Parameters can be used with any implementation \
-of the Equation of State."
+PWA_APP_DESCRIPTION = "Thermodynamic Modeling with GNNePCSAFT"
 PWA_APP_THEME_COLOR = "#000000"
 PWA_APP_BACKGROUND_COLOR = "#f8f9fa"
 PWA_APP_DISPLAY = "fullscreen"

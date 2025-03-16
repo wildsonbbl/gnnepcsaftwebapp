@@ -47,10 +47,7 @@ jobs:
       - name: Package Electron App with Squirrel
         run: |
           cd gnnepcsaftelectron
-          npm install -g npm@11.1.0
-          npm -v
           npm install
-          npm update
           npm run make
           cd ..
           cp gnnepcsaftelectron/out/make/squirrel.windows/x64/*Setup.exe ./GNNePCSAFT-${{github.ref_name}}-Setup.exe

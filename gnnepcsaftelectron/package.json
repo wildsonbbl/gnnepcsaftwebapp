@@ -1,6 +1,6 @@
 {
   "name": "gnnepcsaft",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Thermodynamic Modeling with GNNePCSAFT",
   "main": "main.js",
   "scripts": {
@@ -24,6 +24,8 @@
     "electron": "^34.0.1"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "electron-log": "^5.3.2",
+    "electron-squirrel-startup": "^1.0.1",
+    "node-fetch": "^2.7.0"
   }
 }

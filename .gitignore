@@ -12,3 +12,4 @@ gha-creds-*.json
 **build
 **dist
 **windows
+**apppkg

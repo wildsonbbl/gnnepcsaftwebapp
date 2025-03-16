@@ -1,7 +1,7 @@
 {
   "name": "GNNePCSAFT",
   "short_name": "GNNePCSAFT",
-  "description": "A simple web app with a pretrained GNNePCSAFT model to estimate ePC-SAFT parameters. Parameters can be used with any implementation of the Equation of State.",
+  "description": "Thermodynamic Modeling with GNNePCSAFT",
   "start_url": "/",
   "display": "fullscreen",
   "scope": "/",

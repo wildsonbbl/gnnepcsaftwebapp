@@ -18,16 +18,21 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.13.1
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10.16"
       - name: Install dependencies
         run: |
-          uv pip install --system pyinstaller
-          uv pip install --system -r requirements.txt
+          uv pip install pyinstaller
+          uv pip install -r requirements.txt
+      - name: Check versions
+        run: |
+          npm install -g npm@11.1.0
+          node -v
+          npm -v
+          python --version
+          pyinstaller --version
       - name: Download models from HuggingFace
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
@@ -37,13 +42,15 @@ jobs:
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
           ./pyinstaller-pkg.ps1
+      - name: Check up
+        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp.exe check
       - name: Package Electron App with Squirrel
         run: |
           cd gnnepcsaftelectron
           npm install
           npm run make
           cd ..
-          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/* .
+          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/*Setup.exe ./GNNePCSAFT-${{github.ref_name}}-Setup.exe
       - uses: ncipollo/release-action@v1
         with:
           artifacts: "*Setup.exe"

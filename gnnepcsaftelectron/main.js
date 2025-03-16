@@ -3,12 +3,15 @@ const { spawn } = require("child_process");
 const controller = new AbortController();
 const { signal } = controller;
 const path = require("path");
+const log = require("electron-log/main");
+const fetch = require("node-fetch");
+// Optional, initialize the logger for any renderer process
+log.initialize();
 
 if (require("electron-squirrel-startup")) app.quit();
 
 const createWindow = async () => {
   const djangoBackend = startDjangoServer();
-  await waitForDjangoServer(djangoBackend);
 
   const win = new BrowserWindow({
     width: 768,
@@ -17,6 +20,10 @@ const createWindow = async () => {
   });
 
   win.menuBarVisible = false;
+
+  win.loadFile(path.join(__dirname, "index.html")); //from loading.io
+
+  await waitForDjangoServer();
 
   win.loadURL("http://localhost:19770");
 
@@ -50,41 +57,44 @@ const startDjangoServer = () => {
   );
   const djangoBackend = spawn(
     appPath,
-    ["runserver", "--noreload", "localhost:19770"],
+    ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
     { signal }
   );
 
   djangoBackend.stdout.on("data", (data) => {
-    console.log(`stdout:\n${data}`);
+    log.info(`stdout:\n${data}`);
   });
   djangoBackend.stderr.on("data", (data) => {
-    console.log(`stderr:\n${data}`);
+    log.info(`stderr:\n${data}`);
   });
   djangoBackend.on("error", (error) => {
-    console.log(`error:\n${error.message}`);
+    log.error(`error:\n${error.message}`);
   });
   djangoBackend.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
+    log.info(`child process exited with code ${code}`);
     app.quit();
   });
   djangoBackend.on("message", (message) => {
-    console.log(`message:\n${message}`);
+    log.info(`message:\n${message}`);
   });
   return djangoBackend;
 };
 
-const waitForDjangoServer = (djangoBackend) => {
+const waitForDjangoServer = () => {
   return new Promise((resolve, reject) => {
-    const onData = (data) => {
-      const text = data.toString();
-      console.log("Waiting for Django server...\n", text);
-      if (text.includes("Starting development server")) {
-        // Once we detect the server is running, remove this listener.
-        djangoBackend.stdout.off("data", onData);
-        resolve();
-      }
-    };
-    djangoBackend.stdout.on("data", onData);
-    // Optionally add a timeout or error handling here if needed.
+    const interval = setInterval(() => {
+      fetch("http://localhost:19770")
+        .then((response) => {
+          if (response.status === 200) {
+            clearInterval(interval);
+            log.info("Django server is running");
+            resolve();
+          }
+        })
+        .catch((error) => {
+          log.info("Django server is not running");
+          log.error(error.message);
+        });
+    }, 1000);
   });
 };

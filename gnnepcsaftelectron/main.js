@@ -22,7 +22,7 @@ const createWindow = async () => {
 
   win.loadFile(path.join(__dirname, "index.html")); //from loading.io
 
-  await waitForDjangoServer(djangoBackend);
+  // await waitForDjangoServer(djangoBackend);
 
   win.loadURL("http://localhost:19770");
 
@@ -61,20 +61,20 @@ const startDjangoServer = () => {
   );
 
   djangoBackend.stdout.on("data", (data) => {
-    console.log(`stdout:\n${data}`);
+    log.info(`stdout:\n${data}`);
   });
   djangoBackend.stderr.on("data", (data) => {
-    console.log(`stderr:\n${data}`);
+    log.info(`stderr:\n${data}`);
   });
   djangoBackend.on("error", (error) => {
-    console.log(`error:\n${error.message}`);
+    log.error(`error:\n${error.message}`);
   });
   djangoBackend.on("close", (code) => {
-    console.log(`child process exited with code ${code}`);
+    log.info(`child process exited with code ${code}`);
     app.quit();
   });
   djangoBackend.on("message", (message) => {
-    console.log(`message:\n${message}`);
+    log.info(`message:\n${message}`);
   });
   return djangoBackend;
 };

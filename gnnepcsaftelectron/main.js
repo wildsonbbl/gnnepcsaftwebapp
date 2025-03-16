@@ -106,7 +106,7 @@ const waitForDjangoServer = (djangoBackend) => {
         resolve();
       } else {
         // Do nothing
-        console.log("Waiting for Django server to start...");
+        log.info("Waiting for Django server to start...");
       }
     };
     djangoBackend.stdout.on("data", onData);

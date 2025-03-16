@@ -18,16 +18,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22.13.1
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
       - name: Install dependencies
         run: |
-          uv pip install --system pyinstaller
-          uv pip install --system -r requirements.txt
+          uv pip install pyinstaller
+          uv pip install -r requirements.txt
+      - name: Check versions
+        run: |
+          node -v
+          npm -v
+          python --version
+          pyinstaller --version
       - name: Download models from HuggingFace
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata

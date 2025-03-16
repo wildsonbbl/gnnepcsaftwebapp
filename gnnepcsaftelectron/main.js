@@ -3,6 +3,9 @@ const { spawn } = require("child_process");
 const controller = new AbortController();
 const { signal } = controller;
 const path = require("path");
+const log = require("electron-log/main");
+// Optional, initialize the logger for any renderer process
+log.initialize();
 
 if (require("electron-squirrel-startup")) app.quit();
 
@@ -80,6 +83,7 @@ const waitForDjangoServer = (djangoBackend) => {
   return new Promise((resolve, reject) => {
     const onData = (data) => {
       const text = data.toString();
+      log.info(text);
       if (text.includes("Starting development server")) {
         // Once we detect the server is running, remove this listener.
         djangoBackend.stdout.off("data", onData);

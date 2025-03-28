@@ -4,7 +4,7 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = {
   packagerConfig: {
     asar: true,
-    name: "GNNePCSAFT",
+    name: "gnnepcsaft",
     icon: "./storelogo_scale_400_hf3_icon.ico",
     extraResource: ["../apppkg/dist/gnnepcsaftwebapp"],
   },

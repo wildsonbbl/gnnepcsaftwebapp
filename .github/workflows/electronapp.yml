@@ -49,6 +49,8 @@ jobs:
       - name: Check up
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
       - name: Package Electron App and Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd gnnepcsaftelectron
           npm install

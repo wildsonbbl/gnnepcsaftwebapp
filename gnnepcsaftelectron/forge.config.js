@@ -18,6 +18,23 @@ module.exports = {
           "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/gnnepcsaftelectron/storelogo_scale_400_hf3_icon.ico",
       },
     },
+    {
+      name: "@electron-forge/maker-deb",
+      config: {
+        options: {
+          maintainer: "Wildson Lima",
+          homepage: "https://github.com/wildsonbbl/gnnepcsaftwebapp",
+          icon: "./storelogo_scale_400_hf3_icon.ico",
+        },
+      },
+    },
+    {
+      name: "@electron-forge/maker-dmg",
+      config: {
+        format: "ULFO",
+        icon: "./storelogo_scale_400_hf3_icon.ico",
+      },
+    },
   ],
   plugins: [
     {

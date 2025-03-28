@@ -50,12 +50,5 @@ jobs:
           cd gnnepcsaftelectron
           npm install
           npm run make
-          cd ..
-          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/*Setup.exe ./GNNePCSAFT-${{github.ref_name}}-Setup.exe
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts: "*Setup.exe"
-          allowUpdates: false
-          generateReleaseNotes: true
-          prerelease: true
-          skipIfReleaseExists: true
+      - name: Publish draft release
+        run: npm run publish

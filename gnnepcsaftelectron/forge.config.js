@@ -36,6 +36,20 @@ module.exports = {
       },
     },
   ],
+  publishers: [
+    {
+      name: "@electron-forge/publisher-github",
+      config: {
+        repository: {
+          owner: "wildsonbbl", //"github-user-name",
+          name: "gnnepcsaftwebapp", //"github-repo-name",
+        },
+        prerelease: false,
+        draft: true,
+        generateReleaseNotes: true,
+      },
+    },
+  ],
   plugins: [
     {
       name: "@electron-forge/plugin-auto-unpack-natives",

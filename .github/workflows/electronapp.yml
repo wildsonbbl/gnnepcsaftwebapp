@@ -1,4 +1,4 @@
-name: Package electron app for windows
+name: Package electron App
 
 on:
   workflow_dispatch:
@@ -8,7 +8,10 @@ on:
 
 jobs:
   electron-app-build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        runs-on: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: write
     steps:
@@ -45,10 +48,9 @@ jobs:
 
       - name: Check up
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
-      - name: Package Electron App with Squirrel
+      - name: Package Electron App and Publish
         run: |
           cd gnnepcsaftelectron
           npm install
           npm run make
-      - name: Publish draft release
-        run: npm run publish
+          npm run publish

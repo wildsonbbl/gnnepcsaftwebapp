@@ -44,7 +44,7 @@ jobs:
           pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
 
       - name: Check up
-        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp.exe check
+        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
       - name: Package Electron App with Squirrel
         run: |
           cd gnnepcsaftelectron

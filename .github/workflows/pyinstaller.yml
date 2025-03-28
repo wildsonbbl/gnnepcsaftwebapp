@@ -42,4 +42,3 @@ jobs:
       - name: Check files
         run: |
           ls -l ./apppkg/dist/gnnepcsaftwebapp
-          ls -l ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp*

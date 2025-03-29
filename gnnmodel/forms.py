@@ -175,3 +175,20 @@ class PhaseDiagramCheckForm(forms.Form):
             }
         ),
     )
+
+
+class STCheckForm(forms.Form):
+    "Form to check surface tension."
+
+    st_checkbox = forms.BooleanField(
+        label="Surface tension (mN/m)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Surface tension (mN/m)",
+            }
+        ),
+    )

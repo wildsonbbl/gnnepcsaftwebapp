@@ -31,6 +31,7 @@ from .forms import (
     PhaseDiagramCheckForm,
     RhoCheckForm,
     SlvCheckForm,
+    STCheckForm,
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
@@ -288,7 +289,7 @@ def custom_plot(
     temp_min: float,
     temp_max: float,
     pressure: float,
-    checkboxes: list,
+    checkboxes: list[bool],
 ) -> Union[list[tuple[str, int, str, str]], list]:
     """
     Custom plot function for ePC-SAFT parameters.
@@ -324,6 +325,7 @@ def custom_plot(
     ]
     xlegendpos = [0, 0, 0, 0]
     all_plots = []
+    plot_sf = checkboxes.pop()
 
     for prop_fn, prop_id, prop_name, xpos, checkbox in zip(
         prop_fns,
@@ -343,6 +345,18 @@ def custom_plot(
                 except (AssertionError, RuntimeError) as e:
                     print(e)
             all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
+    if plot_sf:
+        surface_tension, temp_st = pure_surface_tension_feos(
+            parameters + ["unk", "unk", 1], [temp_min]
+        )
+        plot_data = {
+            "T": temp_st.tolist(),
+            "GNN": surface_tension.tolist(),
+            "TML": [],
+        }
+        all_plots.append(
+            (json.dumps(plot_data), 0, "Surface Tension (mN/m)", "st_plot")
+        )
     return all_plots
 
 
@@ -398,23 +412,16 @@ def get_main_plots_data(inchi):
 
 def get_forms(request):
     "get forms"
-    form = InChIorSMILESinput(request.POST)
-    plot_config = CustomPlotConfigForm(request.POST)
-    plot_checkbox = CustomPlotCheckForm(request.POST)
-    rho_checkbox = RhoCheckForm(request.POST)
-    vp_checkbox = VPCheckForm(request.POST)
-    h_lv_checkbox = HlvCheckForm(request.POST)
-    s_lv_checkbox = SlvCheckForm(request.POST)
-    phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
     return (
-        form,
-        plot_config,
-        plot_checkbox,
-        rho_checkbox,
-        vp_checkbox,
-        h_lv_checkbox,
-        s_lv_checkbox,
-        phase_diagram_checkbox,
+        InChIorSMILESinput(request.POST),
+        CustomPlotConfigForm(request.POST),
+        CustomPlotCheckForm(request.POST),
+        RhoCheckForm(request.POST),
+        VPCheckForm(request.POST),
+        HlvCheckForm(request.POST),
+        SlvCheckForm(request.POST),
+        PhaseDiagramCheckForm(request.POST),
+        STCheckForm(request.POST),
     )
 
 
@@ -422,20 +429,31 @@ def get_custom_plots_data(
     pred: list,
     plot_config: CustomPlotConfigForm,
     checkboxes: tuple[
-        RhoCheckForm, VPCheckForm, HlvCheckForm, SlvCheckForm, PhaseDiagramCheckForm
+        RhoCheckForm,
+        VPCheckForm,
+        HlvCheckForm,
+        SlvCheckForm,
+        PhaseDiagramCheckForm,
+        STCheckForm,
     ],
 ) -> tuple[list, list]:
     "get custom plots data"
 
-    rho_checkbox, vp_checkbox, h_lv_checkbox, s_lv_checkbox, phase_diagram_checkbox = (
-        checkboxes
-    )
+    (
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+        st_checkbox,
+    ) = checkboxes
     plot_config.full_clean()
     rho_checkbox.full_clean()
     vp_checkbox.full_clean()
     h_lv_checkbox.full_clean()
     s_lv_checkbox.full_clean()
     phase_diagram_checkbox.full_clean()
+    st_checkbox.full_clean()
     try:
         custom_plots = custom_plot(
             pred,
@@ -447,6 +465,7 @@ def get_custom_plots_data(
                 vp_checkbox.cleaned_data["vp_checkbox"],
                 h_lv_checkbox.cleaned_data["h_lv_checkbox"],
                 s_lv_checkbox.cleaned_data["s_lv_checkbox"],
+                st_checkbox.cleaned_data["st_checkbox"],
             ],
         )
     except RuntimeError as err:

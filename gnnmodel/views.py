@@ -12,6 +12,7 @@ from .forms import (
     PhaseDiagramCheckForm,
     RhoCheckForm,
     SlvCheckForm,
+    STCheckForm,
     VPCheckForm,
 )
 from .utils import get_custom_plots_data, get_forms, get_main_plots_data, get_pred
@@ -52,6 +53,7 @@ def estimator(request):  # pylint: disable=R0914
             h_lv_checkbox,
             s_lv_checkbox,
             phase_diagram_checkbox,
+            st_checkbox,
         ) = get_forms(request)
 
         if form.is_valid():
@@ -72,6 +74,7 @@ def estimator(request):  # pylint: disable=R0914
                         h_lv_checkbox,
                         s_lv_checkbox,
                         phase_diagram_checkbox,
+                        st_checkbox,
                     ),
                 )
 
@@ -84,6 +87,7 @@ def estimator(request):  # pylint: disable=R0914
         h_lv_checkbox = HlvCheckForm()
         s_lv_checkbox = SlvCheckForm()
         phase_diagram_checkbox = PhaseDiagramCheckForm()
+        st_checkbox = STCheckForm()
 
     context = {
         "form": form,
@@ -94,6 +98,7 @@ def estimator(request):  # pylint: disable=R0914
             vp_checkbox,
             h_lv_checkbox,
             s_lv_checkbox,
+            st_checkbox,
             phase_diagram_checkbox,
         ],
         "predicted_para": (

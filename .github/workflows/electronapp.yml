@@ -1,4 +1,4 @@
-name: Package electron App
+name: Publish electron App
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - "v*"
 
 jobs:
-  electron-app-build:
+  publish:
     strategy:
       matrix:
         runs-on: [windows-latest, macos-latest, ubuntu-latest]
@@ -48,11 +48,10 @@ jobs:
 
       - name: Check up
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
-      - name: Package Electron App and Publish
+      - name: Build and Publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd gnnepcsaftelectron
           npm install
-          npm run make
           npm run publish

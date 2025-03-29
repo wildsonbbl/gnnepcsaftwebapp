@@ -62,23 +62,25 @@ def make_dataset():
 
 
 # pylint: disable=R0914
-def plotdata(para: np.ndarray, inchi: str, tml_data: dict) -> tuple[list, list]:
+def plotdata(
+    para: list, inchi: str, tml_data: dict[str, tuple[np.ndarray, np.ndarray]]
+) -> tuple[dict, dict]:
     "Organize data for plotting."
-    plotden, plotvp = None, None
+    plotden, plotvp = {}, {}
     if inchi in tml_data:
         rho, vp = tml_data[inchi]
         pred_rho, pred_vp = rhovp_data(para, rho, vp)
         # plot rho data
         if rho.shape[0] > 2:
             idx_p = abs(rho[:, 1] - 101325) < 1_000
-            rho: np.ndarray = rho[idx_p]
+            rho_p = rho[idx_p]
             pred_rho = pred_rho[idx_p]
 
-            if rho.shape[0] > 2:
-                idx = np.argsort(rho[:, 0], 0)
+            if rho_p.shape[0] > 2:
+                idx = np.argsort(rho_p[:, 0], 0)
                 plotden = {
-                    "T": rho[idx, 0].tolist(),
-                    "TML": rho[idx, -1].tolist(),
+                    "T": rho_p[idx, 0].tolist(),
+                    "TML": rho_p[idx, -1].tolist(),
                     "GNN": pred_rho[idx].tolist(),
                 }
         # plot vp data
@@ -97,16 +99,16 @@ def plotmol(inchi: str) -> str:
     "Make Mol block for 3Dmol."
 
     mol = Chem.MolFromInchi(inchi)
-    mol = Chem.AddHs(mol)
-    params = Chem.ETKDGv3()
+    mol = Chem.AddHs(mol)  # type: ignore
+    params = Chem.ETKDGv3()  # type: ignore
     params.randomSeed = 0xF00D
-    result = Chem.EmbedMolecule(mol, params)
+    result = Chem.EmbedMolecule(mol, params)  # type: ignore
     if result == 0:
-        Chem.MMFFOptimizeMolecule(
+        Chem.MMFFOptimizeMolecule(  # type: ignore
             mol, maxIters=1000, nonBondedThresh=100, ignoreInterfragInteractions=False
         )
     # mol = Chem.RemoveHs(mol, implicitOnly=False)
-    imgmol = Chem.MolToV3KMolBlock(mol)
+    imgmol = Chem.MolToV3KMolBlock(mol)  # type: ignore
     return imgmol
 
 
@@ -176,18 +178,16 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
         if len(molecule) == 0:
             continue
         molecule = molecule[0]
-        para = np.asarray(
-            [
-                molecule.m,
-                molecule.sigma,
-                molecule.e,
-                molecule.k_ab,
-                molecule.e_ab,
-                molecule.mu,
-                molecule.na,
-                molecule.nb,
-            ]
-        )
+        para = [
+            molecule.m,
+            molecule.sigma,
+            molecule.e,
+            molecule.k_ab,
+            molecule.e_ab,
+            molecule.mu,
+            molecule.na,
+            molecule.nb,
+        ]
         plotden, plotvp = plotdata(para, inchi, tml_data)
         if plotden:
             new_comp = ThermoMLDenData(inchi=inchi, den=json.dumps(plotden))
@@ -241,7 +241,7 @@ def prediction(smiles: str) -> np.ndarray:
     return pred
 
 
-def rhovp_data(parameters: np.ndarray, rho: np.ndarray, vp: np.ndarray):
+def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
     """Calculates density and vapor pressure with ePC-SAFT"""
 
     all_pred_den = []
@@ -271,7 +271,7 @@ def custom_plot(
     temp_max: float,
     pressure: float,
     checkboxes: list,
-):
+) -> list:
     """
     Custom plot function for ePC-SAFT parameters."
     args:
@@ -317,9 +317,7 @@ def custom_plot(
             for state in states:
                 try:
 
-                    prop_for_state = prop_fn(
-                        np.asarray(parameters, dtype=np.float64), state
-                    )
+                    prop_for_state = prop_fn(parameters, state)
                     plot_data["T"].append(state[0])
                     plot_data["GNN"].append(prop_for_state)
                 except (AssertionError, RuntimeError) as e:

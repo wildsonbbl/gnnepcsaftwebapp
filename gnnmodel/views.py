@@ -38,10 +38,12 @@ available_params = [
 def estimator(request):  # pylint: disable=R0914
     "handle request"
 
-    pred = None
+    pred = []
     output = False
     plotden, plotvp, molimg, phase_diagrams = "", "", "", ""
     custom_plots = []
+    inchi = ""
+    smiles = ""
     if request.method == "POST":
         (
             form,
@@ -120,14 +122,16 @@ def estimator(request):  # pylint: disable=R0914
     return render(request, "pred.html", context)
 
 
-def get_pred(query, inchi):
+def get_pred(smiles: str, inchi: str) -> list:
     "get prediction"
-    comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(comp) == 0:
-        pred = prediction(query)
-        pred = pred.tolist()
+    all_comp_matched = GnnepcsaftPara.objects.filter(  # pylint: disable=E1101
+        inchi=inchi
+    ).all()
+    if len(all_comp_matched) == 0:
+        pred_array = prediction(smiles)
+        pred = pred_array.tolist()
     else:
-        comp = comp[0]
+        comp = all_comp_matched[0]
         pred = [
             comp.m,
             comp.sigma,
@@ -194,7 +198,7 @@ def get_custom_plots_data(
     checkboxes: tuple[
         RhoCheckForm, VPCheckForm, HlvCheckForm, SlvCheckForm, PhaseDiagramCheckForm
     ],
-) -> tuple[str, list[dict]]:
+) -> tuple[list, list]:
     "get custom plots data"
 
     rho_checkbox, vp_checkbox, h_lv_checkbox, s_lv_checkbox, phase_diagram_checkbox = (
@@ -222,7 +226,7 @@ def get_custom_plots_data(
     except RuntimeError as err:
         print(err)
         custom_plots = []
-    phase_diagrams = ""
+    phase_diagrams = []
     if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
         try:
             phase_diagrams_all_data = phase_diagram_feos(
@@ -239,7 +243,7 @@ def get_custom_plots_data(
             ]
         except RuntimeError as err:
             print(err)
-            phase_diagrams = ""
+            phase_diagrams = []
     return phase_diagrams, custom_plots
 
 

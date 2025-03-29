@@ -3,6 +3,7 @@
 import csv
 import json
 import os.path as osp
+from typing import Literal, Union
 
 import numpy as np
 import onnxruntime as ort
@@ -31,7 +32,7 @@ msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
 assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
 
 
-def make_dataset():
+def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
     "Make dict dataset for inference."
     import polars as pl  # # pylint: disable = C0415
 
@@ -198,7 +199,9 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     print("Updated database with plotden, plotvp")
 
 
-def prediction(smiles: str) -> np.ndarray:
+def prediction(
+    smiles: str,
+) -> np.ndarray[tuple[Literal[8]], np.dtype[np.float64]]:
     "Predict ePC-SAFT parameters."
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
@@ -235,10 +238,10 @@ def prediction(smiles: str) -> np.ndarray:
         },
     )[0][0]
     munanb = np.asarray([0.0, na, nb])
-    pred = np.hstack([msigmae, assoc, munanb])
-    pred = np.clip(pred, lower_bounds, upper_bounds)
+    pred = np.hstack([msigmae, assoc, munanb], dtype=np.float64)
+    np.clip(pred, lower_bounds, upper_bounds, out=pred)
 
-    return pred
+    return pred  # type: ignore
 
 
 def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
@@ -271,7 +274,7 @@ def custom_plot(
     temp_max: float,
     pressure: float,
     checkboxes: list,
-) -> list:
+) -> Union[list[tuple[str, int, str, str]], list]:
     """
     Custom plot function for ePC-SAFT parameters."
     args:

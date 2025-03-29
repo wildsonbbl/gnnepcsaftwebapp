@@ -16,7 +16,7 @@ from .forms import (
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import custom_plot, plotmol, prediction
+from .utils import get_custom_plots_data, get_forms, get_main_plots_data, get_pred
 
 file_dir = osp.dirname(__file__)
 
@@ -120,133 +120,6 @@ def estimator(request):  # pylint: disable=R0914
     }
 
     return render(request, "pred.html", context)
-
-
-def get_pred(smiles: str, inchi: str) -> list:
-    "get prediction"
-    all_comp_matched = GnnepcsaftPara.objects.filter(  # pylint: disable=E1101
-        inchi=inchi
-    ).all()
-    if len(all_comp_matched) == 0:
-        pred_array = prediction(smiles)
-        pred = pred_array.tolist()
-    else:
-        comp = all_comp_matched[0]
-        pred = [
-            comp.m,
-            comp.sigma,
-            comp.e,
-            comp.k_ab,
-            comp.e_ab,
-            comp.mu,
-            comp.na,
-            comp.nb,
-        ]
-
-    try:
-        critical_points = critical_points_feos(pred.copy())
-    except RuntimeError:
-        critical_points = [0.0, 0.0]
-
-    pred.append(critical_points[0])
-    pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
-    return pred
-
-
-def get_main_plots_data(inchi):
-    "get main plot data"
-
-    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        plotvp = alldata[0].vp
-    else:
-        plotvp = ""
-
-    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        plotden = alldata[0].den
-    else:
-        plotden = ""
-
-    molimg = plotmol(inchi)
-    return plotden, plotvp, molimg
-
-
-def get_forms(request):
-    "get forms"
-    form = InChIorSMILESinput(request.POST)
-    plot_config = CustomPlotConfigForm(request.POST)
-    plot_checkbox = CustomPlotCheckForm(request.POST)
-    rho_checkbox = RhoCheckForm(request.POST)
-    vp_checkbox = VPCheckForm(request.POST)
-    h_lv_checkbox = HlvCheckForm(request.POST)
-    s_lv_checkbox = SlvCheckForm(request.POST)
-    phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
-    return (
-        form,
-        plot_config,
-        plot_checkbox,
-        rho_checkbox,
-        vp_checkbox,
-        h_lv_checkbox,
-        s_lv_checkbox,
-        phase_diagram_checkbox,
-    )
-
-
-def get_custom_plots_data(
-    pred: list,
-    plot_config: CustomPlotConfigForm,
-    checkboxes: tuple[
-        RhoCheckForm, VPCheckForm, HlvCheckForm, SlvCheckForm, PhaseDiagramCheckForm
-    ],
-) -> tuple[list, list]:
-    "get custom plots data"
-
-    rho_checkbox, vp_checkbox, h_lv_checkbox, s_lv_checkbox, phase_diagram_checkbox = (
-        checkboxes
-    )
-    plot_config.full_clean()
-    rho_checkbox.full_clean()
-    vp_checkbox.full_clean()
-    h_lv_checkbox.full_clean()
-    s_lv_checkbox.full_clean()
-    phase_diagram_checkbox.full_clean()
-    try:
-        custom_plots = custom_plot(
-            pred,
-            plot_config.cleaned_data["temp_min"],
-            plot_config.cleaned_data["temp_max"],
-            plot_config.cleaned_data["pressure"],
-            [
-                rho_checkbox.cleaned_data["rho_checkbox"],
-                vp_checkbox.cleaned_data["vp_checkbox"],
-                h_lv_checkbox.cleaned_data["h_lv_checkbox"],
-                s_lv_checkbox.cleaned_data["s_lv_checkbox"],
-            ],
-        )
-    except RuntimeError as err:
-        print(err)
-        custom_plots = []
-    phase_diagrams = []
-    if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
-        try:
-            phase_diagrams_all_data = phase_diagram_feos(
-                pred, [plot_config.cleaned_data["temp_min"]]
-            )
-            phase_diagrams = [
-                phase_diagrams_all_data.get("temperature", [0]),
-                phase_diagrams_all_data.get(
-                    "pressure",
-                    phase_diagrams_all_data.get("pressure vapor", [0]),
-                ),
-                phase_diagrams_all_data["density liquid"],
-                phase_diagrams_all_data["density vapor"],
-            ]
-        except RuntimeError as err:
-            print(err)
-            phase_diagrams = []
-    return phase_diagrams, custom_plots
 
 
 def homepage(request):

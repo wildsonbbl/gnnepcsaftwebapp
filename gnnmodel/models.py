@@ -1,9 +1,11 @@
 "Module for django models (dbs)."
+
 from django.db import models
 
 
 class GnnepcsaftPara(models.Model):
     "Table at DB for gnnepcsaft predicted params."
+
     inchi = models.CharField(max_length=255)
     smiles = models.CharField(max_length=255)
     m = models.FloatField()
@@ -18,12 +20,14 @@ class GnnepcsaftPara(models.Model):
 
 class ThermoMLDenData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted density data."
+
     inchi = models.CharField(max_length=255)
     den = models.JSONField()
 
 
 class ThermoMLVPData(models.Model):
     "Table at DB for ThermoML Archive and GNNePCSAFT predicted vapor pressure data."
+
     inchi = models.CharField(max_length=255)
     vp = models.JSONField()
 

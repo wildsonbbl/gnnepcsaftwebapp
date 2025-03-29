@@ -1,5 +1,5 @@
-function getplot(dataname, xlegendpos, ytitle, id) {
-  var alldata = JSON.parse(dataname);
+function getplot(data_json, xlegendpos, ytitle, id) {
+  var alldata = JSON.parse(data_json);
 
   var trace1 = {
     x: alldata["T"],

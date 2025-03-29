@@ -97,10 +97,10 @@
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
-        {% for dataname, xlegendpos, ytitle, id in custom_plots %}
+        {% for data_json, xlegendpos, ytitle, id in custom_plots %}
           <div class="col-lg-4 mt-2 ">
             <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
-            <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+            <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}

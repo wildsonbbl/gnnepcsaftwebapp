@@ -1,4 +1,4 @@
-name: Publish electron App
+name: Publish Electron App to GitHub Releases
 
 on:
   workflow_dispatch:

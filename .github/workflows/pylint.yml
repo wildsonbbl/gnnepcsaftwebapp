@@ -1,4 +1,4 @@
-name: Pylint
+name: Pylint check up
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
       - "**.py"
 
 jobs:
-  pylint-test:
+  pylint:
     runs-on: ubuntu-latest
     strategy:
       matrix:

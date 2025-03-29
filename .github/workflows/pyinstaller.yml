@@ -9,7 +9,7 @@ on:
       - "**.py"
 
 jobs:
-  pyinstaller_test:
+  pyinstaller:
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]

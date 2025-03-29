@@ -191,7 +191,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     tml_data = make_dataset()
 
     for inchi in tqdm(tml_data):
-        molecule = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
+        molecule = GnnepcsaftPara.objects.filter(inchi=inchi)
         if len(molecule) == 0:
             continue
         molecule = molecule[0]
@@ -362,9 +362,7 @@ def custom_plot(
 
 def get_pred(smiles: str, inchi: str) -> list:
     "get prediction"
-    all_comp_matched = GnnepcsaftPara.objects.filter(  # pylint: disable=E1101
-        inchi=inchi
-    ).all()
+    all_comp_matched = GnnepcsaftPara.objects.filter(inchi=inchi).all()
     if len(all_comp_matched) == 0:
         pred_array = prediction(smiles)
         pred = pred_array.tolist()
@@ -394,13 +392,13 @@ def get_pred(smiles: str, inchi: str) -> list:
 def get_main_plots_data(inchi):
     "get main plot data"
 
-    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
+    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()
     if len(alldata) > 0:
         plotvp = alldata[0].vp
     else:
         plotvp = ""
 
-    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
+    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()
     if len(alldata) > 0:
         plotden = alldata[0].den
     else:

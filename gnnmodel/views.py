@@ -40,8 +40,8 @@ def estimator(request):  # pylint: disable=R0914
 
     pred = []
     output = False
-    plotden, plotvp, molimg, phase_diagrams = "", "", "", ""
-    custom_plots = []
+    plotden, plotvp, molimg = ("", "", "")
+    custom_plots, phase_diagrams = [], []
     inchi = ""
     smiles = ""
     if request.method == "POST":

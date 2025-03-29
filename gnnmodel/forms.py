@@ -5,9 +5,8 @@ import re
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
-from gnnepcsaft.data.rdkit_util import inchitosmiles, smilestoinchi
-
-from .utils import prediction
+from gnnepcsaft.data.ogb_utils import smiles2graph
+from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
 
 
 class InChIorSMILESinput(forms.Form):
@@ -34,14 +33,16 @@ class InChIorSMILESinput(forms.Form):
             try:
                 smiles = inchitosmiles(data, False, False)
                 inchi = smilestoinchi(smiles, False, False)
-                prediction(smiles)
+                smiles2graph(smiles)
+                assoc_number(inchi)
             except ValueError as e:
                 raise ValidationError(_("Invalid InChI/SMILES.")) from e
         else:
             try:
                 inchi = smilestoinchi(data, False, False)
                 smiles = inchitosmiles(inchi, False, False)
-                prediction(smiles)
+                smiles2graph(smiles)
+                assoc_number(inchi)
             except ValueError as e:
                 raise ValidationError(_("Invalid InChI/SMILES.")) from e
 

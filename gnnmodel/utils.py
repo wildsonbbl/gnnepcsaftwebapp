@@ -291,18 +291,20 @@ def custom_plot(
     checkboxes: list,
 ) -> Union[list[tuple[str, int, str, str]], list]:
     """
-    Custom plot function for ePC-SAFT parameters."
-    args:
+    Custom plot function for ePC-SAFT parameters.
+
+    args
+    ---------
     parameters: list
-    list with ePC-SAFT parameters
+      list with ePC-SAFT parameters
     temp_min: float
-    minimum temperature in Kelvin
+      minimum temperature in Kelvin
     temp_max: float
-    maximum temperature in Kelvin
+      maximum temperature in Kelvin
     pressure: float
-    pressure in Pa
+      pressure in Pa
     checkboxes: list
-    list with checks to plot in the order [density, vapor pressure, enthalpy, entropy]
+      list with checks to plot in the order [density, vapor pressure, enthalpy, entropy]
     """
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)

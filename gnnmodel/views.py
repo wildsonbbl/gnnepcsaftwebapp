@@ -3,7 +3,6 @@
 import os.path as osp
 
 from django.shortcuts import render
-from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos, phase_diagram_feos
 
 from .forms import (
     CustomPlotCheckForm,
@@ -15,7 +14,6 @@ from .forms import (
     SlvCheckForm,
     VPCheckForm,
 )
-from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 from .utils import get_custom_plots_data, get_forms, get_main_plots_data, get_pred
 
 file_dir = osp.dirname(__file__)

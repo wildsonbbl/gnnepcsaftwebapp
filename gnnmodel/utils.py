@@ -320,7 +320,7 @@ def custom_plot(
             for state in states:
                 try:
 
-                    prop_for_state = prop_fn(parameters, state)
+                    prop_for_state = prop_fn(parameters.copy(), state)
                     plot_data["T"].append(state[0])
                     plot_data["GNN"].append(prop_for_state)
                 except (AssertionError, RuntimeError) as e:

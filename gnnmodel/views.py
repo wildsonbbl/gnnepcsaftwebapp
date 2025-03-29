@@ -66,7 +66,7 @@ def estimator(request):  # pylint: disable=R0914
             plot_checkbox.full_clean()
             if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
                 phase_diagrams, custom_plots = get_custom_plots_data(
-                    pred,
+                    pred[:-2],
                     plot_config,
                     (
                         rho_checkbox,
@@ -142,10 +142,12 @@ def get_pred(smiles: str, inchi: str) -> list:
             comp.na,
             comp.nb,
         ]
+
     try:
-        critical_points = critical_points_feos(pred)
+        critical_points = critical_points_feos(pred.copy())
     except RuntimeError:
         critical_points = [0.0, 0.0]
+
     pred.append(critical_points[0])
     pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
     return pred

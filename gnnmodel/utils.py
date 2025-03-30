@@ -490,3 +490,73 @@ def get_custom_plots_data(
             print(err)
             phase_diagrams = []
     return phase_diagrams, custom_plots
+
+
+def get_mixture_plots_data(
+    para_pred_list: list[list],
+    mole_fractions_list: list[float],
+    plot_config: CustomPlotConfigForm,
+) -> list:
+    "get mixture plots data"
+
+    plot_config.full_clean()
+    mixture_plot = mixture_plots(
+        para_pred_list,
+        mole_fractions_list,
+        plot_config.cleaned_data["temp_min"],
+        plot_config.cleaned_data["temp_max"],
+        plot_config.cleaned_data["pressure"],
+    )
+
+    return mixture_plot
+
+
+def mixture_plots(
+    para_pred_list: list[list],
+    mole_fractions_list: list[float],
+    temp_min: float,
+    temp_max: float,
+    pressure: float,
+) -> list:
+    "get mixture plots data"
+    temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
+    p_range = np.asarray([pressure] * 100, dtype=np.float64)
+    mole_fractions = np.asarray([mole_fractions_list] * 100, dtype=np.float64)
+    states = np.stack((temp_range, p_range), 1)
+    print(states.shape)
+    states = np.hstack((states, mole_fractions))
+    print(states.shape)
+    all_plots = []
+
+    plot_data = {"T": [], "GNN": [], "TML": []}
+    plot_data_bubble = {"T": [], "GNN": [], "TML": []}
+    plot_data_dew = {"T": [], "GNN": [], "TML": []}
+    for state in states:
+        try:
+
+            prop_for_state = mix_den_feos(para_pred_list.copy(), state)
+            bubble_for_state, dew_for_state = mix_vp_feos(para_pred_list.copy(), state)
+            plot_data["T"].append(state[0])
+            plot_data["GNN"].append(prop_for_state)
+            plot_data_bubble["T"].append(state[0])
+            plot_data_bubble["GNN"].append(bubble_for_state)
+            plot_data_dew["T"].append(state[0])
+            plot_data_dew["GNN"].append(dew_for_state)
+        except (AssertionError, RuntimeError) as e:
+            print(e)
+    all_plots.append(
+        (json.dumps(plot_data), 0, "Liquid Density (mol / m³)", "den_plot")
+    )
+    all_plots.append(
+        (
+            json.dumps(plot_data_bubble),
+            0,
+            "Bubble point pressure (Pa)",
+            "vp_bubble_plot",
+        )
+    )
+    all_plots.append(
+        (json.dumps(plot_data_dew), 0, "Dew point pressure (Pa)", "vp_dew_plot")
+    )
+
+    return all_plots

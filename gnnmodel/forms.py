@@ -96,6 +96,73 @@ class InChIorSMILESareaInput(forms.Form):
         return inchi_list, smiles_list
 
 
+class InChIorSMILESareaInputforMixture(forms.Form):
+    "Form to receive InChI/SMILES + mole fractions from user."
+
+    text_area = forms.CharField(
+        label="Type/Paste a list of InChI/SMILES | mole fractions",
+        strip=True,
+        required=True,
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control my-2",
+                "aria-label": "Type/Paste InChI or SMILES",
+                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line",
+            }
+        ),
+    )
+
+    def clean_text_area(self):
+        "check valid input and output SMILES."
+        data: str = self.cleaned_data["text_area"]
+
+        lines = data.split("\n")
+        inchi_list, smiles_list = [], []
+        mole_fraction_list = []
+        for full_line in lines:
+            try:
+                query, mole_fraction = full_line.strip().split("|")
+                query = query.strip()
+                mole_fraction = mole_fraction.strip()
+            except ValueError as e:
+                raise ValidationError(
+                    _(f'Missing/Extra " | " for line: {full_line}')
+                ) from e
+
+            inchi_check = re.search("^InChI=", query)
+            if inchi_check:
+                try:
+                    smiles = inchitosmiles(query, False, False)
+                    inchi = smilestoinchi(smiles, False, False)
+                    smiles2graph(smiles)
+                    assoc_number(inchi)
+                    smiles_list.append(smiles)
+                    inchi_list.append(inchi)
+                except ValueError as e:
+                    raise ValidationError(
+                        _(f'Invalid InChI/SMILES: "{query}" in line "{full_line}"')
+                    ) from e
+            else:
+                try:
+                    inchi = smilestoinchi(query, False, False)
+                    smiles = inchitosmiles(inchi, False, False)
+                    smiles2graph(smiles)
+                    assoc_number(inchi)
+                    smiles_list.append(smiles)
+                    inchi_list.append(inchi)
+                except ValueError as e:
+                    raise ValidationError(
+                        _(f'Invalid InChI/SMILES: "{query}" in line "{full_line}"')
+                    ) from e
+            try:
+                mole_fraction_list.append(float(mole_fraction))
+            except ValueError as e:
+                raise ValidationError(
+                    _(f'Invalid Mole Fraction: "{mole_fraction}" in line "{full_line}"')
+                ) from e
+        return inchi_list, smiles_list, mole_fraction_list
+
+
 class CustomPlotConfigForm(forms.Form):
     "Form to receive custom plot config."
 

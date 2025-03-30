@@ -1,4 +1,4 @@
-function getplot(data_json, xlegendpos, ytitle, id) {
+function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNePCSAFT") {
   var alldata = JSON.parse(data_json);
 
   var trace1 = {
@@ -18,7 +18,7 @@ function getplot(data_json, xlegendpos, ytitle, id) {
     y: alldata["GNN"],
     mode: "lines",
     type: "scatter",
-    name: "GNNePCSAFT",
+    name: trace_name,
   };
 
   var layout = {

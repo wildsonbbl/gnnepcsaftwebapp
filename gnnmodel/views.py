@@ -35,8 +35,8 @@ available_params = [
 
 
 # Create your views here.
-def estimator(request):  # pylint: disable=R0914
-    "handle request"
+def pure(request):  # pylint: disable=R0914
+    "handle request for pure substance"
 
     pred = []
     output = False
@@ -126,8 +126,8 @@ def estimator(request):  # pylint: disable=R0914
     return render(request, "pure.html", context)
 
 
-def batch_estimator(request):
-    "handle request"
+def batch(request):
+    "handle request for batch of substances"
     pred_list = []
     output = False
     if request.method == "POST":
@@ -163,5 +163,5 @@ def authorpage(request):
 
 
 def about(request):
-    "handle request"
+    "handle request for about page"
     return render(request, "about.html")

@@ -75,14 +75,14 @@
         <div id="vp_plots" alt="Bubble/Dew point plot"></div>
         <script>
           var vp_plots = {{ vp_plots|safe }};
-          getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble");
+          getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble curve");
           var alldata = JSON.parse(vp_plots[1]);
           var trace2 = {
             x: alldata["T"],
             y: alldata["GNN"],
             mode: "lines",
             type: "scatter",
-            name: "Dew",
+            name: "Dew curve",
           };
           Plotly.addTraces("vp_plots", trace2);
         </script>

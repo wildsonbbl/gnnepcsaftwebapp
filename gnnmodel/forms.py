@@ -72,6 +72,7 @@ class InChIorSMILESareaInput(forms.Form):
         lines = data.split("\n")
         inchi_list, smiles_list = [], []
         for line in lines:
+            line = line.strip()
             inchi_check = re.search("^InChI=", line)
             if inchi_check:
                 try:

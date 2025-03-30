@@ -163,7 +163,7 @@ def mixture(request):
     "handle request for mixture"
     para_pred_list = []
     output = False
-    mixture_plots = []
+    mixture_plots = ([], [])
     mole_fractions_list = []
     para_pred_for_plot = []
     if request.method == "POST":
@@ -193,7 +193,8 @@ def mixture(request):
         "plot_config": plot_config,
         "available_params": available_params,
         "parameters_molefractions_list": list(zip(para_pred_list, mole_fractions_list)),
-        "mixture_plots": mixture_plots,
+        "mixture_plots": mixture_plots[0],
+        "vp_plots": mixture_plots[1],
         "output": output,
     }
 

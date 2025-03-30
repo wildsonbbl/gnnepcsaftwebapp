@@ -496,7 +496,7 @@ def get_mixture_plots_data(
     para_pred_list: list[list],
     mole_fractions_list: list[float],
     plot_config: CustomPlotConfigForm,
-) -> list:
+) -> tuple[list, list]:
     "get mixture plots data"
 
     plot_config.full_clean()
@@ -517,7 +517,7 @@ def mixture_plots(
     temp_min: float,
     temp_max: float,
     pressure: float,
-) -> list:
+) -> tuple[list, list]:
     "get mixture plots data"
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
@@ -525,6 +525,7 @@ def mixture_plots(
     states = np.stack((temp_range, p_range), 1)
     states = np.hstack((states, mole_fractions))
     all_plots = []
+    vp_plots = []
 
     plot_data = {"T": [], "GNN": [], "TML": []}
     plot_data_bubble = {"T": [], "GNN": [], "TML": []}
@@ -545,16 +546,7 @@ def mixture_plots(
     all_plots.append(
         (json.dumps(plot_data), 0, "Liquid Density (mol / m³)", "den_plot")
     )
-    all_plots.append(
-        (
-            json.dumps(plot_data_bubble),
-            0,
-            "Bubble point pressure (Pa)",
-            "vp_bubble_plot",
-        )
-    )
-    all_plots.append(
-        (json.dumps(plot_data_dew), 0, "Dew point pressure (Pa)", "vp_dew_plot")
-    )
+    vp_plots.append(json.dumps(plot_data_bubble))
+    vp_plots.append(json.dumps(plot_data_dew))
 
-    return all_plots
+    return all_plots, vp_plots

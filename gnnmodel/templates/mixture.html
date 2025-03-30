@@ -71,6 +71,22 @@
           <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
         </div>
       {% endfor %}
+      <div class="col-lg-4 mt-2 ">
+        <div id="vp_plots" alt="Bubble/Dew point plot"></div>
+        <script>
+          var vp_plots = {{ vp_plots|safe }};
+          getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble");
+          var alldata = JSON.parse(vp_plots[1]);
+          var trace2 = {
+            x: alldata["T"],
+            y: alldata["GNN"],
+            mode: "lines",
+            type: "scatter",
+            name: "Dew",
+          };
+          Plotly.addTraces("vp_plots", trace2);
+        </script>
+      </div>
     {% endif %}
   </div>
 {% endblock content %}

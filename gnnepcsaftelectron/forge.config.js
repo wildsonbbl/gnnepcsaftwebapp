@@ -4,7 +4,7 @@ const { FuseV1Options, FuseVersion } = require("@electron/fuses");
 module.exports = {
   packagerConfig: {
     asar: true,
-    name: "GNNePCSAFT",
+    name: "gnnepcsaft",
     icon: "./storelogo_scale_400_hf3_icon.ico",
     extraResource: ["../apppkg/dist/gnnepcsaftwebapp"],
   },
@@ -16,6 +16,37 @@ module.exports = {
         setupIcon: "./storelogo_scale_400_hf3_icon.ico",
         iconUrl:
           "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/gnnepcsaftelectron/storelogo_scale_400_hf3_icon.ico",
+      },
+    },
+    {
+      name: "@electron-forge/maker-deb",
+      config: {
+        options: {
+          maintainer: "Wildson Lima",
+          homepage: "https://github.com/wildsonbbl/gnnepcsaftwebapp",
+          icon: "./storelogo_scale_400_hf3_icon.ico",
+        },
+      },
+    },
+    {
+      name: "@electron-forge/maker-dmg",
+      config: {
+        format: "ULFO",
+        icon: "./storelogo_scale_400_hf3_icon.ico",
+      },
+    },
+  ],
+  publishers: [
+    {
+      name: "@electron-forge/publisher-github",
+      config: {
+        repository: {
+          owner: "wildsonbbl", //"github-user-name",
+          name: "gnnepcsaftwebapp", //"github-repo-name",
+        },
+        prerelease: false,
+        draft: true,
+        generateReleaseNotes: true,
       },
     },
   ],

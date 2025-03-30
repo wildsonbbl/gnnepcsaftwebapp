@@ -51,10 +51,18 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  const appPath = path.join(
-    process.resourcesPath,
-    "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
-  );
+  let appPath;
+  if (process.platform === "win32") {
+    appPath = path.join(
+      process.resourcesPath,
+      "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+    );
+  } else {
+    appPath = path.join(
+      process.resourcesPath,
+      "gnnepcsaftwebapp/gnnepcsaftwebapp"
+    );
+  }
   const djangoBackend = spawn(
     appPath,
     ["runserver", "--noreload", "--skip-checks", "localhost:19770"],

@@ -1,4 +1,5 @@
 {% extends "master.html" %}
+{% load static %}
 {% block title %}
   GNNePCSAFT
 {% endblock title %}
@@ -31,7 +32,7 @@
           <span class="visually-hidden">Loading...</span>
         </div>
       </div>
-      <script src='/static/js/loading.js'></script>
+      <script src={% static "js/loading.js" %}></script>
     </div>
     <div class="row" id="mol_identifiers">
       {% if output %}
@@ -55,8 +56,8 @@
     </div>
     <div class="row justify-content-center" id="results">
       {% if output %}
-        <script src="static/js/plotly-2.35.2.min.js" charset="utf-8"></script>
-        <script src='static/js/plot.js'></script>
+        <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
+        <script src={% static "js/plot.js" %}></script>
         <div class="col-lg-4 mt-2 text-success">
           <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
           <table class="table table-hover">
@@ -97,10 +98,10 @@
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
-        {% for dataname, xlegendpos, ytitle, id in custom_plots %}
+        {% for data_json, xlegendpos, ytitle, id in custom_plots %}
           <div class="col-lg-4 mt-2 ">
             <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
-            <script>getplot("{{dataname|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+            <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}
@@ -128,8 +129,8 @@
       {% if output %}
         <div class="col-lg-6 d-grid border border-dark">
           <div id="molplot" class="molplot-style"></div>
-          <script src="static/js/3Dmol-min.js"></script>
-          <script src="static/js/plotmol.js"></script>
+          <script src={% static "js/3Dmol-min.js" %}></script>
+          <script src={% static "js/plotmol.js" %}></script>
           <script>loadmol(`{{mol_data}}`);</script>
           <div class="btn-group btn-group-sm"
                role="group"

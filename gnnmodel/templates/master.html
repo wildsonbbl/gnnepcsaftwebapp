@@ -20,7 +20,7 @@
     {% progressive_web_app_meta %}
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="https://cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
-    <script src='/static/js/myidb.js' async></script>
+    <script src={% static "js/myidb.js" %} async></script>
     <title>
       {% block title %}
       {% endblock title %}
@@ -30,13 +30,19 @@
     <div class="container-fluid bg-light text-dark">
       <ul class="nav bg-dark justify-content-center">
         <li class="nav-item">
-          <a class="nav-link link-light" href={% url "estimator" %}>HOME</a>
+          <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
         </li>
         <li class="nav-item">
           <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
         </li>
         <li class="nav-item" id="installButton"></li>
-        <script src="/static/js/install.js" async></script>
+        <script src={% static "js/install.js" %} async></script>
       </ul>
       <div class="row">
         {% block content %}

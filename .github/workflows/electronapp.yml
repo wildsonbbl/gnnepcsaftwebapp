@@ -1,4 +1,4 @@
-name: Package electron app for windows
+name: Publish Electron App to GitHub Releases
 
 on:
   workflow_dispatch:
@@ -7,8 +7,11 @@ on:
       - "v*"
 
 jobs:
-  electron-app-build:
-    runs-on: windows-latest
+  publish:
+    strategy:
+      matrix:
+        runs-on: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: write
     steps:
@@ -41,20 +44,14 @@ jobs:
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
-          ./pyinstaller-pkg.ps1
+          pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
+
       - name: Check up
-        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp.exe check
-      - name: Package Electron App with Squirrel
+        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
+      - name: Build and Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd gnnepcsaftelectron
           npm install
-          npm run make
-          cd ..
-          cp gnnepcsaftelectron/out/make/squirrel.windows/x64/*Setup.exe ./GNNePCSAFT-${{github.ref_name}}-Setup.exe
-      - uses: ncipollo/release-action@v1
-        with:
-          artifacts: "*Setup.exe"
-          allowUpdates: false
-          generateReleaseNotes: true
-          prerelease: true
-          skipIfReleaseExists: true
+          npm run publish

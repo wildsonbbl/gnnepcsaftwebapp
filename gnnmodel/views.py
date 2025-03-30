@@ -3,20 +3,28 @@
 import os.path as osp
 
 from django.shortcuts import render
-from gnnepcsaft.epcsaft.epcsaft_feos import critical_points_feos, phase_diagram_feos
+from gnnepcsaft.data.rdkit_util import mw
 
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
     HlvCheckForm,
+    InChIorSMILESareaInput,
+    InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
     PhaseDiagramCheckForm,
     RhoCheckForm,
     SlvCheckForm,
+    STCheckForm,
     VPCheckForm,
 )
-from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-from .utils import custom_plot, plotmol, prediction
+from .utils import (
+    get_custom_plots_data,
+    get_forms,
+    get_main_plots_data,
+    get_mixture_plots_data,
+    get_pred,
+)
 
 file_dir = osp.dirname(__file__)
 
@@ -35,13 +43,15 @@ available_params = [
 
 
 # Create your views here.
-def estimator(request):  # pylint: disable=R0914
-    "handle request"
+def pure(request):  # pylint: disable=R0914
+    "handle request for pure substance"
 
-    pred = None
+    pred = []
     output = False
-    plotden, plotvp, molimg, phase_diagrams = "", "", "", ""
-    custom_plots = []
+    plotden, plotvp, molimg = ("", "", "")
+    custom_plots, phase_diagrams = [], []
+    inchi = ""
+    smiles = ""
     if request.method == "POST":
         (
             form,
@@ -52,6 +62,7 @@ def estimator(request):  # pylint: disable=R0914
             h_lv_checkbox,
             s_lv_checkbox,
             phase_diagram_checkbox,
+            st_checkbox,
         ) = get_forms(request)
 
         if form.is_valid():
@@ -64,7 +75,7 @@ def estimator(request):  # pylint: disable=R0914
             plot_checkbox.full_clean()
             if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
                 phase_diagrams, custom_plots = get_custom_plots_data(
-                    pred,
+                    pred[:-2],
                     plot_config,
                     (
                         rho_checkbox,
@@ -72,6 +83,7 @@ def estimator(request):  # pylint: disable=R0914
                         h_lv_checkbox,
                         s_lv_checkbox,
                         phase_diagram_checkbox,
+                        st_checkbox,
                     ),
                 )
 
@@ -84,6 +96,7 @@ def estimator(request):  # pylint: disable=R0914
         h_lv_checkbox = HlvCheckForm()
         s_lv_checkbox = SlvCheckForm()
         phase_diagram_checkbox = PhaseDiagramCheckForm()
+        st_checkbox = STCheckForm()
 
     context = {
         "form": form,
@@ -94,6 +107,7 @@ def estimator(request):  # pylint: disable=R0914
             vp_checkbox,
             h_lv_checkbox,
             s_lv_checkbox,
+            st_checkbox,
             phase_diagram_checkbox,
         ],
         "predicted_para": (
@@ -117,130 +131,74 @@ def estimator(request):  # pylint: disable=R0914
         "phase_diagrams": phase_diagrams,
     }
 
-    return render(request, "pred.html", context)
+    return render(request, "pure.html", context)
 
 
-def get_pred(query, inchi):
-    "get prediction"
-    comp = GnnepcsaftPara.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(comp) == 0:
-        pred = prediction(query)
-        pred = pred.tolist()
+def batch(request):
+    "handle request for batch of substances"
+    pred_list = []
+    output = False
+    if request.method == "POST":
+        form = InChIorSMILESareaInput(request.POST)
+        if form.is_valid():
+            inchi_list, smiles_list = form.cleaned_data["text_area"]
+
+            for smiles, inchi in zip(smiles_list, inchi_list):
+                pred_list.append([round(para, 5) for para in get_pred(smiles, inchi)])
+            output = True
     else:
-        comp = comp[0]
-        pred = [
-            comp.m,
-            comp.sigma,
-            comp.e,
-            comp.k_ab,
-            comp.e_ab,
-            comp.mu,
-            comp.na,
-            comp.nb,
-        ]
-    try:
-        critical_points = critical_points_feos(pred)
-    except RuntimeError:
-        critical_points = [0.0, 0.0]
-    pred.append(critical_points[0])
-    pred.append(critical_points[1] * 0.00001)  # convert from Pa to Bar
-    return pred
+        form = InChIorSMILESareaInput()
+
+    context = {
+        "form": form,
+        "available_params": available_params,
+        "parameters_list": pred_list,
+        "output": output,
+    }
+
+    return render(request, "batch.html", context)
 
 
-def get_main_plots_data(inchi):
-    "get main plot data"
-
-    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        plotvp = alldata[0].vp
-    else:
-        plotvp = ""
-
-    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        plotden = alldata[0].den
-    else:
-        plotden = ""
-
-    molimg = plotmol(inchi)
-    return plotden, plotvp, molimg
-
-
-def get_forms(request):
-    "get forms"
-    form = InChIorSMILESinput(request.POST)
-    plot_config = CustomPlotConfigForm(request.POST)
-    plot_checkbox = CustomPlotCheckForm(request.POST)
-    rho_checkbox = RhoCheckForm(request.POST)
-    vp_checkbox = VPCheckForm(request.POST)
-    h_lv_checkbox = HlvCheckForm(request.POST)
-    s_lv_checkbox = SlvCheckForm(request.POST)
-    phase_diagram_checkbox = PhaseDiagramCheckForm(request.POST)
-    return (
-        form,
-        plot_config,
-        plot_checkbox,
-        rho_checkbox,
-        vp_checkbox,
-        h_lv_checkbox,
-        s_lv_checkbox,
-        phase_diagram_checkbox,
-    )
-
-
-def get_custom_plots_data(
-    pred: list,
-    plot_config: CustomPlotConfigForm,
-    checkboxes: tuple[
-        RhoCheckForm, VPCheckForm, HlvCheckForm, SlvCheckForm, PhaseDiagramCheckForm
-    ],
-) -> tuple[str, list[dict]]:
-    "get custom plots data"
-
-    rho_checkbox, vp_checkbox, h_lv_checkbox, s_lv_checkbox, phase_diagram_checkbox = (
-        checkboxes
-    )
-    plot_config.full_clean()
-    rho_checkbox.full_clean()
-    vp_checkbox.full_clean()
-    h_lv_checkbox.full_clean()
-    s_lv_checkbox.full_clean()
-    phase_diagram_checkbox.full_clean()
-    try:
-        custom_plots = custom_plot(
-            pred,
-            plot_config.cleaned_data["temp_min"],
-            plot_config.cleaned_data["temp_max"],
-            plot_config.cleaned_data["pressure"],
-            [
-                rho_checkbox.cleaned_data["rho_checkbox"],
-                vp_checkbox.cleaned_data["vp_checkbox"],
-                h_lv_checkbox.cleaned_data["h_lv_checkbox"],
-                s_lv_checkbox.cleaned_data["s_lv_checkbox"],
-            ],
-        )
-    except RuntimeError as err:
-        print(err)
-        custom_plots = []
-    phase_diagrams = ""
-    if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
-        try:
-            phase_diagrams_all_data = phase_diagram_feos(
-                pred, [plot_config.cleaned_data["temp_min"]]
-            )
-            phase_diagrams = [
-                phase_diagrams_all_data.get("temperature", [0]),
-                phase_diagrams_all_data.get(
-                    "pressure",
-                    phase_diagrams_all_data.get("pressure vapor", [0]),
-                ),
-                phase_diagrams_all_data["density liquid"],
-                phase_diagrams_all_data["density vapor"],
+def mixture(request):
+    "handle request for mixture"
+    para_pred_list = []
+    output = False
+    mixture_plots = ([], [])
+    mole_fractions_list = []
+    para_pred_for_plot = []
+    if request.method == "POST":
+        form = InChIorSMILESareaInputforMixture(request.POST)
+        plot_config = CustomPlotConfigForm(request.POST)
+        if form.is_valid():
+            inchi_list, smiles_list, mole_fractions_list = form.cleaned_data[
+                "text_area"
             ]
-        except RuntimeError as err:
-            print(err)
-            phase_diagrams = ""
-    return phase_diagrams, custom_plots
+            for smiles, inchi in zip(smiles_list, inchi_list):
+                para_pred_list.append(
+                    [round(para, 5) for para in get_pred(smiles, inchi)]
+                )
+                para_pred_for_plot = [
+                    para[:-2] + [inchi, smiles, mw(inchi)] for para in para_pred_list
+                ]
+            mixture_plots = get_mixture_plots_data(
+                para_pred_for_plot, mole_fractions_list, plot_config
+            )
+            output = True
+    else:
+        form = InChIorSMILESareaInputforMixture()
+        plot_config = CustomPlotConfigForm()
+
+    context = {
+        "form": form,
+        "plot_config": plot_config,
+        "available_params": available_params,
+        "parameters_molefractions_list": list(zip(para_pred_list, mole_fractions_list)),
+        "mixture_plots": mixture_plots[0],
+        "vp_plots": mixture_plots[1],
+        "output": output,
+    }
+
+    return render(request, "mixture.html", context)
 
 
 def homepage(request):
@@ -254,5 +212,5 @@ def authorpage(request):
 
 
 def about(request):
-    "handle request"
+    "handle request for about page"
     return render(request, "about.html")

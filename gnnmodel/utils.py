@@ -523,9 +523,7 @@ def mixture_plots(
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
     mole_fractions = np.asarray([mole_fractions_list] * 100, dtype=np.float64)
     states = np.stack((temp_range, p_range), 1)
-    print(states.shape)
     states = np.hstack((states, mole_fractions))
-    print(states.shape)
     all_plots = []
 
     plot_data = {"T": [], "GNN": [], "TML": []}

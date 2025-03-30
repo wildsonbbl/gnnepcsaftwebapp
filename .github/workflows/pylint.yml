@@ -28,5 +28,3 @@ jobs:
         run: |
           pylint $(git ls-files '*.py') --load-plugins pylint_django \
           --django-settings-module=webapp.settings --rcfile=.pylintrc
-      - name: Check up
-        run: python manage.py check

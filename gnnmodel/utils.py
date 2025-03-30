@@ -445,7 +445,7 @@ def get_custom_plots_data(
         h_lv_checkbox,
         s_lv_checkbox,
         phase_diagram_checkbox,
-        st_checkbox,
+        st_checkbox_,
     ) = checkboxes
     plot_config.full_clean()
     rho_checkbox.full_clean()
@@ -453,7 +453,7 @@ def get_custom_plots_data(
     h_lv_checkbox.full_clean()
     s_lv_checkbox.full_clean()
     phase_diagram_checkbox.full_clean()
-    st_checkbox.full_clean()
+    st_checkbox_.full_clean()
     try:
         custom_plots = custom_plot(
             pred,
@@ -465,7 +465,7 @@ def get_custom_plots_data(
                 vp_checkbox.cleaned_data["vp_checkbox"],
                 h_lv_checkbox.cleaned_data["h_lv_checkbox"],
                 s_lv_checkbox.cleaned_data["s_lv_checkbox"],
-                st_checkbox.cleaned_data["st_checkbox"],
+                st_checkbox_.cleaned_data["st_checkbox"],
             ],
         )
     except RuntimeError as err:

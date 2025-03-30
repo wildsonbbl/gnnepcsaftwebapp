@@ -440,19 +440,19 @@ def get_custom_plots_data(
     "get custom plots data"
 
     (
-        rho_checkbox,
-        vp_checkbox,
-        h_lv_checkbox,
-        s_lv_checkbox,
-        phase_diagram_checkbox,
+        rho_checkbox_,
+        vp_checkbox_,
+        h_lv_checkbox_,
+        s_lv_checkbox_,
+        phase_diagram_checkbox_,
         st_checkbox_,
     ) = checkboxes
     plot_config.full_clean()
-    rho_checkbox.full_clean()
-    vp_checkbox.full_clean()
-    h_lv_checkbox.full_clean()
-    s_lv_checkbox.full_clean()
-    phase_diagram_checkbox.full_clean()
+    rho_checkbox_.full_clean()
+    vp_checkbox_.full_clean()
+    h_lv_checkbox_.full_clean()
+    s_lv_checkbox_.full_clean()
+    phase_diagram_checkbox_.full_clean()
     st_checkbox_.full_clean()
     try:
         custom_plots = custom_plot(
@@ -461,10 +461,10 @@ def get_custom_plots_data(
             plot_config.cleaned_data["temp_max"],
             plot_config.cleaned_data["pressure"],
             [
-                rho_checkbox.cleaned_data["rho_checkbox"],
-                vp_checkbox.cleaned_data["vp_checkbox"],
-                h_lv_checkbox.cleaned_data["h_lv_checkbox"],
-                s_lv_checkbox.cleaned_data["s_lv_checkbox"],
+                rho_checkbox_.cleaned_data["rho_checkbox"],
+                vp_checkbox_.cleaned_data["vp_checkbox"],
+                h_lv_checkbox_.cleaned_data["h_lv_checkbox"],
+                s_lv_checkbox_.cleaned_data["s_lv_checkbox"],
                 st_checkbox_.cleaned_data["st_checkbox"],
             ],
         )
@@ -472,7 +472,7 @@ def get_custom_plots_data(
         print(err)
         custom_plots = []
     phase_diagrams = []
-    if phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
+    if phase_diagram_checkbox_.cleaned_data["phase_diagram_checkbox"]:
         try:
             phase_diagrams_all_data = phase_diagram_feos(
                 pred, [plot_config.cleaned_data["temp_min"]]

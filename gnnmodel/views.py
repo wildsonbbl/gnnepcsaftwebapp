@@ -140,7 +140,6 @@ def batch(request):
             output = True
     else:
         form = InChIorSMILESareaInput()
-        output = False
 
     context = {
         "form": form,

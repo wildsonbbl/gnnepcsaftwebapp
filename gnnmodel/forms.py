@@ -55,13 +55,12 @@ class InChIorSMILESareaInput(forms.Form):
     text_area = forms.CharField(
         label="Type/Paste a list of InChI or SMILES",
         strip=True,
-        empty_value="InChI or SMILES",
         required=True,
-        help_text="One InChI or SMILES per line.",
         widget=forms.Textarea(
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
+                "placeholder": "One InChI or SMILES per line",
             }
         ),
     )

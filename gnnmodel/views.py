@@ -123,7 +123,7 @@ def estimator(request):  # pylint: disable=R0914
         "phase_diagrams": phase_diagrams,
     }
 
-    return render(request, "pred.html", context)
+    return render(request, "pure.html", context)
 
 
 def batch_estimator(request):

@@ -8,6 +8,7 @@ from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
     HlvCheckForm,
+    InChIorSMILESareaInput,
     InChIorSMILESinput,
     PhaseDiagramCheckForm,
     RhoCheckForm,
@@ -123,6 +124,32 @@ def estimator(request):  # pylint: disable=R0914
     }
 
     return render(request, "pred.html", context)
+
+
+def batch_estimator(request):
+    "handle request"
+    pred_list = []
+    output = False
+    if request.method == "POST":
+        form = InChIorSMILESareaInput(request.POST)
+        if form.is_valid():
+            inchi_list, smiles_list = form.cleaned_data["text_area"]
+            pred_list = []
+            for smiles, inchi in zip(smiles_list, inchi_list):
+                pred_list.append([round(para, 5) for para in get_pred(smiles, inchi)])
+            output = True
+    else:
+        form = InChIorSMILESareaInput()
+        output = False
+
+    context = {
+        "form": form,
+        "available_params": available_params,
+        "parameters_list": pred_list,
+        "output": output,
+    }
+
+    return render(request, "batch.html", context)
 
 
 def homepage(request):

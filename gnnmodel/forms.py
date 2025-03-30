@@ -49,6 +49,54 @@ class InChIorSMILESinput(forms.Form):
         return smiles, inchi
 
 
+class InChIorSMILESareaInput(forms.Form):
+    "Form to receive InChI/SMILES from user."
+
+    text_area = forms.CharField(
+        label="Type/Paste a list of InChI or SMILES",
+        strip=True,
+        empty_value="InChI or SMILES",
+        required=True,
+        help_text="One InChI or SMILES per line.",
+        widget=forms.Textarea(
+            attrs={
+                "class": "form-control my-2",
+                "aria-label": "Type/Paste InChI or SMILES",
+            }
+        ),
+    )
+
+    def clean_text_area(self):
+        "check valid input and output SMILES."
+        data: str = self.cleaned_data["text_area"]
+
+        lines = data.split("\n")
+        inchi_list, smiles_list = [], []
+        for line in lines:
+            inchi_check = re.search("^InChI=", line)
+            if inchi_check:
+                try:
+                    smiles = inchitosmiles(line, False, False)
+                    inchi = smilestoinchi(smiles, False, False)
+                    smiles2graph(smiles)
+                    assoc_number(inchi)
+                    smiles_list.append(smiles)
+                    inchi_list.append(inchi)
+                except ValueError as e:
+                    raise ValidationError(_(f"Invalid InChI/SMILES: {line}")) from e
+            else:
+                try:
+                    inchi = smilestoinchi(line, False, False)
+                    smiles = inchitosmiles(inchi, False, False)
+                    smiles2graph(smiles)
+                    assoc_number(inchi)
+                    smiles_list.append(smiles)
+                    inchi_list.append(inchi)
+                except ValueError as e:
+                    raise ValidationError(_(f"Invalid InChI/SMILES: {line}")) from e
+        return inchi_list, smiles_list
+
+
 class CustomPlotConfigForm(forms.Form):
     "Form to receive custom plot config."
 

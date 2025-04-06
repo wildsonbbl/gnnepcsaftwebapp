@@ -7,13 +7,15 @@ from urllib.request import HTTPError, urlopen
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from markdown import markdown
+from pydantic import SecretStr
 
 
-def resume_mol(inchi: str, smiles: str):
+def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
     "Describe the molecule with google's gemini."
 
     llm = ChatGoogleGenerativeAI(
-        model="gemma-3-27b-it"
+        model="gemma-3-27b-it",
+        api_key=api_key,
     )  # needs GOOGLE_API_KEY env variable
 
     url = (

@@ -231,7 +231,9 @@ def description(request):
         google_api_key_form = GoogleAPIKeyForm(request.POST)
         if google_api_key_form.is_valid() and form.is_valid():
             smiles, inchi = form.cleaned_data["query"]
-            html_output = resume_mol(inchi, smiles)
+            html_output = resume_mol(
+                inchi, smiles, google_api_key_form.cleaned_data["google_api_key"]
+            )
     else:
         form = InChIorSMILESinput()
         google_api_key_form = GoogleAPIKeyForm()

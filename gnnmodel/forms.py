@@ -1,6 +1,5 @@
 "Django forms."
 
-import os
 import re
 
 from django import forms
@@ -8,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
+from pydantic import SecretStr
 
 from .utils_llm import is_api_key_valid
 
@@ -334,5 +334,4 @@ class GoogleAPIKeyForm(forms.Form):
             raise ValidationError(_("Google API Key is required"))
         if not is_api_key_valid(google_api_key):
             raise ValidationError(_("Invalid Google API Key"))
-        os.environ["GOOGLE_API_KEY"] = google_api_key
-        return google_api_key
+        return SecretStr(google_api_key)

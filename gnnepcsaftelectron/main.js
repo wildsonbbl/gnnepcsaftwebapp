@@ -27,6 +27,16 @@ const createWindow = async () => {
   win.loadURL("http://localhost:19770");
 
   win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http://localhost:19770")) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          fullscreen: false,
+          width: 600,
+          height: 600,
+        },
+      };
+    }
     shell.openExternal(url);
     return { action: "deny" };
   });

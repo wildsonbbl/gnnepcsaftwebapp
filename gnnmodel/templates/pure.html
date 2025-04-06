@@ -52,14 +52,17 @@
             </tbody>
           </table>
         </div>
-        <form action={% url "description" %} method="post" id="descriptionForm">
+        <form action="{% url "description" %}"
+              method="post"
+              id="descriptionForm"
+              target="_blank">
           {% csrf_token %}
           <div class="row my-1 justify-content-center">
             <div class="col-md-3">
               {{ google_api_key_form.google_api_key }}
               <p class="mx-2 my-1">
                 You can find more about Google API Key
-                <a href="https://ai.google.dev/gemini-api/docs/api-key">here</a>
+                <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">here</a>
               </p>
             </div>
             <div class="col-md-3" id="descriptionContainer">

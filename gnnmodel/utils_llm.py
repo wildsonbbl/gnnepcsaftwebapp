@@ -6,6 +6,7 @@ from urllib.request import HTTPError, urlopen
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
 from markdown import markdown
 
 
@@ -61,3 +62,15 @@ def resume_mol(inchi: str, smiles: str):
     if isinstance(response.content, str):
         return markdown(response.content)
     return response.content
+
+
+def check_api_key():
+    "Check if the API key is set and valid."
+    try:
+        llm = ChatGoogleGenerativeAI(model="gemma-3-27b-it", max_tokens=20)
+        ai_msg = llm.invoke("hi there")
+        print(ai_msg)
+    except (ChatGoogleGenerativeAIError, ValueError) as e:
+        print(e)
+        return False
+    return True

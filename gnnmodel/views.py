@@ -1,6 +1,5 @@
 "request handler."
 
-import os
 import os.path as osp
 
 from django.shortcuts import render
@@ -230,14 +229,9 @@ def description(request):
     if request.method == "POST":
         form = InChIorSMILESinput(request.POST)
         google_api_key_form = GoogleAPIKeyForm(request.POST)
-        if google_api_key_form.is_valid():
-            os.environ["GOOGLE_API_KEY"] = google_api_key_form.cleaned_data[
-                "google_api_key"
-            ]
-
-            if form.is_valid():
-                smiles, inchi = form.cleaned_data["query"]
-                html_output = resume_mol(inchi, smiles)
+        if google_api_key_form.is_valid() and form.is_valid():
+            smiles, inchi = form.cleaned_data["query"]
+            html_output = resume_mol(inchi, smiles)
     else:
         form = InChIorSMILESinput()
         google_api_key_form = GoogleAPIKeyForm()

@@ -52,6 +52,31 @@
             </tbody>
           </table>
         </div>
+        <form action={% url "description" %} method="post" id="descriptionForm">
+          {% csrf_token %}
+          <div class="row my-1 justify-content-center">
+            <div class="col-md-3">
+              {{ google_api_key_form.google_api_key }}
+              <p class="mx-2 my-1">
+                You can find more about Google API Key
+                <a href="https://ai.google.dev/gemini-api/docs/api-key">here</a>
+              </p>
+            </div>
+            <div class="col-md-3" id="descriptionContainer">
+              <script>let id_query = document.getElementById("id_query")
+                const hidden_input = document.createElement("input")
+                hidden_input.type = "hidden"
+                hidden_input.name = "query"
+                hidden_input.value = id_query.value
+                hidden_input.id = "hidden_query"
+                document.getElementById("descriptionContainer").appendChild(hidden_input)
+              </script>
+              <input type="submit"
+                     value="AI generated molecule description"
+                     class="form-control btn-outline-primary" />
+            </div>
+          </div>
+        </form>
       {% endif %}
     </div>
     <div class="row justify-content-center" id="results">

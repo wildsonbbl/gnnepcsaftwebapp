@@ -12,7 +12,7 @@ def resume_mol(inchi: str):
     "Describe the molecule with google's gemini."
 
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-pro-exp-03-25"
+        model="gemma-3-27b-it"
     )  # needs GOOGLE_API_KEY env variable
 
     url = (

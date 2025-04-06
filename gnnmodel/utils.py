@@ -26,6 +26,7 @@ from rdkit.Chem import AllChem as Chem
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
+    GoogleAPIKeyForm,
     HlvCheckForm,
     InChIorSMILESinput,
     PhaseDiagramCheckForm,
@@ -422,6 +423,7 @@ def get_forms(request):
         SlvCheckForm(request.POST),
         PhaseDiagramCheckForm(request.POST),
         STCheckForm(request.POST),
+        GoogleAPIKeyForm(request.POST),
     )
 
 

@@ -307,3 +307,19 @@ class STCheckForm(forms.Form):
             }
         ),
     )
+
+
+class GoogleAPIKeyForm(forms.Form):
+    "Form to receive Google API Key."
+
+    google_api_key = forms.CharField(
+        strip=True,
+        required=True,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "aria-label": "Google API Key",
+                "placeholder": "Google API Key",
+            }
+        ),
+    )

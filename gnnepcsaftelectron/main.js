@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("child_process");
 const controller = new AbortController();
 const { signal } = controller;
@@ -9,6 +9,7 @@ const fetch = require("node-fetch");
 log.initialize();
 
 if (require("electron-squirrel-startup")) app.quit();
+Menu.setApplicationMenu(null); // Hide the menu bar
 
 const createWindow = async () => {
   const djangoBackend = startDjangoServer();
@@ -18,8 +19,6 @@ const createWindow = async () => {
     height: 600,
     titleBarStyle: "default",
   });
-
-  win.menuBarVisible = false;
 
   win.loadFile(path.join(__dirname, "index.html")); //from loading.io
 

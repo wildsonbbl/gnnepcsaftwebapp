@@ -25,6 +25,7 @@ from .utils import (
     get_mixture_plots_data,
     get_pred,
 )
+from .utils_llm import resume_mol
 
 file_dir = osp.dirname(__file__)
 
@@ -214,3 +215,19 @@ def authorpage(request):
 def about(request):
     "handle request for about page"
     return render(request, "about.html")
+
+
+def description(request):
+    "handle request for molecule description"
+
+    html_output = ""
+
+    if request.method == "POST":
+        form = InChIorSMILESinput(request.POST)
+        if form.is_valid():
+            smiles, inchi = form.cleaned_data["query"]
+            html_output = resume_mol(inchi, smiles)
+    else:
+        form = InChIorSMILESinput()
+
+    return render(request, "description.html", {"output": html_output})

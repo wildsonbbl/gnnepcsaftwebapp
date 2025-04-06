@@ -6,9 +6,10 @@ from urllib.request import HTTPError, urlopen
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
+from markdown import markdown
 
 
-def resume_mol(inchi: str):
+def resume_mol(inchi: str, smiles: str):
     "Describe the molecule with google's gemini."
 
     llm = ChatGoogleGenerativeAI(
@@ -23,10 +24,10 @@ def resume_mol(inchi: str):
         with urlopen(url) as ans:
             ans = ans.read().decode("utf8").rstrip()
     except (TypeError, HTTPError, ValueError):
-        ans = "no data available."
+        ans = "no data available on this molecule."
 
     query = """
-            You are a chemistry expert who is given this InChI {inchi} to analyse.
+            You are a chemistry expert who is given this InChI {inchi} and this SMILES {smiles} to analyse.
             Make sure to answer each one of the bellow questions. 
             To be able to do that you are gonna need to take into account all the 
             organic groups known in chemistry, 
@@ -34,7 +35,9 @@ def resume_mol(inchi: str):
             hydrogen bond, a hydrogen bond donor
             and hydrogen bond acceptor. Once you have all this 
             information gathered, you will be able to answer. You can use
-            the passage bellow as reference.
+            the data collected from PubChem bellow as reference too.
+
+            PubChem Description: '{ans}'
 
             QUESTIONS: '
             First, describe the molecule with this InChI in detail.
@@ -45,9 +48,6 @@ def resume_mol(inchi: str):
                - Is it a Lewis acid or base or both? 
                - Can it do hydrogen bonds? 
                - Is it a hydrogen bond donor or acceptor?'
-               
-            PASSAGE: '{ans}'
-
             """
     query = textwrap.dedent(query)
 
@@ -56,6 +56,8 @@ def resume_mol(inchi: str):
     # pylint: disable=E1131
     chain = prompt | llm
     # pylint: enable=E1131
-    response = chain.invoke({"inchi": inchi, "ans": ans})
+    response = chain.invoke({"smiles": smiles, "inchi": inchi, "ans": ans})
 
+    if isinstance(response.content, str):
+        return markdown(response.content)
     return response.content

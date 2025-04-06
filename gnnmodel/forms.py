@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
 
-from .utils_llm import check_api_key
+from .utils_llm import is_api_key_valid
 
 
 class InChIorSMILESinput(forms.Form):
@@ -332,7 +332,7 @@ class GoogleAPIKeyForm(forms.Form):
         google_api_key = self.cleaned_data["google_api_key"]
         if not google_api_key:
             raise ValidationError(_("Google API Key is required"))
-        os.environ["GOOGLE_API_KEY"] = google_api_key
-        if not check_api_key():
+        if not is_api_key_valid(google_api_key):
             raise ValidationError(_("Invalid Google API Key"))
+        os.environ["GOOGLE_API_KEY"] = google_api_key
         return google_api_key

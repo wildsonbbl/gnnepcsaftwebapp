@@ -321,8 +321,8 @@ class GoogleAPIKeyForm(forms.Form):
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
-                "aria-label": "Google API Key",
-                "placeholder": "Google API Key",
+                "aria-label": "Gemini API Key",
+                "placeholder": "Gemini API Key",
             }
         ),
     )
@@ -331,7 +331,7 @@ class GoogleAPIKeyForm(forms.Form):
         "check valid Google API Key."
         google_api_key = self.cleaned_data["google_api_key"]
         if not google_api_key:
-            raise ValidationError(_("Google API Key is required"))
+            raise ValidationError(_("Gemini API Key is required"))
         if not is_api_key_valid(google_api_key):
-            raise ValidationError(_("Invalid Google API Key"))
+            raise ValidationError(_("Invalid Gemini API Key"))
         return SecretStr(google_api_key)

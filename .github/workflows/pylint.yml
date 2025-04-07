@@ -24,6 +24,7 @@ jobs:
         run: |
           uv pip install pylint pylint-django pyinstaller tqdm
           uv pip install -r requirements.txt
+          uv pip install -r requirements-llm.txt
       - name: Analysing the code with pylint
         run: |
           pylint $(git ls-files '*.py') --load-plugins pylint_django \

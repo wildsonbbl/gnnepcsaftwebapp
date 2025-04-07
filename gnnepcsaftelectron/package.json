@@ -1,8 +1,8 @@
 {
   "name": "gnnepcsaft",
-  "version": "4.0.0",
+  "version": "5.0.0",
   "description": "Thermodynamic Modeling with GNNePCSAFT",
-  "main": "main.js",
+  "main": "main.cjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron-forge start",

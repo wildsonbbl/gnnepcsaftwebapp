@@ -1,4 +1,4 @@
-const { app, BrowserWindow, shell } = require("electron");
+const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("child_process");
 const controller = new AbortController();
 const { signal } = controller;
@@ -9,6 +9,7 @@ const fetch = require("node-fetch");
 log.initialize();
 
 if (require("electron-squirrel-startup")) app.quit();
+Menu.setApplicationMenu(null); // Hide the menu bar
 
 const createWindow = async () => {
   const djangoBackend = startDjangoServer();
@@ -17,9 +18,8 @@ const createWindow = async () => {
     width: 768,
     height: 600,
     titleBarStyle: "default",
+    title: "GNNePCSAFT",
   });
-
-  win.menuBarVisible = false;
 
   win.loadFile(path.join(__dirname, "index.html")); //from loading.io
 
@@ -28,6 +28,17 @@ const createWindow = async () => {
   win.loadURL("http://localhost:19770");
 
   win.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith("http://localhost:19770")) {
+      return {
+        action: "allow",
+        overrideBrowserWindowOptions: {
+          fullscreen: false,
+          width: 600,
+          height: 600,
+          title: "GNNePCSAFT",
+        },
+      };
+    }
     shell.openExternal(url);
     return { action: "deny" };
   });

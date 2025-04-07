@@ -1,8 +1,8 @@
-# GNNePCSAFT Web App
+# GNNePCSAFT App
 
 ## Project Overview: Smart Thermodynamic Modeling with Graph Neural Networks
 
-Embark on a cutting-edge journey with our project that harnesses the power of graph neural networks to estimate pure-component parameters of the state-of-the-art Equation of State, ePC-SAFT. Our aim is to empower users to leverage this robust equation without the need for prior experimental data, revolutionizing the calculation of thermodynamic properties and enhancing process simulations.
+Embark on a cutting-edge journey with our project that harnesses the power of graph neural networks to estimate pure-component parameters of the state-of-the-art Equation of State, ePC-SAFT. We aim to empower users to leverage this robust equation without the need for prior experimental data, revolutionizing the calculation of thermodynamic properties and enhancing process simulations.
 
 ### Current Capabilities
 

@@ -8,6 +8,7 @@ from gnnepcsaft.data.rdkit_util import mw
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
+    GoogleAPIKeyForm,
     HlvCheckForm,
     InChIorSMILESareaInput,
     InChIorSMILESareaInputforMixture,
@@ -25,6 +26,7 @@ from .utils import (
     get_mixture_plots_data,
     get_pred,
 )
+from .utils_llm import resume_mol
 
 file_dir = osp.dirname(__file__)
 
@@ -63,6 +65,7 @@ def pure(request):  # pylint: disable=R0914
             s_lv_checkbox,
             phase_diagram_checkbox,
             st_checkbox,
+            google_api_key_form,
         ) = get_forms(request)
 
         if form.is_valid():
@@ -97,6 +100,7 @@ def pure(request):  # pylint: disable=R0914
         s_lv_checkbox = SlvCheckForm()
         phase_diagram_checkbox = PhaseDiagramCheckForm()
         st_checkbox = STCheckForm()
+        google_api_key_form = GoogleAPIKeyForm()
 
     context = {
         "form": form,
@@ -129,6 +133,7 @@ def pure(request):  # pylint: disable=R0914
         "mol_data": molimg,
         "custom_plots": custom_plots,
         "phase_diagrams": phase_diagrams,
+        "google_api_key_form": google_api_key_form,
     }
 
     return render(request, "pure.html", context)
@@ -214,3 +219,30 @@ def authorpage(request):
 def about(request):
     "handle request for about page"
     return render(request, "about.html")
+
+
+def description(request):
+    "handle request for molecule description"
+
+    html_output = ""
+
+    if request.method == "POST":
+        form = InChIorSMILESinput(request.POST)
+        google_api_key_form = GoogleAPIKeyForm(request.POST)
+        if google_api_key_form.is_valid() and form.is_valid():
+            smiles, inchi = form.cleaned_data["query"]
+            html_output = resume_mol(
+                inchi, smiles, google_api_key_form.cleaned_data["google_api_key"]
+            )
+    else:
+        form = InChIorSMILESinput()
+        google_api_key_form = GoogleAPIKeyForm()
+
+    return render(
+        request,
+        "description.html",
+        {
+            "output": html_output,
+            "google_api_key_form": google_api_key_form,
+        },
+    )

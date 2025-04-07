@@ -7,6 +7,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
+from pydantic import SecretStr
+
+from .utils_llm import is_api_key_valid
 
 
 class InChIorSMILESinput(forms.Form):
@@ -307,3 +310,28 @@ class STCheckForm(forms.Form):
             }
         ),
     )
+
+
+class GoogleAPIKeyForm(forms.Form):
+    "Form to receive Google API Key."
+
+    google_api_key = forms.CharField(
+        strip=True,
+        required=True,
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "aria-label": "Gemini API Key",
+                "placeholder": "Gemini API Key",
+            }
+        ),
+    )
+
+    def clean_google_api_key(self):
+        "check valid Google API Key."
+        google_api_key = self.cleaned_data["google_api_key"]
+        if not google_api_key:
+            raise ValidationError(_("Gemini API Key is required"))
+        if not is_api_key_valid(google_api_key):
+            raise ValidationError(_("Invalid Gemini API Key"))
+        return SecretStr(google_api_key)

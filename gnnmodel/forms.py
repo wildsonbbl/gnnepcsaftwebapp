@@ -324,7 +324,7 @@ class GoogleAPIKeyForm(forms.Form):
             attrs={
                 "class": "form-control",
                 "aria-label": "Gemini API Key",
-                "placeholder": "Gemini API Key",
+                "placeholder": "Paste your Gemini API key here",
             }
         ),
     )

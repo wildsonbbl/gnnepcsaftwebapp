@@ -27,6 +27,16 @@ const createWindow = async () => {
 
   win.loadURL("http://localhost:19770");
 
+  win.webContents.on("did-finish-load", () => {
+    win.webContents.executeJavaScript(`
+      id_google_api_key = document.getElementById("id_google_api_key");
+      if (id_google_api_key) {
+        id_google_api_key.placeholder =
+          "Paste your Gemini API key here or create the env variable GEMINI_API_KEY=your_api_key";
+      }
+      `);
+  });
+
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http://localhost:19770")) {
       return {

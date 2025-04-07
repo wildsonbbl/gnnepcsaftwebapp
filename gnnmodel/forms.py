@@ -1,5 +1,6 @@
 "Django forms."
 
+import os
 import re
 
 from django import forms
@@ -317,7 +318,8 @@ class GoogleAPIKeyForm(forms.Form):
 
     google_api_key = forms.CharField(
         strip=True,
-        required=True,
+        required=False,
+        empty_value="",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
@@ -330,8 +332,14 @@ class GoogleAPIKeyForm(forms.Form):
     def clean_google_api_key(self):
         "check valid Google API Key."
         google_api_key = self.cleaned_data["google_api_key"]
-        if not google_api_key:
-            raise ValidationError(_("Gemini API Key is required"))
-        if not is_api_key_valid(google_api_key):
+        if google_api_key:
+            if not is_api_key_valid(google_api_key):
+                raise ValidationError(_("Invalid Gemini API Key"))
+        elif os.environ.get("GEMINI_API_KEY") is None:
+            raise ValidationError(
+                _("Gemini API Key is required for AI generated content")
+            )
+        elif not is_api_key_valid(os.environ.get("GEMINI_API_KEY", "")):
             raise ValidationError(_("Invalid Gemini API Key"))
+
         return SecretStr(google_api_key)

@@ -1,5 +1,6 @@
 "Module for utils to work with LLMs"
 
+import os
 import textwrap
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
@@ -15,8 +16,8 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
 
     llm = ChatGoogleGenerativeAI(
         model="gemma-3-27b-it",
-        api_key=api_key,
-    )  # needs GOOGLE_API_KEY env variable
+        api_key=api_key if api_key else SecretStr(os.environ.get("GEMINI_API_KEY", "")),
+    )
 
     url = (
         "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="

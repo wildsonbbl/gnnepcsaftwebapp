@@ -18,6 +18,7 @@ const createWindow = async () => {
     width: 768,
     height: 600,
     titleBarStyle: "default",
+    title: "GNNePCSAFT",
   });
 
   win.loadFile(path.join(__dirname, "index.html")); //from loading.io
@@ -34,6 +35,7 @@ const createWindow = async () => {
           fullscreen: false,
           width: 600,
           height: 600,
+          title: "GNNePCSAFT",
         },
       };
     }

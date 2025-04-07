@@ -58,7 +58,7 @@
               target="_blank">
           {% csrf_token %}
           <div class="row my-1 justify-content-center">
-            <div class="col-md-3">
+            <div class="col-md-6">
               {{ google_api_key_form.google_api_key }}
               <p class="mx-2 my-1">
                 You can find more about Gemini API Keys
@@ -66,7 +66,7 @@
                 This key is not stored for security reasons.
               </p>
             </div>
-            <div class="col-md-3" id="descriptionContainer">
+            <div class="col-md-6" id="descriptionContainer">
               <script>let id_query = document.getElementById("id_query")
                 const hidden_input = document.createElement("input")
                 hidden_input.type = "hidden"

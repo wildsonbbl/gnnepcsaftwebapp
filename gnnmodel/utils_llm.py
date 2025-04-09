@@ -2,6 +2,7 @@
 
 import os
 import textwrap
+from json import loads
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
 
@@ -59,7 +60,7 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
     return response.content
 
 
-def pubchem_description(inchi: str) -> str:
+def pubchem_description(inchi: str) -> dict[str, str]:
     """
     Check if the molecule is in PubChem and return its description.
 
@@ -72,9 +73,9 @@ def pubchem_description(inchi: str) -> str:
     )
     try:
         with urlopen(url) as ans:
-            ans = ans.read().decode("utf8").strip()
+            ans = loads(ans.read().decode("utf8").strip())
     except (TypeError, HTTPError, ValueError):
-        ans = "no data available on this molecule in PubChem."
+        ans = {"result": "no data available on this molecule in PubChem."}
     return ans
 
 

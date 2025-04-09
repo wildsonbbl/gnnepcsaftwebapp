@@ -182,9 +182,7 @@ def mixture(request):
                 para_pred_list.append(
                     [round(para, 5) for para in get_pred(smiles, inchi)]
                 )
-                para_pred_for_plot = [
-                    para[:-2] + [inchi, smiles, mw(inchi)] for para in para_pred_list
-                ]
+                para_pred_for_plot.append(para_pred_list[-1] + [mw(inchi)])
             mixture_plots = get_mixture_plots_data(
                 para_pred_for_plot, mole_fractions_list, plot_config
             )

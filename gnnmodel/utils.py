@@ -366,7 +366,7 @@ def custom_plot(
     return all_plots
 
 
-def get_pred(smiles: str, inchi: str) -> list:
+def get_pred(smiles: str, inchi: str) -> list[float]:
     "get prediction"
     all_comp_matched = GnnepcsaftPara.objects.filter(  # pylint: disable=E1101
         inchi=inchi

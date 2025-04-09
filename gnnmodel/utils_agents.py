@@ -41,28 +41,8 @@ def resume_mol_agent(inchi, smiles, llm):
         checkpointer=memory,
     )
     query = f"""
-            You are a chemistry expert who is given this 
-            InChI '{inchi}' and 
-            this SMILES '{smiles}' to analyse. 
-            Make sure to answer each one of the bellow questions. 
-            To be able to do that you are gonna need to take into account all the 
-            organic groups known in chemistry, 
-            the difference between a Lewis acid and base, the concept of a 
-            hydrogen bond, a hydrogen bond donor 
-            and hydrogen bond acceptor. Once you have all this 
-            information gathered, you will be able to answer. 
-
-            QUESTIONS: 
-            First, from the InChI and SMILES try to come out with the name
-             of the molecule, and with this name make a search to find out more about it. 
-            Make a summary of what you found out.
-            
-            Then, answer the following questions about this molecule with 
-            a detailed explanation of the answer: 
-               - Is it a Lewis acid or base or both? 
-               - Can it do hydrogen bonds? 
-               - Is it a hydrogen bond donor or acceptor? 
-               
+            You are given this InChI '{inchi}' and this SMILES '{smiles}' to analyse. 
+            Find out what it is and search more info on it.
             """
     query = textwrap.dedent(query)
     config = RunnableConfig(configurable={"thread_id": "abc123"})

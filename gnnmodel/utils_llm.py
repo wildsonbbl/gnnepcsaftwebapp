@@ -19,15 +19,7 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
         api_key=api_key if api_key else SecretStr(os.environ.get("GEMINI_API_KEY", "")),
     )
 
-    url = (
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
-        + quote(inchi, safe="")
-    )
-    try:
-        with urlopen(url) as ans:
-            ans = ans.read().decode("utf8").rstrip()
-    except (TypeError, HTTPError, ValueError):
-        ans = "no data available on this molecule."
+    ans = pubchem_description(inchi)
 
     query = """
             You are a chemistry expert who is given this InChI '{inchi}' and this SMILES '{smiles}' to analyse.
@@ -65,6 +57,25 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
     if isinstance(response.content, str):
         return markdown(response.content)
     return response.content
+
+
+def pubchem_description(inchi: str) -> str:
+    """
+    Check if the molecule is in PubChem and return its description.
+
+    Args:
+        inchi (str): The InChI of the molecule.
+    """
+    url = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
+        + quote(inchi, safe="")
+    )
+    try:
+        with urlopen(url) as ans:
+            ans = ans.read().decode("utf8").strip()
+    except (TypeError, HTTPError, ValueError):
+        ans = "no data available on this molecule in PubChem."
+    return ans
 
 
 def is_api_key_valid(api_key: str) -> bool:

@@ -7,7 +7,7 @@ import re
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import Any, Callable, List, Literal, Optional, Union
+from typing import Any, Callable, List, Literal, Optional
 
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     mix_den_feos,
@@ -16,12 +16,12 @@ from gnnepcsaft.epcsaft.epcsaft_feos import (
     pure_vp_feos,
 )
 from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import HumanMessage
 from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_groq import ChatGroq
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from pydantic import SecretStr
@@ -124,7 +124,7 @@ def mixture_phase(
 
 
 def custom_agent(
-    llm: Union[ChatGoogleGenerativeAI, ChatGroq],
+    llm: BaseChatModel,
     message: str,
     fn_list: Optional[List[Callable[..., Any]]] = None,
 ):
@@ -282,6 +282,8 @@ if __name__ == "__main__":
 
        Do just what's asked.
        """
+
+    from langchain_groq import ChatGroq
 
     llama3_70b = ChatGroq(
         model="llama3-70b-8192",

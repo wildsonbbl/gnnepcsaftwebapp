@@ -263,7 +263,23 @@ if __name__ == "__main__":
        Do just what's asked.
        """
 
-    from langchain_groq import ChatGroq
+    PROMPT2 = """
+      What's the molecule with this InChI 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'?
+      If there's any source info about it, what does each source say?
+    """
+
+    from langchain_groq import ChatGroq  # pylint: disable=import-error
+    from utils_llm import pubchem_description  # pylint: disable=import-error
+
+    _fn_list = [
+        pure_vp_feos,
+        pure_den_feos,
+        mix_den_feos,
+        mix_vp_feos,
+        pure_phase,
+        mixture_phase,
+        pubchem_description,
+    ]
 
     llama3_70b = ChatGroq(
         model="llama3-70b-8192",
@@ -294,4 +310,4 @@ if __name__ == "__main__":
 
     # langgraph_agent(PROMPT, gemini_20_flash)
 
-    custom_agent(llama3_70b, PROMPT)
+    custom_agent(gemini_20_flash, PROMPT2, _fn_list)

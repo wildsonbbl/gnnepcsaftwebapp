@@ -30,7 +30,7 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
         ans = "no data available on this molecule."
 
     query = """
-            You are a chemistry expert who is given this InChI {inchi} and this SMILES {smiles} to analyse.
+            You are a chemistry expert who is given this InChI '{inchi}' and this SMILES '{smiles}' to analyse.
             Make sure to answer each one of the bellow questions. 
             To be able to do that you are gonna need to take into account all the 
             organic groups known in chemistry, 
@@ -40,9 +40,10 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
             information gathered, you will be able to answer. You can use
             the data collected from PubChem bellow as reference too.
 
-            PubChem Description: '{ans}'
+            PubChem Description: 
+            {ans}
 
-            QUESTIONS: '
+            QUESTIONS:
             First, describe the molecule with this InChI in detail.
             
             Then, answer the following questions about this molecule with 
@@ -50,7 +51,7 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
             
                - Is it a Lewis acid or base or both? 
                - Can it do hydrogen bonds? 
-               - Is it a hydrogen bond donor or acceptor?'
+               - Is it a hydrogen bond donor or acceptor?
             """
     query = textwrap.dedent(query)
 

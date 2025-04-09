@@ -219,7 +219,12 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
 def prediction(
     smiles: str,
 ) -> np.ndarray[tuple[Literal[8]], np.dtype[np.float64]]:
-    "Predict ePC-SAFT parameters."
+    """Predict ePC-SAFT parameters
+    `[m, sigma, epsilon/kB, kappa_ab, epsilon_ab/kB, dipole moment, na, nb]`
+
+    Args:
+      smiles: SMILES string
+    """
     lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
     upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
 

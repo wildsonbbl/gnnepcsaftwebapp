@@ -3,3 +3,4 @@ langchain-google-genai
 langchain-community
 #unstructured
 markdown
+langgraph

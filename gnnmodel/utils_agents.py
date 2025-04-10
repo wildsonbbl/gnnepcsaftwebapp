@@ -6,6 +6,7 @@ import os
 import re
 import textwrap
 import traceback
+from ast import literal_eval
 from contextlib import redirect_stdout
 from typing import Any, Callable, List, Literal, Optional, Union
 
@@ -122,12 +123,15 @@ def custom_agent(
 
     python_docs = get_python_docs(fn_list)
 
-    instruction_prompt_with_function_calling = """
+    instruction_prompt_with_function_calling = (
+        textwrap.dedent(
+            """
     At each turn, if you decide to call any of the function(s), 
     you MUST put it in the format: 
     
     ```tool_code
-    [func_name1(params_name1=params_value1, params_name2=params_value2...), func_name2(params), ...]
+    [{'tool_name': 'func_name1', 'arguments': {'arg1': value1, 'arg2': value2, ...}},\
+    {'tool_name': 'func_name2', 'arguments': {'arg1': value1, 'arg2': value2, ...}}, ...]
     ```
     
     You SHOULD NOT include any other text in the response if you call a function.
@@ -145,19 +149,17 @@ def custom_agent(
     readable and efficient.
 
     The following Python methods are available:
+    """
+        )
+        + f"""
 
-    ```python
-    {python_docs}
+    ```python\n{python_docs}
     ```
 
-    USER: 
-    {message}
+    USER:\n{message}
     """
-    human_message = HumanMessage(
-        content=textwrap.dedent(instruction_prompt_with_function_calling).format(
-            python_docs=python_docs, message=textwrap.dedent(message)
-        )
     )
+    human_message = HumanMessage(content=instruction_prompt_with_function_calling)
     human_message.pretty_print()
     messages = []
     messages += [human_message]
@@ -166,19 +168,25 @@ def custom_agent(
     return messages
 
 
-def agent_loop(llm: BaseChatModel, messages: List[Union[BaseMessage, HumanMessage]]):
+def agent_loop(
+    llm: BaseChatModel,
+    messages: List[Union[BaseMessage, HumanMessage]],
+    fn_list: Optional[List[Callable[..., Any]]] = None,
+):
     "Loop of the agent to call the functions"
     llm_response = llm.invoke(messages)
     messages += [llm_response]
     llm_response.pretty_print()
-    call_response = extract_tool_call(llm_response.content)
+    assert isinstance(llm_response.content, str)
+    call_response = extract_tool_call(llm_response.content, fn_list)
     while call_response is not None:
         HumanMessage(content=call_response).pretty_print()
         messages += [HumanMessage(content=call_response)]
         llm_response = llm.invoke(messages)
         messages += [llm_response]
         llm_response.pretty_print()
-        call_response = extract_tool_call(llm_response.content)
+        assert isinstance(llm_response.content, str)
+        call_response = extract_tool_call(llm_response.content, fn_list)
     return messages
 
 
@@ -210,8 +218,21 @@ def get_python_docs(fn_list):
     return python_docs
 
 
-def extract_tool_call(text) -> Optional[str]:
+def extract_tool_call(
+    text: str,
+    fn_list: Optional[List[Callable[..., Any]]] = None,
+) -> Optional[str]:
     "tool call from the response for gemma."
+
+    if fn_list is None:
+        fn_list = [
+            pure_vp_feos,
+            pure_den_feos,
+            mix_den_feos,
+            mix_vp_feos,
+            pure_phase,
+            mixture_phase,
+        ]
 
     pattern = r"```tool_code\s*(.*?)\s*```"
     match = re.search(pattern, text, re.DOTALL)
@@ -221,13 +242,19 @@ def extract_tool_call(text) -> Optional[str]:
         f = io.StringIO()
         with redirect_stdout(f):
             try:
-                result = eval(code)  # pylint: disable=W0123
-            except (RuntimeError, SyntaxError, AssertionError):
-                result = f"Error on function call:\n\n{traceback.format_exc()}"
-            except TypeError:
+                tool_calls = literal_eval(code)
+                result = []
+                for tool_call in tool_calls:
+                    tool_name = tool_call["tool_name"]
+                    args = tool_call["arguments"]
+                    fn_result = fn_list[
+                        fn_list.index(eval(tool_name))  # pylint: disable=W0123
+                    ](**args)
+                    result.append(fn_result)
+            except (RuntimeError, SyntaxError, AssertionError, TypeError):
                 result = (
-                    traceback.format_exc()
-                    + "\n\nCheck what's the output type of each function and try again."
+                    f"ERROR on function call:\n\n{traceback.format_exc()}"
+                    + "\n\nYou MUST fix the issues before trying again."
                 )
         output = f.getvalue()
         r = result if output == "" else output

@@ -8,7 +8,8 @@ import textwrap
 import traceback
 from ast import literal_eval
 from contextlib import redirect_stdout
-from typing import Any, Callable, List, Literal, Optional, Union
+from json import dumps
+from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     mix_den_feos,
@@ -21,11 +22,11 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_core.runnables import RunnableConfig
-from langchain_core.tools import tool
+from langchain_core.tools import BaseTool, tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
-from pydantic import SecretStr
+from pydantic import SecretStr, ValidationError
 
 
 def resume_mol_agent(inchi, smiles, llm):
@@ -104,10 +105,12 @@ def mixture_phase(
     )
 
 
-def custom_agent(llm: BaseChatModel, message: str, fn_list: List[Callable[..., Any]]):
+def custom_agent(llm: BaseChatModel, message: str, tools: Dict[str, BaseTool]):
     "Agent to use functions"
 
-    python_docs = get_python_docs(fn_list)
+    python_docs = dumps(
+        [tools[key].args_schema.model_json_schema() for key in tools],  # type: ignore
+    )
 
     instruction_prompt_with_function_calling = (
         textwrap.dedent(
@@ -150,21 +153,21 @@ def custom_agent(llm: BaseChatModel, message: str, fn_list: List[Callable[..., A
     messages = []
     messages += [human_message]
 
-    messages = agent_loop(llm, messages, fn_list)
+    messages = agent_loop(llm, messages, tools)
     return messages
 
 
 def agent_loop(
     llm: BaseChatModel,
     messages: List[Union[BaseMessage, HumanMessage]],
-    fn_list: List[Callable[..., Any]],
+    tools: Dict[str, BaseTool],
 ):
     "Loop of the agent to call the functions"
     llm_response = llm.invoke(messages)
     messages += [llm_response]
     llm_response.pretty_print()
     assert isinstance(llm_response.content, str)
-    call_response = extract_tool_call(llm_response.content, fn_list)
+    call_response = extract_tool_call(llm_response.content, tools)
     while call_response is not None:
         HumanMessage(content=call_response).pretty_print()
         messages += [HumanMessage(content=call_response)]
@@ -172,12 +175,12 @@ def agent_loop(
         messages += [llm_response]
         llm_response.pretty_print()
         assert isinstance(llm_response.content, str)
-        call_response = extract_tool_call(llm_response.content, fn_list)
+        call_response = extract_tool_call(llm_response.content, tools)
     return messages
 
 
 def reviewer_agent(
-    llm: BaseChatModel, messages: List[BaseMessage], fn_list: List[Callable[..., Any]]
+    llm: BaseChatModel, messages: List[BaseMessage], tools: Dict[str, BaseTool]
 ):
     """
     Review the response of the previous agent
@@ -187,7 +190,7 @@ def reviewer_agent(
           Make a review of it and correct it if necessary."
     )
     messages += [human_message]
-    messages = agent_loop(llm, messages, fn_list)
+    messages = agent_loop(llm, messages, tools)
     return messages
 
 
@@ -206,7 +209,7 @@ def get_python_docs(fn_list):
     return python_docs
 
 
-def extract_tool_call(text: str, fn_list: List[Callable[..., Any]]) -> Optional[str]:
+def extract_tool_call(text: str, tools: Dict[str, BaseTool]) -> Optional[str]:
     "tool call from the response for gemma."
 
     pattern = r"```tool_code\s*(.*?)\s*```"
@@ -223,9 +226,7 @@ def extract_tool_call(text: str, fn_list: List[Callable[..., Any]]) -> Optional[
                     try:
                         tool_name = tool_call["tool_name"]
                         args = tool_call["arguments"]
-                        fn_result = fn_list[
-                            fn_list.index(eval(tool_name))  # pylint: disable=W0123
-                        ](**args)
+                        fn_result = tools[tool_name].invoke(input=args)
                         result.append(fn_result)
                     except (
                         RuntimeError,
@@ -233,6 +234,7 @@ def extract_tool_call(text: str, fn_list: List[Callable[..., Any]]) -> Optional[
                         AssertionError,
                         TypeError,
                         IndexError,
+                        ValidationError,
                     ) as e:
                         result.append(
                             f"ERROR on this function call: {e}."
@@ -307,6 +309,8 @@ if __name__ == "__main__":
         pubchem_description,
     ]
 
+    _tools = {fn.__name__: tool(fn, parse_docstring=True) for fn in _fn_list}
+
     llama3_70b = ChatGroq(
         model="llama3-70b-8192",
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
@@ -336,5 +340,5 @@ if __name__ == "__main__":
 
     # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    first_agent_messages = custom_agent(llama4_maverick, PROMPT, _fn_list)
+    first_agent_messages = custom_agent(llama33_70b, PROMPT, _tools)
     # reviwer_messages = reviewer_agent(gemma3_27b_it, first_agent_messages)

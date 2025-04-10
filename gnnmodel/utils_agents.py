@@ -132,7 +132,7 @@ def custom_agent(
     
     You SHOULD NOT include any other text in the response if you call a function.
     
-    The user will give the response to a method with the format: 
+    After calling a functions(s), just wait the next turn to receive the response with the format: 
     
     ```tool_output 
     [func_name1 response, func_name2 response, ...]

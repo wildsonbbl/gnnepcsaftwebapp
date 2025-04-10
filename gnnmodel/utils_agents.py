@@ -104,22 +104,8 @@ def mixture_phase(
     )
 
 
-def custom_agent(
-    llm: BaseChatModel,
-    message: str,
-    fn_list: Optional[List[Callable[..., Any]]] = None,
-):
+def custom_agent(llm: BaseChatModel, message: str, fn_list: List[Callable[..., Any]]):
     "Agent to use functions"
-
-    if fn_list is None:
-        fn_list = [
-            pure_vp_feos,
-            pure_den_feos,
-            mix_den_feos,
-            mix_vp_feos,
-            pure_phase,
-            mixture_phase,
-        ]
 
     python_docs = get_python_docs(fn_list)
 
@@ -130,7 +116,7 @@ def custom_agent(
     you MUST put it in the format: 
     
     ```tool_code
-    [{'tool_name': 'func_name1', 'arguments': {'arg1': value1, 'arg2': value2, ...}},\
+    [{'tool_name': 'func_name1', 'arguments': {'arg1': value1, 'arg2': value2, ...}},
     {'tool_name': 'func_name2', 'arguments': {'arg1': value1, 'arg2': value2, ...}}, ...]
     ```
     
@@ -164,14 +150,14 @@ def custom_agent(
     messages = []
     messages += [human_message]
 
-    messages = agent_loop(llm, messages)
+    messages = agent_loop(llm, messages, fn_list)
     return messages
 
 
 def agent_loop(
     llm: BaseChatModel,
     messages: List[Union[BaseMessage, HumanMessage]],
-    fn_list: Optional[List[Callable[..., Any]]] = None,
+    fn_list: List[Callable[..., Any]],
 ):
     "Loop of the agent to call the functions"
     llm_response = llm.invoke(messages)
@@ -190,7 +176,9 @@ def agent_loop(
     return messages
 
 
-def reviewer_agent(llm: BaseChatModel, messages: List[BaseMessage]):
+def reviewer_agent(
+    llm: BaseChatModel, messages: List[BaseMessage], fn_list: List[Callable[..., Any]]
+):
     """
     Review the response of the previous agent
     """
@@ -199,7 +187,7 @@ def reviewer_agent(llm: BaseChatModel, messages: List[BaseMessage]):
           Make a review of it and correct it if necessary."
     )
     messages += [human_message]
-    messages = agent_loop(llm, messages)
+    messages = agent_loop(llm, messages, fn_list)
     return messages
 
 
@@ -218,21 +206,8 @@ def get_python_docs(fn_list):
     return python_docs
 
 
-def extract_tool_call(
-    text: str,
-    fn_list: Optional[List[Callable[..., Any]]] = None,
-) -> Optional[str]:
+def extract_tool_call(text: str, fn_list: List[Callable[..., Any]]) -> Optional[str]:
     "tool call from the response for gemma."
-
-    if fn_list is None:
-        fn_list = [
-            pure_vp_feos,
-            pure_den_feos,
-            mix_den_feos,
-            mix_vp_feos,
-            pure_phase,
-            mixture_phase,
-        ]
 
     pattern = r"```tool_code\s*(.*?)\s*```"
     match = re.search(pattern, text, re.DOTALL)
@@ -274,18 +249,10 @@ def extract_tool_call(
     return None
 
 
-def langgraph_agent(_prompt, llm, fn_list=None):
+def langgraph_agent(
+    _prompt: str, llm: BaseChatModel, fn_list: List[Callable[..., Any]]
+):
     """Agent to check PCSAFT functions"""
-
-    if fn_list is None:
-        fn_list = [
-            pure_vp_feos,
-            pure_den_feos,
-            mix_den_feos,
-            mix_vp_feos,
-            pure_phase,
-            mixture_phase,
-        ]
 
     memory = MemorySaver()
     agent = create_react_agent(
@@ -310,14 +277,14 @@ if __name__ == "__main__":
     PROMPT = """
        I have the PCSAFT parameters for molecule A as [2.87, 2.96, 187.37, 0.0559, 2460.62, 0.0, 1, 1]
        and for molecule B as [2.7758, 3.2416, 230.6054, 0.0002, 1448.9628, 0.0, 1, 0]. 
-       Consider them pure at 325 K and 101325 Pa.
+       Consider them pure at 325 K and 101325 Pa and MW=1.
        - What's their density? Which one is more dense?
        - What's their vapor pressure? Which one is more volatile?
-       After this check their pure component phase.
+       - What's their pure component phase.
 
        Then consider their 50/50 mixture at 300 K and 101325 Pa.
        - What's their density?
-       After this, check the mixture phase.
+       - What's the mixture phase.
 
        Do just what's asked.
        """
@@ -369,5 +336,5 @@ if __name__ == "__main__":
 
     # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    # first_agent_messages = custom_agent(gemma3_27b_it, PROMPT, _fn_list)
+    first_agent_messages = custom_agent(llama4_maverick, PROMPT, _fn_list)
     # reviwer_messages = reviewer_agent(gemma3_27b_it, first_agent_messages)

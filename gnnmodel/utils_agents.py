@@ -5,7 +5,6 @@ import io
 import os
 import re
 import textwrap
-import traceback
 from ast import literal_eval
 from contextlib import redirect_stdout
 from json import dumps
@@ -235,15 +234,23 @@ def extract_tool_call(text: str, tools: Dict[str, BaseTool]) -> Optional[str]:
                         TypeError,
                         IndexError,
                         ValidationError,
+                        ValueError,
                     ) as e:
                         result.append(
                             f"ERROR on this function call: {e}."
                             f" You MUST fix the issues for next turn."
                         )
-            except (RuntimeError, SyntaxError, AssertionError, TypeError):
+            except (
+                RuntimeError,
+                SyntaxError,
+                AssertionError,
+                TypeError,
+                ValueError,
+            ) as e:
                 result = (
-                    f"ERROR on tool_code:\n\n{traceback.format_exc()}"
+                    f"ERROR on tool_code: {e}."
                     f" You MUST fix the issues for next turn."
+                    f" Make sure to write only python code in ```toll_code ```."
                 )
         output = f.getvalue()
         r = result if output == "" else output
@@ -320,6 +327,10 @@ if __name__ == "__main__":
         model="meta-llama/llama-4-maverick-17b-128e-instruct",
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
+    llama4_scout = ChatGroq(
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
+    )
 
     llama33_70b = ChatGroq(
         model="llama-3.3-70b-versatile",
@@ -338,7 +349,12 @@ if __name__ == "__main__":
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
 
+    deepseek_r1 = ChatGroq(
+        model="deepseek-r1-distill-llama-70b",
+        rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
+    )
+
     # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    first_agent_messages = custom_agent(llama33_70b, PROMPT, _tools)
-    # reviwer_messages = reviewer_agent(gemma3_27b_it, first_agent_messages)
+    first_agent_messages = custom_agent(gemma3_27b_it, PROMPT, _tools)
+    reviwer_messages = reviewer_agent(deepseek_r1, first_agent_messages, _tools)

@@ -256,13 +256,14 @@ def langgraph_agent(_prompt, llm, fn_list=None):
     )
     query = textwrap.dedent(_prompt)
     config = RunnableConfig(configurable={"thread_id": "abc123"})
+    step = {"messages": [HumanMessage(content=query)]}
     for step in agent.stream(
         {"messages": [HumanMessage(content=query)]},
         config,
         stream_mode="values",
     ):
         step["messages"][-1].pretty_print()
-    return agent
+    return step
 
 
 if __name__ == "__main__":
@@ -310,23 +311,24 @@ if __name__ == "__main__":
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
 
-    llama_33_70b = ChatGroq(
+    llama33_70b = ChatGroq(
         model="llama-3.3-70b-versatile",
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
 
-    gemini_20_flash = ChatGoogleGenerativeAI(
+    gemini20_flash = ChatGoogleGenerativeAI(
         model="gemini-2.0-flash",
         api_key=SecretStr(os.environ.get("GEMINI_API_KEY", "")),
         rate_limiter=InMemoryRateLimiter(requests_per_second=5 / 60),
     )
 
-    gemma_3_27b_it = ChatGoogleGenerativeAI(
+    gemma3_27b_it = ChatGoogleGenerativeAI(
         model="gemma-3-27b-it",
         api_key=SecretStr(os.environ.get("GEMINI_API_KEY", "")),
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
 
-    # langgraph_agent(PROMPT, gemini_20_flash)
+    # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    custom_agent(gemini_20_flash, PROMPT2, _fn_list)
+    # first_agent_messages = custom_agent(gemma3_27b_it, PROMPT, _fn_list)
+    # reviwer_messages = reviewer_agent(gemma3_27b_it, first_agent_messages)

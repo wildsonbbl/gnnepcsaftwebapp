@@ -7,7 +7,7 @@ import re
 import textwrap
 import traceback
 from contextlib import redirect_stdout
-from typing import Any, Callable, List, Literal, Optional
+from typing import Any, Callable, List, Literal, Optional, Union
 
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     mix_den_feos,
@@ -17,7 +17,7 @@ from gnnepcsaft.epcsaft.epcsaft_feos import (
 )
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_core.language_models import BaseChatModel
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_core.rate_limiters import InMemoryRateLimiter
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
@@ -159,10 +159,15 @@ def custom_agent(
         )
     )
     human_message.pretty_print()
-    messages = [
-        human_message,
-    ]
+    messages = []
+    messages += [human_message]
 
+    messages = agent_loop(llm, messages)
+    return messages
+
+
+def agent_loop(llm: BaseChatModel, messages: List[Union[BaseMessage, HumanMessage]]):
+    "Loop of the agent to call the functions"
     llm_response = llm.invoke(messages)
     messages += [llm_response]
     llm_response.pretty_print()
@@ -174,6 +179,20 @@ def custom_agent(
         messages += [llm_response]
         llm_response.pretty_print()
         call_response = extract_tool_call(llm_response.content)
+    return messages
+
+
+def reviewer_agent(llm: BaseChatModel, messages: List[BaseMessage]):
+    """
+    Review the response of the previous agent
+    """
+    human_message = HumanMessage(
+        content="This is all the work of another agent. \
+          Make a review of it and correct it if necessary."
+    )
+    messages += [human_message]
+    messages = agent_loop(llm, messages)
+    return messages
 
 
 def get_python_docs(fn_list):
@@ -203,7 +222,7 @@ def extract_tool_call(text) -> Optional[str]:
         with redirect_stdout(f):
             try:
                 result = eval(code)  # pylint: disable=W0123
-            except RuntimeError:
+            except (RuntimeError, SyntaxError, AssertionError):
                 result = f"Error on function call:\n\n{traceback.format_exc()}"
             except TypeError:
                 result = (

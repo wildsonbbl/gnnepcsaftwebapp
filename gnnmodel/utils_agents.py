@@ -245,16 +245,28 @@ def extract_tool_call(
                 tool_calls = literal_eval(code)
                 result = []
                 for tool_call in tool_calls:
-                    tool_name = tool_call["tool_name"]
-                    args = tool_call["arguments"]
-                    fn_result = fn_list[
-                        fn_list.index(eval(tool_name))  # pylint: disable=W0123
-                    ](**args)
-                    result.append(fn_result)
+                    try:
+                        tool_name = tool_call["tool_name"]
+                        args = tool_call["arguments"]
+                        fn_result = fn_list[
+                            fn_list.index(eval(tool_name))  # pylint: disable=W0123
+                        ](**args)
+                        result.append(fn_result)
+                    except (
+                        RuntimeError,
+                        SyntaxError,
+                        AssertionError,
+                        TypeError,
+                        IndexError,
+                    ) as e:
+                        result.append(
+                            f"ERROR on this function call: {e}."
+                            f" You MUST fix the issues for next turn."
+                        )
             except (RuntimeError, SyntaxError, AssertionError, TypeError):
                 result = (
-                    f"ERROR on function call:\n\n{traceback.format_exc()}"
-                    + "\n\nYou MUST fix the issues before trying again."
+                    f"ERROR on tool_code:\n\n{traceback.format_exc()}"
+                    f" You MUST fix the issues for next turn."
                 )
         output = f.getvalue()
         r = result if output == "" else output

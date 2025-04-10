@@ -123,7 +123,7 @@ def custom_agent(
     python_docs = get_python_docs(fn_list)
 
     instruction_prompt_with_function_calling = """
-    At each turn, if you decide to invoke any of the function(s), 
+    At each turn, if you decide to call any of the function(s), 
     you MUST put it in the format: 
     
     ```tool_code

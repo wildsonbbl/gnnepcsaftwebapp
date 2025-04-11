@@ -10,6 +10,7 @@ from contextlib import redirect_stdout
 from json import dumps
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 
+from gnnepcsaft.data.rdkit_util import mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     mix_den_feos,
     mix_vp_feos,
@@ -26,6 +27,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from pydantic import SecretStr, ValidationError
+
+from .utils import prediction
+from .utils_llm import pubchem_description
 
 
 def resume_mol_agent(inchi, smiles, llm):
@@ -168,8 +172,9 @@ def agent_loop(
     assert isinstance(llm_response.content, str)
     call_response = extract_tool_call(llm_response.content, tools)
     while call_response is not None:
-        HumanMessage(content=call_response).pretty_print()
-        messages += [HumanMessage(content=call_response)]
+        tool_message = HumanMessage(content=call_response)
+        tool_message.pretty_print()
+        messages += [tool_message]
         llm_response = llm.invoke(messages)
         messages += [llm_response]
         llm_response.pretty_print()
@@ -284,27 +289,30 @@ def langgraph_agent(
 if __name__ == "__main__":
 
     PROMPT = """
-       I have the PCSAFT parameters for molecule A as [2.87, 2.96, 187.37, 0.0559, 2460.62, 0.0, 1, 1]
-       and for molecule B as [2.7758, 3.2416, 230.6054, 0.0002, 1448.9628, 0.0, 1, 0]. 
-       Consider them pure at 325 K and 101325 Pa and MW=1.
-       - What's their density? Which one is more dense?
-       - What's their vapor pressure? Which one is more volatile?
-       - What's their pure component phase.
+    I have two molecules with SMILES 'CCO' and 'CC(=0)C'. 
+    Consider them pure at 325 K and 101325 Pa.
+    - What's their density? Which one is more dense?
+    - What's their vapor pressure? Which one is more volatile?
+    - What's their pure component phase.
 
-       Then consider their 50/50 mixture at 300 K and 101325 Pa.
-       - What's their density?
-       - What's the mixture phase.
-
-       Do just what's asked.
-       """
+    Do just what's asked.
+"""
 
     PROMPT2 = """
-      What's the molecule with this InChI 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'?
-      If there's any source info about it, what does each source say?
+    Then consider their 50/50 mixture at 300 K and 101325 Pa.
+    - What's their density?
+    - What's the mixture phase.
+"""
+
+    PROMPT3 = """
+    What's the molecule with those SMILES?
+    If there's any source info about it, what does each source say?
     """
 
     from langchain_groq import ChatGroq  # pylint: disable=import-error
-    from utils_llm import pubchem_description  # pylint: disable=import-error
+    from langchain_mistralai.chat_models import (  # pylint: disable=import-error
+        ChatMistralAI,
+    )
 
     _fn_list = [
         pure_vp_feos,
@@ -314,6 +322,9 @@ if __name__ == "__main__":
         pure_phase,
         mixture_phase,
         pubchem_description,
+        mw,
+        smilestoinchi,
+        prediction,
     ]
 
     _tools = {fn.__name__: tool(fn, parse_docstring=True) for fn in _fn_list}
@@ -354,7 +365,20 @@ if __name__ == "__main__":
         rate_limiter=InMemoryRateLimiter(requests_per_second=25 / 60),
     )
 
+    mistral = ChatMistralAI(
+        model_name="mistral-large-2411",
+        rate_limiter=InMemoryRateLimiter(requests_per_second=1),
+    )
+
     # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    first_agent_messages = custom_agent(gemma3_27b_it, PROMPT, _tools)
-    reviwer_messages = reviewer_agent(deepseek_r1, first_agent_messages, _tools)
+    agent_messages = custom_agent(mistral, PROMPT, _tools)
+    prompt_message = HumanMessage(content=PROMPT2)
+    prompt_message.pretty_print()
+    agent_messages += [prompt_message]
+    agent_messages = agent_loop(llama4_maverick, agent_messages, _tools)
+    prompt_message = HumanMessage(content=PROMPT3)
+    prompt_message.pretty_print()
+    agent_messages += [prompt_message]
+    agent_messages = agent_loop(gemma3_27b_it, agent_messages, _tools)
+    reviewer_messages = reviewer_agent(gemini20_flash, agent_messages, _tools)

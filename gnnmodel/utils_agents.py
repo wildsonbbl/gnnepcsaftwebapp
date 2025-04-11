@@ -209,7 +209,7 @@ def get_python_docs(fn_list):
 
 
 def extract_tool_call(text: str, tools: Dict[str, BaseTool]) -> Optional[str]:
-    "tool call from the response for gemma."
+    "extract tools call from the agent response."
 
     pattern = r"```tool_code\s*(.*?)\s*```"
     match = re.search(pattern, text, re.DOTALL)

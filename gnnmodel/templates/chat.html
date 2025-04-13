@@ -1,0 +1,91 @@
+{% extends "master.html" %}
+{% load static %}
+{% block title %}
+  AI CHAT
+{% endblock title %}
+{% block content %}
+  <div class="col-lg">
+    <div class="row d-flex justify-content-center my-1" id="chatrow">
+      <div class="col-md-12">
+        <div class="card chat-card-style">
+          <div id="chat-header"
+               class="card-header d-flex justify-content-between align-items-center p-3 bg-info text-white border-bottom-0">
+            <p class="mb-0 fw-bold">Live chat</p>
+          </div>
+          <div id="chat-log" class="card-body overflow-auto"></div>
+        </div>
+      </div>
+    </div>
+    <div class="row d-flex justify-content-center" id="formRow">
+      <div class="col-lg-8">
+        <div class="row my-1 justify-content-center">
+          <div class="col-lg-6 my-1">
+            <input id="chat-message-input"
+                   class="form-control"
+                   type="text"
+                   placeholder="Write your message here" />
+          </div>
+          <div class="col-lg-6 my-1">
+            <input id="chat-message-submit"
+                   type="submit"
+                   value="SEND"
+                   class="form-control btn-outline-primary" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    var wss_protocol = window.location.protocol == "https:" ? "wss://" : "ws://";
+    var chatSocket = new WebSocket(
+      wss_protocol + window.location.host + "/ws/chat/"
+    );
+    var messages = [];
+  
+    chatSocket.onopen = function (e) {
+      console.log("Connected to chat server");
+    };
+  
+    chatSocket.onmessage = function (e) {
+      var data = JSON.parse(e.data);
+      var message = data["text"];
+      messages.push(message);
+  
+      var str = '';
+      messages.forEach(function (msg) {
+        str += `<div class="d-flex flex-row mb-4 ${ msg.source == "assistant" ? "justify-content-start" : "justify-content-end" }">
+        <div class="p-3 ms-3  ${ msg.source == "assistant" ? "bot-message" : "user-message" }">
+        <p class="small mb-0">${msg.msg}</p></div></div>`;
+      });
+
+      str += ` <div id="bottom-chat-log"></div>`;
+      
+      document.querySelector("#chat-log").innerHTML = str;
+      document.getElementById("bottom-chat-log").scrollIntoView();
+    };
+  
+    chatSocket.onclose = function (e) {
+      console.log("Socket closed unexpectedly, please reload the page.");
+    };
+  
+    document.querySelector("#chat-message-input").focus();
+    document.querySelector("#chat-message-input").onkeyup = function (e) {
+      if (e.keyCode === 13) {
+        // enter, return
+        document.querySelector("#chat-message-submit").click();
+      }
+    };
+  
+    document.querySelector("#chat-message-submit").onclick = function (e) {
+      var messageInputDom = document.querySelector("#chat-message-input");
+      var message = messageInputDom.value;
+      chatSocket.send(
+        JSON.stringify({
+          text: message,
+        })
+      );
+  
+      messageInputDom.value = "";
+    };
+  </script>
+{% endblock content %}

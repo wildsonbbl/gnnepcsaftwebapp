@@ -63,10 +63,7 @@ MIDDLEWARE = [
 # Django Channels
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [config("REDIS_BACKEND")],
-        },
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
 

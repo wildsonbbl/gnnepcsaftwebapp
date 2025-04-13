@@ -18,7 +18,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", str(config("DJANGO_SETTINGS_MODU
 # is populated before importing code that may import ORM models.
 django_asgi_app = get_asgi_application()
 
-
+# pylint: disable = C0413
+import gnnmodel.routing
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
@@ -26,6 +27,8 @@ from channels.security.websocket import AllowedHostsOriginValidator
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_app,
-        # We will add WebSocket protocol later. For now, it's just HTTP.
+        "websocket": AllowedHostsOriginValidator(
+            AuthMiddlewareStack(URLRouter(gnnmodel.routing.websocket_urlpatterns))
+        ),
     }
 )

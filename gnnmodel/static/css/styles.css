@@ -18,3 +18,16 @@
   justify-content: center;
   align-items: center;
 }
+.chat-card-style {
+  height: 400px;
+}
+
+.bot-message {
+  border-radius: 15px;
+  background-color: rgba(147, 57, 237, 0.2);
+}
+
+.user-message {
+  border-radius: 15px;
+  background-color: rgba(57, 192, 237, 0.2);
+}

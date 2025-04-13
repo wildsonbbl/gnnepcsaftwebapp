@@ -10,6 +10,7 @@ urlpatterns = [
     path("batch/", views.batch, name="batch"),
     path("mixture/", views.mixture, name="mixture"),
     path("description/", views.description, name="description"),
+    path("chat/", views.chat, name="chat"),
     # path("", views.homepage, name="homepage"),
     # path("author/", views.authorpage, name="author"),
 ]

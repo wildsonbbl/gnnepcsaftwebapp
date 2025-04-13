@@ -244,3 +244,9 @@ def description(request):
             "google_api_key_form": google_api_key_form,
         },
     )
+
+
+def chat(request):
+    "handle request for chat"
+
+    return render(request, "chat.html")

@@ -20,7 +20,7 @@ load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -30,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("GNNEPCSAFT_SECRET_KEY", "ABCDEFG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("GNNEPCSAFT_DEBUG", "false").lower() == "true"
+DEBUG = False
 
 ALLOWED_HOSTS = [
     os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sessions",
     "gnnmodel",
-    "debug_toolbar",
     "bootstrap5",
     "fontawesomefree",
     "pwa",
@@ -63,7 +62,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 

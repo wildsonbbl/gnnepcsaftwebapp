@@ -17,13 +17,14 @@ class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
     query = forms.CharField(
-        label="Type/Paste InChI or SMILES",
         strip=True,
-        empty_value="InChI or SMILES",
         required=True,
-        initial="CCO",
         widget=forms.TextInput(
-            attrs={"class": "form-control", "aria-label": "Type/Paste InChI or SMILES"}
+            attrs={
+                "class": "form-control",
+                "aria-label": "Type/Paste InChI or SMILES",
+                "placeholder": "Type/Paste InChI or SMILES",
+            }
         ),
     )
 
@@ -64,7 +65,8 @@ class InChIorSMILESareaInput(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One InChI or SMILES per line",
+                "placeholder": "One InChI or SMILES per line, example:"
+                "\n\nCCO\nCC\nO\nCC(O)C",
             }
         ),
     )
@@ -112,7 +114,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line",
+                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line,"
+                " example:\n\nCCO | 0.5\nCC | 0.5",
             }
         ),
     )

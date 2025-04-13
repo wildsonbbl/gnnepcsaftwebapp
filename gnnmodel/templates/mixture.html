@@ -9,16 +9,15 @@
       <div class="col-md-12">
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
-          <div class="row my-5 justify-content-center">
+          <div class="row my-2 justify-content-center">
             <div class="col-lg">
-              <label for="id_text_area" class="form-label">{{ form.text_area.label }}</label>
               {{ form.text_area }}
               <input type="submit"
                      value="Analyse SMILES/InChI Mixture"
                      class="form-control btn-outline-primary" />
             </div>
             <div class="col-lg">
-              <div class="form-control my-1">{{ plot_config }}</div>
+              <div class="form-control my-2">{{ plot_config }}</div>
             </div>
           </div>
         </form>

@@ -9,11 +9,14 @@ import feos
 import gunicorn
 import pwa
 import whitenoise
+from decouple import config
 
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webapp.settings.development")
+    os.environ.setdefault(
+        "DJANGO_SETTINGS_MODULE", str(config("DJANGO_SETTINGS_MODULE"))
+    )
     try:
         # pylint: disable = C0415
         from django.core.management import execute_from_command_line

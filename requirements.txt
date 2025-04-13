@@ -1,7 +1,7 @@
 Django
 numpy
 psycopg2-binary
-python-dotenv
+python-decouple
 rdkit
 polars
 django-debug-toolbar

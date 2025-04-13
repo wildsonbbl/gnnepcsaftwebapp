@@ -11,13 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 import json
-import os
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
+from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -27,15 +23,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("GNNEPCSAFT_SECRET_KEY", "ABCDEFG")
+SECRET_KEY = config("GNNEPCSAFT_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-
-ALLOWED_HOSTS = [
-    os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
-    os.getenv("GNNEPCSAFT_ALLOWED_HOSTS", "*"),
-]
+ALLOWED_HOSTS = config("GNNEPCSAFT_ALLOWED_HOSTS", cast=Csv())
 
 
 # Application definition
@@ -70,10 +62,11 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": ["REDIS_BACKEND"],
+            "hosts": [config("REDIS_BACKEND")],
         },
     },
 }
+
 
 INTERNAL_IPS = [
     # ...
@@ -183,10 +176,7 @@ SESSION_COOKIE_SECURE = True
 
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://*." + os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
-    "http://*." + os.getenv("GNNEPCSAFT_DOMAIN_NAME", "*"),
-]
+CSRF_TRUSTED_ORIGINS = config("GNNEPCSAFT_DOMAIN_NAME", cast=Csv())
 
 
 # DJANGO-PWA for manifest.json

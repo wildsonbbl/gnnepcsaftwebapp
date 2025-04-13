@@ -5,7 +5,6 @@ import sys
 
 # pylint: disable = W0611
 import bootstrap5
-import debug_toolbar
 import feos
 import gunicorn
 import pwa
@@ -14,7 +13,7 @@ import whitenoise
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webapp.settings")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webapp.settings.development")
     try:
         # pylint: disable = C0415
         from django.core.management import execute_from_command_line

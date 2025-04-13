@@ -41,6 +41,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -65,6 +66,16 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
+
+# Django Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ["REDIS_BACKEND"],
+        },
+    },
+}
 
 INTERNAL_IPS = [
     # ...
@@ -92,6 +103,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "webapp.wsgi.application"
+
+
+ASGI_APPLICATION = "webapp.asgi.application"
 
 
 # Database

@@ -4,6 +4,7 @@ import asyncio
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import InMemoryChannelLayer
 from google.adk.agents.run_config import RunConfig
 from google.genai.types import Content, FunctionCall, Part
 from markdown import markdown
@@ -15,7 +16,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     "Chat consumer"
 
     session_id = "session_01"
-    runner, session = start_agent_session(session_id)
+    runner, runner_session = start_agent_session(session_id)
+    channel_layer: InMemoryChannelLayer
 
     # Set response modality = TEXT
     run_config = RunConfig(response_modalities=["TEXT"])

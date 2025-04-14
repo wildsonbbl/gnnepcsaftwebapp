@@ -4,89 +4,90 @@
   Mixture Mode
 {% endblock title %}
 {% block content %}
-  <div class="row" id="formRow">
-    <div class="col-md-12">
-      <form action="" method="post" id="submitQueryPred">
-        {% csrf_token %}
-        <div class="row my-5 justify-content-center">
-          <div class="col-lg">
-            <label for="id_text_area" class="form-label">{{ form.text_area.label }}</label>
-            {{ form.text_area }}
-            <input type="submit"
-                   value="Analyse SMILES/InChI Mixture"
-                   class="form-control btn-outline-primary" />
+  <div class="col-lg">
+    <div class="row" id="formRow">
+      <div class="col-md-12">
+        <form action="" method="post" id="submitQueryPred">
+          {% csrf_token %}
+          <div class="row my-2 justify-content-center">
+            <div class="col-lg">
+              {{ form.text_area }}
+              <input type="submit"
+                     value="Analyse SMILES/InChI Mixture"
+                     class="form-control btn-outline-primary" />
+            </div>
+            <div class="col-lg">
+              <div class="form-control my-2">{{ plot_config }}</div>
+            </div>
           </div>
-          <div class="col-lg">
-            <div class="form-control my-1">{{ plot_config }}</div>
+        </form>
+        <div id="loadingIndicator" class="loading-indicator">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
           </div>
         </div>
-      </form>
-      <div id="loadingIndicator" class="loading-indicator">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+        <script src={% static "js/loading.js" %}></script>
       </div>
-      <script src={% static "js/loading.js" %}></script>
     </div>
-  </div>
-  <div class="row justify-content-center" id="output">
-    {% if output %}
-      <div class="col-lg mt-2 text-success">
-        <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
-        <div class="table-responsive text-dark">
-          <table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Mole Fractions</th>
-                {% for paraname in available_params %}<th>{{ paraname }}</th>{% endfor %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for parameters, mole_fractions in parameters_molefractions_list %}
+    <div class="row justify-content-center" id="output">
+      {% if output %}
+        <div class="col-lg mt-2 text-success">
+          <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
+          <div class="table-responsive text-dark">
+            <table class="table table-hover">
+              <thead>
                 <tr>
-                  <td>{{ mole_fractions }}</td>
-                  {% for parameter in parameters %}<td>{{ parameter }}</td>{% endfor %}
+                  <th>Mole Fractions</th>
+                  {% for paraname in available_params %}<th>{{ paraname }}</th>{% endfor %}
                 </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for parameters, mole_fractions in parameters_molefractions_list %}
+                  <tr>
+                    <td>{{ mole_fractions }}</td>
+                    {% for parameter in parameters %}<td>{{ parameter }}</td>{% endfor %}
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <p class="text-dark">* Not estimated</p>
         </div>
-        <p class="text-dark">* Not estimated</p>
-      </div>
-    {% else %}
-      <div class="col-lg">
-        <ul>
-          {% for error in form.text_area.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
-        </ul>
-      </div>
-    {% endif %}
-  </div>
-  <div class="row justify-content-center" id="output_plots">
-    {% if output %}
-      <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
-      <script src={% static "js/plot.js" %}></script>
-      {% for data_json, xlegendpos, ytitle, id in mixture_plots %}
+      {% else %}
+        <div class="col-lg">
+          <ul>
+            {% for error in form.text_area.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </div>
+    <div class="row justify-content-center" id="output_plots">
+      {% if output %}
+        <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
+        <script src={% static "js/plot.js" %}></script>
+        {% for data_json, xlegendpos, ytitle, id in mixture_plots %}
+          <div class="col-lg-4 mt-2 ">
+            <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
+            <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+          </div>
+        {% endfor %}
         <div class="col-lg-4 mt-2 ">
-          <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
-          <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+          <div id="vp_plots" alt="Bubble/Dew point plot"></div>
+          <script>
+            var vp_plots = {{ vp_plots|safe }};
+            getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble curve");
+            var alldata = JSON.parse(vp_plots[1]);
+            var trace2 = {
+              x: alldata["T"],
+              y: alldata["GNN"],
+              mode: "lines",
+              type: "scatter",
+              name: "Dew curve",
+            };
+            Plotly.addTraces("vp_plots", trace2);
+          </script>
         </div>
-      {% endfor %}
-      <div class="col-lg-4 mt-2 ">
-        <div id="vp_plots" alt="Bubble/Dew point plot"></div>
-        <script>
-          var vp_plots = {{ vp_plots|safe }};
-          getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble curve");
-          var alldata = JSON.parse(vp_plots[1]);
-          var trace2 = {
-            x: alldata["T"],
-            y: alldata["GNN"],
-            mode: "lines",
-            type: "scatter",
-            name: "Dew curve",
-          };
-          Plotly.addTraces("vp_plots", trace2);
-        </script>
-      </div>
-    {% endif %}
+      {% endif %}
+    </div>
   </div>
 {% endblock content %}

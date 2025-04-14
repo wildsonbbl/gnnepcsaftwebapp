@@ -1,6 +1,8 @@
 "Module for utils to work with LLMs"
 
+import os
 import textwrap
+from json import loads
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
 
@@ -15,21 +17,13 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
 
     llm = ChatGoogleGenerativeAI(
         model="gemma-3-27b-it",
-        api_key=api_key,
-    )  # needs GOOGLE_API_KEY env variable
-
-    url = (
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
-        + quote(inchi, safe="")
+        api_key=api_key if api_key else SecretStr(os.environ.get("GEMINI_API_KEY", "")),
     )
-    try:
-        with urlopen(url) as ans:
-            ans = ans.read().decode("utf8").rstrip()
-    except (TypeError, HTTPError, ValueError):
-        ans = "no data available on this molecule."
+
+    ans = pubchem_description(inchi)
 
     query = """
-            You are a chemistry expert who is given this InChI {inchi} and this SMILES {smiles} to analyse.
+            You are a chemistry expert who is given this InChI '{inchi}' and this SMILES '{smiles}' to analyse.
             Make sure to answer each one of the bellow questions. 
             To be able to do that you are gonna need to take into account all the 
             organic groups known in chemistry, 
@@ -39,9 +33,10 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
             information gathered, you will be able to answer. You can use
             the data collected from PubChem bellow as reference too.
 
-            PubChem Description: '{ans}'
+            PubChem Description: 
+            {ans}
 
-            QUESTIONS: '
+            QUESTIONS:
             First, describe the molecule with this InChI in detail.
             
             Then, answer the following questions about this molecule with 
@@ -49,7 +44,7 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
             
                - Is it a Lewis acid or base or both? 
                - Can it do hydrogen bonds? 
-               - Is it a hydrogen bond donor or acceptor?'
+               - Is it a hydrogen bond donor or acceptor?
             """
     query = textwrap.dedent(query)
 
@@ -63,6 +58,25 @@ def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
     if isinstance(response.content, str):
         return markdown(response.content)
     return response.content
+
+
+def pubchem_description(inchi: str) -> dict[str, str]:
+    """
+    Check if the molecule is in PubChem and return its description.
+
+    Args:
+        inchi (str): The InChI of the molecule.
+    """
+    url = (
+        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
+        + quote(inchi, safe="")
+    )
+    try:
+        with urlopen(url) as ans:
+            ans = loads(ans.read().decode("utf8").strip())
+    except (TypeError, HTTPError, ValueError):
+        ans = {"result": "no data available on this molecule in PubChem."}
+    return ans
 
 
 def is_api_key_valid(api_key: str) -> bool:

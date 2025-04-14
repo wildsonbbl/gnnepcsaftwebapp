@@ -1,7 +1,7 @@
 Django
 numpy
 psycopg2-binary
-python-dotenv
+python-decouple
 rdkit
 polars
 django-debug-toolbar
@@ -10,10 +10,12 @@ django-pwa
 whitenoise
 gunicorn
 fontawesomefree
-gnnepcsaft>=0.2.0
+gnnepcsaft>=0.2.2
 jq
 #teqp
 #PCSAFTsuperanc
 feos
 si-units
 onnxruntime
+channels
+daphne

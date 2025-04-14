@@ -1,5 +1,6 @@
 "request handler."
 
+import os
 import os.path as osp
 
 from django.shortcuts import render
@@ -26,7 +27,7 @@ from .utils import (
     get_mixture_plots_data,
     get_pred,
 )
-from .utils_llm import resume_mol
+from .utils_llm import is_api_key_valid, resume_mol
 
 file_dir = osp.dirname(__file__)
 
@@ -182,9 +183,7 @@ def mixture(request):
                 para_pred_list.append(
                     [round(para, 5) for para in get_pred(smiles, inchi)]
                 )
-                para_pred_for_plot = [
-                    para[:-2] + [inchi, smiles, mw(inchi)] for para in para_pred_list
-                ]
+                para_pred_for_plot.append(para_pred_list[-1] + [mw(inchi)])
             mixture_plots = get_mixture_plots_data(
                 para_pred_for_plot, mole_fractions_list, plot_config
             )
@@ -245,4 +244,25 @@ def description(request):
             "output": html_output,
             "google_api_key_form": google_api_key_form,
         },
+    )
+
+
+def chat(request):
+    "handle request for chat"
+
+    show_form = True
+    if request.method == "POST":
+        google_api_key_form = GoogleAPIKeyForm(request.POST)
+        if google_api_key_form.is_valid():
+            show_form = False
+    else:
+        google_api_key_form = GoogleAPIKeyForm()
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        if google_api_key is not None and is_api_key_valid(google_api_key):
+            show_form = False
+
+    return render(
+        request,
+        "chat.html",
+        {"show_form": show_form, "google_api_key_form": google_api_key_form},
     )

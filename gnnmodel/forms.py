@@ -1,5 +1,6 @@
 "Django forms."
 
+import os
 import re
 
 from django import forms
@@ -16,13 +17,14 @@ class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
     query = forms.CharField(
-        label="Type/Paste InChI or SMILES",
         strip=True,
-        empty_value="InChI or SMILES",
         required=True,
-        initial="CCO",
         widget=forms.TextInput(
-            attrs={"class": "form-control", "aria-label": "Type/Paste InChI or SMILES"}
+            attrs={
+                "class": "form-control",
+                "aria-label": "Type/Paste InChI or SMILES",
+                "placeholder": "Type/Paste InChI or SMILES",
+            }
         ),
     )
 
@@ -63,7 +65,8 @@ class InChIorSMILESareaInput(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One InChI or SMILES per line",
+                "placeholder": "One InChI or SMILES per line, example:"
+                "\n\nCCO\nCC\nO\nCC(O)C",
             }
         ),
     )
@@ -111,7 +114,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line",
+                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line,"
+                " example:\n\nCCO | 0.5\nCC | 0.5",
             }
         ),
     )
@@ -318,11 +322,12 @@ class GoogleAPIKeyForm(forms.Form):
     google_api_key = forms.CharField(
         strip=True,
         required=True,
+        empty_value="",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
                 "aria-label": "Gemini API Key",
-                "placeholder": "Gemini API Key",
+                "placeholder": "Paste your Gemini API key here or set env variable GOOGLE_API_KEY",
             }
         ),
     )
@@ -330,8 +335,14 @@ class GoogleAPIKeyForm(forms.Form):
     def clean_google_api_key(self):
         "check valid Google API Key."
         google_api_key = self.cleaned_data["google_api_key"]
-        if not google_api_key:
-            raise ValidationError(_("Gemini API Key is required"))
-        if not is_api_key_valid(google_api_key):
+        if google_api_key:
+            if not is_api_key_valid(google_api_key):
+                raise ValidationError(_("Invalid Gemini API Key"))
+        elif os.environ.get("GOOGLE_API_KEY") is None:
+            raise ValidationError(
+                _("Gemini API Key is required for AI generated content")
+            )
+        elif not is_api_key_valid(os.environ.get("GOOGLE_API_KEY", "")):
             raise ValidationError(_("Invalid Gemini API Key"))
+        os.environ["GOOGLE_API_KEY"] = google_api_key
         return SecretStr(google_api_key)

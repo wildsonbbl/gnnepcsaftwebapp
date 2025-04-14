@@ -35,6 +35,31 @@ pubchem_agent = LlmAgent(
     tools=[pubchem_description, smilestoinchi, inchitosmiles],
 )
 
+chemistry_agent = LlmAgent(
+    model=MODEL_NAME,
+    name="chemistry_agent",
+    instruction=textwrap.dedent(
+        """
+    You are a chemistry expert that uses InChI and SMILES to analyse molecules. 
+    Your only task is to find out the molecule structure, name, and general properties. 
+    To be able to do that you are gonna need to take into account all the 
+    organic groups known in chemistry, the difference between 
+    a Lewis acid and base, the concept of a hydrogen bond, a hydrogen bond donor 
+    and hydrogen bond acceptor. Once you have all this information 
+    gathered, you will be able to analyse the molecule. 
+    You can use theses questions to help yourself describe the molecule in detail.
+      - What organic groups does it have?
+      - Is it a Lewis acid or base or both? 
+      - Can it do hydrogen bonds? 
+      - Is it a hydrogen bond donor or acceptor?
+
+    Do not perform any other action. Use the InChI or SMILES 
+    info received in previous turns to make the analysis.
+    """
+    ),
+    description="A chemistry expert that handles analyses of molecules from InChI and SMILES.",
+)
+
 root_agent = LlmAgent(
     model=MODEL_NAME,
     name="gnnepcsaft_agent",
@@ -45,9 +70,12 @@ root_agent = LlmAgent(
       Handle its 'status' response ('report' or 'error_message'). 
     - Delegation Rules: 
       - If you or the user needs more info about a molecule 
-         delegate to `pubchem_agent`. 
+         first delegate to `pubchem_agent`. 
       - Before delegating, make sure you have available InChI or SMILES,
         if the user didn't provide any of them, ask at least for SMILES.
+      - If `pubchem_agent` doesn't find much info on PubChem, then delegate to `chemistry_agent`.
+      - If the user wants analysis of a InChI or SMILES, delegate to `chemistry_agent`.
+      - Always make sure you have InChI or SMILES before delegating.
       - Handle thermodynamic requests yourself using ePC-SAFT tools. 
       - For other queries, state clearly if you cannot handle them.
     """
@@ -65,5 +93,5 @@ root_agent = LlmAgent(
         inchitosmiles,
         pure_h_lv_feos,
     ],
-    sub_agents=[pubchem_agent],
+    sub_agents=[pubchem_agent, chemistry_agent],
 )

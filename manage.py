@@ -5,7 +5,6 @@ import sys
 
 # pylint: disable = W0611
 import bootstrap5
-import channels_redis.core
 import debug_toolbar
 import feos
 import gunicorn

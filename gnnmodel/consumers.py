@@ -4,7 +4,8 @@ import asyncio
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
-from google.genai.types import Content, Part
+from google.adk.agents.run_config import RunConfig
+from google.genai.types import Content, FunctionCall, Part
 from markdown import markdown
 
 from .chat_utils import start_agent_session
@@ -13,17 +14,18 @@ from .chat_utils import start_agent_session
 class ChatConsumer(AsyncWebsocketConsumer):
     "Chat consumer"
 
-    live_events, live_request_queue = start_agent_session("session_01")
+    session_id = "session_01"
+    runner, session = start_agent_session(session_id)
+
+    # Set response modality = TEXT
+    run_config = RunConfig(response_modalities=["TEXT"])
 
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None
         text_data_json = json.loads(text_data)
 
-        agent_to_client_task = asyncio.create_task(self.agent_to_client_messaging())
-        client_to_agent_task = asyncio.create_task(
-            self.client_to_agent_messaging(text_data_json["text"])
-        )
-        await asyncio.gather(agent_to_client_task, client_to_agent_task)
+        await self.client_to_agent_messaging(text_data_json["text"])
+        await self.agent_to_client_messaging(text_data_json["text"])
 
     # Handles the chat.mesage event i.e. receives messages from the channel layer
     # and sends it back to the client.
@@ -32,10 +34,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         text = event["text"]
         await self.send(text_data=json.dumps({"text": text}))
 
-    async def agent_to_client_messaging(self):
+    async def agent_to_client_messaging(self, text):
         """Agent to client communication"""
 
-        async for event in self.live_events:
+        async for event in self.runner.run_async(
+            new_message=Content(role="user", parts=[Part.from_text(text=text)]),
+            user_id=self.session_id,
+            session_id=self.session_id,
+            run_config=self.run_config,
+        ):
             # turn_complete
             if event.turn_complete:
                 print("[TURN COMPLETE]")
@@ -47,13 +54,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             # Read the Content and its first Part
             part = event.content and event.content.parts and event.content.parts[0]
-            if not part or not event.partial:
+            if not part or event.partial:
                 continue
 
             # Get the text
             text = event.content and event.content.parts and event.content.parts[0].text
             if not text:
-                continue
+                text = (
+                    event.content
+                    and event.content.parts
+                    and event.content.parts[0].function_call
+                )
+                if isinstance(text, FunctionCall) and text.name:
+                    text = "**Calling: " + text.name + " **"
+                else:
+                    continue
             assert isinstance(text, str)
 
             # # Send the text to the client
@@ -76,8 +91,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 "text": {"msg": text, "source": "user"},
             },
         )
-
-        content = Content(role="user", parts=[Part.from_text(text=text)])
-        self.live_request_queue.send_content(content=content)
         print(f"[CLIENT TO AGENT]: {text}")
-        await asyncio.sleep(2)

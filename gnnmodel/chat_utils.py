@@ -1,7 +1,5 @@
 """utils for adk agent runner"""
 
-from google.adk.agents import LiveRequestQueue
-from google.adk.agents.run_config import RunConfig
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
@@ -28,16 +26,4 @@ def start_agent_session(session_id: str):
         session_service=session_service,
     )
 
-    # Set response modality = TEXT
-    run_config = RunConfig(response_modalities=["TEXT"])
-
-    # Create a LiveRequestQueue for this session
-    live_request_queue = LiveRequestQueue()
-
-    # Start agent session
-    live_events = runner.run_live(
-        session=session,
-        live_request_queue=live_request_queue,
-        run_config=run_config,
-    )
-    return live_events, live_request_queue
+    return runner, session

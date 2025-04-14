@@ -3,12 +3,14 @@
 import os
 import sys
 
-# pylint: disable = W0611
+# pylint: disable = W0611,C0411
 import bootstrap5
 import debug_toolbar
 import feos
 import gunicorn
 import pwa
+import webapp.asgi
+import webapp.wsgi
 import whitenoise
 from decouple import config
 
@@ -16,7 +18,8 @@ from decouple import config
 def main():
     """Run administrative tasks."""
     os.environ.setdefault(
-        "DJANGO_SETTINGS_MODULE", str(config("DJANGO_SETTINGS_MODULE"))
+        "DJANGO_SETTINGS_MODULE",
+        str(config("DJANGO_SETTINGS_MODULE", default="webapp.settings")),
     )
     try:
         # pylint: disable = C0415

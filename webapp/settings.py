@@ -23,12 +23,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("GNNEPCSAFT_SECRET_KEY")
+SECRET_KEY = config("GNNEPCSAFT_SECRET_KEY", default="ABCDEFG")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("GNNEPCSAFT_DEBUG", default=False, cast=bool)
 
-ALLOWED_HOSTS = config("GNNEPCSAFT_ALLOWED_HOSTS", cast=Csv())
+ALLOWED_HOSTS = config(
+    "GNNEPCSAFT_ALLOWED_HOSTS",
+    default=[
+        "*",
+    ],
+    cast=Csv(),
+)
 
 
 # Application definition
@@ -176,7 +182,13 @@ SESSION_COOKIE_SECURE = True
 
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = config("GNNEPCSAFT_DOMAIN_NAME", cast=Csv())
+CSRF_TRUSTED_ORIGINS = config(
+    "GNNEPCSAFT_DOMAIN_NAME",
+    default=[
+        "*",
+    ],
+    cast=Csv(),
+)
 
 
 # DJANGO-PWA for manifest.json

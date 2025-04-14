@@ -12,7 +12,10 @@ import os
 from decouple import config
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", str(config("DJANGO_SETTINGS_MODULE")))
+os.environ.setdefault(
+    "DJANGO_SETTINGS_MODULE",
+    str(config("DJANGO_SETTINGS_MODULE", default="webapp.settings")),
+)
 
 # Initialize Django ASGI application early to ensure the AppRegistry
 # is populated before importing code that may import ORM models.

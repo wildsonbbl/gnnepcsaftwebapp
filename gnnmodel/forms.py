@@ -344,5 +344,5 @@ class GoogleAPIKeyForm(forms.Form):
             )
         elif not is_api_key_valid(os.environ.get("GOOGLE_API_KEY", "")):
             raise ValidationError(_("Invalid Gemini API Key"))
-
+        os.environ["GOOGLE_API_KEY"] = google_api_key
         return SecretStr(google_api_key)

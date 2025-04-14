@@ -372,13 +372,13 @@ if __name__ == "__main__":
 
     # langgraph_agent(PROMPT, gemini20_flash, _fn_list)
 
-    agent_messages = custom_agent(mistral, PROMPT, _tools)
-    prompt_message = HumanMessage(content=PROMPT2)
-    prompt_message.pretty_print()
-    agent_messages += [prompt_message]
-    agent_messages = agent_loop(llama4_maverick, agent_messages, _tools)
-    prompt_message = HumanMessage(content=PROMPT3)
-    prompt_message.pretty_print()
-    agent_messages += [prompt_message]
-    agent_messages = agent_loop(gemma3_27b_it, agent_messages, _tools)
-    reviewer_messages = reviewer_agent(gemini20_flash, agent_messages, _tools)
+    # agent_messages = custom_agent(mistral, PROMPT, _tools)
+    # prompt_message = HumanMessage(content=PROMPT2)
+    # prompt_message.pretty_print()
+    # agent_messages += [prompt_message]
+    # agent_messages = agent_loop(llama4_maverick, agent_messages, _tools)
+    # prompt_message = HumanMessage(content=PROMPT3)
+    # prompt_message.pretty_print()
+    # agent_messages += [prompt_message]
+    # agent_messages = agent_loop(gemma3_27b_it, agent_messages, _tools)
+    # reviewer_messages = reviewer_agent(gemini20_flash, agent_messages, _tools)

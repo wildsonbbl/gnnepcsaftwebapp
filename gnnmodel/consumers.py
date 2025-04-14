@@ -25,6 +25,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None
         text_data_json = json.loads(text_data)
+        if text_data_json["text"] == "":
+            return
 
         await self.client_to_agent_messaging(text_data_json["text"])
         await self.agent_to_client_messaging(text_data_json["text"])

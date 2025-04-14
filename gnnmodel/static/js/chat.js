@@ -61,3 +61,17 @@ document.querySelector("#chat-message-submit").onclick = function (e) {
 
   messageInputDom.value = "";
 };
+
+document
+  .getElementById("chat-log-save_button")
+  .addEventListener("click", function () {
+    const dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify(messages));
+    const downloadAnchorNode = document.createElement("a");
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "messages.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  });

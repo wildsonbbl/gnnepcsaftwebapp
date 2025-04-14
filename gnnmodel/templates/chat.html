@@ -24,6 +24,13 @@
           </div>
         </div>
       </form>
+      <div class="row my-1 justify-content-center">
+        <ul>
+          {% for error in google_api_key_form.google_api_key.errors %}
+            <li class="alert alert-danger">{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
     {% else %}
       <div class="row d-flex justify-content-center my-1" id="chatrow">
         <div class="col-md-12">

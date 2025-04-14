@@ -15,8 +15,8 @@ const createWindow = async () => {
   const djangoBackend = startDjangoServer();
 
   const win = new BrowserWindow({
-    width: 768,
-    height: 600,
+    width: 1280,
+    height: 800,
     titleBarStyle: "default",
     title: "GNNePCSAFT",
   });

@@ -26,6 +26,10 @@ jobs:
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
           echo "${{ secrets.DESKTOP_ENV }}" > .env
+      - name: Download models from HuggingFace
+        run: |
+          git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
+          cp hfdata/*.onnx* ./gnnmodel/static
       - name: Analysing the code with pylint
         run: |
           pylint $(git ls-files '*.py') --load-plugins pylint_django \

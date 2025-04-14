@@ -26,6 +26,7 @@ const createWindow = async () => {
   await waitForDjangoServer();
 
   win.loadURL("http://localhost:19770");
+  win.maximize();
 
   win.webContents.on("did-finish-load", () => {
     win.webContents.executeJavaScript(`

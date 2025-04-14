@@ -30,6 +30,8 @@ jobs:
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
           cp hfdata/*.onnx* ./gnnmodel/static
+          mkdir ./gnnmodel/productionfiles
+          cp hfdata/*.onnx* ./gnnmodel/productionfiles
           python manage.py collectstatic --no-input
       - name: Analysing the code with pylint
         run: |

@@ -321,13 +321,13 @@ class GoogleAPIKeyForm(forms.Form):
 
     google_api_key = forms.CharField(
         strip=True,
-        required=False,
+        required=True,
         empty_value="",
         widget=forms.PasswordInput(
             attrs={
                 "class": "form-control",
                 "aria-label": "Gemini API Key",
-                "placeholder": "Paste your Gemini API key here",
+                "placeholder": "Paste your Gemini API key here or set env variable GOOGLE_API_KEY",
             }
         ),
     )
@@ -338,11 +338,11 @@ class GoogleAPIKeyForm(forms.Form):
         if google_api_key:
             if not is_api_key_valid(google_api_key):
                 raise ValidationError(_("Invalid Gemini API Key"))
-        elif os.environ.get("GEMINI_API_KEY") is None:
+        elif os.environ.get("GOOGLE_API_KEY") is None:
             raise ValidationError(
                 _("Gemini API Key is required for AI generated content")
             )
-        elif not is_api_key_valid(os.environ.get("GEMINI_API_KEY", "")):
+        elif not is_api_key_valid(os.environ.get("GOOGLE_API_KEY", "")):
             raise ValidationError(_("Invalid Gemini API Key"))
 
         return SecretStr(google_api_key)

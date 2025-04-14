@@ -18,7 +18,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", str(config("DJANGO_SETTINGS_MODU
 # is populated before importing code that may import ORM models.
 django_asgi_app = get_asgi_application()
 
-# pylint: disable = C0413
+# pylint: disable = C0413,C0411
 import gnnmodel.routing
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter

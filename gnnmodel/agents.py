@@ -17,20 +17,6 @@ from .utils import mixture_phase, prediction, pubchem_description, pure_phase
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
-PROMPT = """
-    I have two molecules with SMILES 'CCO' and 'CC(=O)C'. 
-    Consider them pure at 325 K and 101325 Pa.
-    - What's their density? Which one is more dense?
-    - What's their vapor pressure? Which one is more volatile?
-    - What's their pure component phase.
-    Then consider their 50/50 mixture at 300 K and 101325 Pa.
-    - What's their density?
-    - What's the mixture phase.
-    What's the molecule with those SMILES?
-    If there's any source info about it, what does each source say?
-    """
-
-
 MODEL_NAME = "gemini-2.0-flash-exp"
 
 pubchem_agent = LlmAgent(

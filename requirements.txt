@@ -17,3 +17,5 @@ jq
 feos
 si-units
 onnxruntime
+channels
+daphne

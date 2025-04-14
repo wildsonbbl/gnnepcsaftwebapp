@@ -84,7 +84,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     )
                 else:
                     all_texts += f"No text or function_call in part: {part}"
-            print(f"[AGENT TO CLIENT]: {all_texts}")
+            print(f"[AGENT TO CLIENT]: {all_texts}".encode("utf-8"))
             await asyncio.sleep(0.5)
         print("[TURN COMPLETE]")
         await self.send(

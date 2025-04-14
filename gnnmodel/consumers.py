@@ -6,7 +6,7 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import InMemoryChannelLayer
 from google.adk.agents.run_config import RunConfig
-from google.genai.types import Content, FunctionCall, Part
+from google.genai.types import Content, Part
 from markdown import markdown
 
 from .chat_utils import start_agent_session
@@ -28,13 +28,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.client_to_agent_messaging(text_data_json["text"])
         await self.agent_to_client_messaging(text_data_json["text"])
-
-    # Handles the chat.mesage event i.e. receives messages from the channel layer
-    # and sends it back to the client.
-    async def chat_message(self, event):
-        "send chat message"
-        text = event["text"]
-        await self.send(text_data=json.dumps({"text": text}))
+        # await self.bot_to_client_messaging()
 
     async def agent_to_client_messaging(self, text):
         """Agent to client communication"""
@@ -45,52 +39,93 @@ class ChatConsumer(AsyncWebsocketConsumer):
             session_id=self.session_id,
             run_config=self.run_config,
         ):
-            # turn_complete
-            if event.turn_complete:
-                print("[TURN COMPLETE]")
-                break
 
             if event.interrupted:
                 print("[INTERRUPTED]")
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "text": {
+                                "msg": "Turn interrupted, brother",
+                                "source": "turn_end",
+                                "end_turn": True,
+                            }
+                        }
+                    ),
+                )
                 break
 
-            # Read the Content and its first Part
-            part = event.content and event.content.parts and event.content.parts[0]
-            if not part or event.partial:
+            all_parts = event.content and event.content.parts
+            if not all_parts or event.partial:
                 continue
-
-            # Get the text
-            text = event.content and event.content.parts and event.content.parts[0].text
-            if not text:
-                text = (
-                    event.content
-                    and event.content.parts
-                    and event.content.parts[0].function_call
-                )
-                if isinstance(text, FunctionCall) and text.name:
-                    text = "**Calling: " + text.name + " **"
+            all_texts = ""
+            for part in all_parts:
+                if part.text:
+                    text = part.text
+                    all_texts += text + "\n\n"
+                elif part.function_call and part.function_call.name:
+                    text = "**Calling:** `" + part.function_call.name + "`"
+                    all_texts += text + "\n\n"
                 else:
-                    continue
-            assert isinstance(text, str)
-
-            # # Send the text to the client
-            await self.channel_layer.send(  # type: ignore
-                self.channel_name,
+                    text = None
+                if text:
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "text": {
+                                    "msg": markdown(text),
+                                    "source": "assistant",
+                                    "end_turn": False,
+                                }
+                            }
+                        ),
+                    )
+                else:
+                    print(f"No text or function_call in part: {part}")
+            print(f"[AGENT TO CLIENT]: {all_texts}")
+            await asyncio.sleep(0.5)
+        print("[TURN COMPLETE]")
+        await self.send(
+            text_data=json.dumps(
                 {
-                    "type": "chat.message",
-                    "text": {"msg": markdown(text), "source": "assistant"},
-                },
-            )
-            print(f"[AGENT TO CLIENT]: {text}")
-            await asyncio.sleep(2)
+                    "text": {
+                        "msg": "Turn completed, brother",
+                        "source": "turn_end",
+                        "end_turn": True,
+                    }
+                }
+            ),
+        )
 
     async def client_to_agent_messaging(self, text):
         """Client to agent communication"""
-        await self.channel_layer.send(  # type: ignore
-            self.channel_name,
-            {
-                "type": "chat.message",
-                "text": {"msg": text, "source": "user"},
-            },
+        await self.send(
+            text_data=json.dumps(
+                {"text": {"msg": text, "source": "user", "end_turn": False}}
+            ),
         )
         print(f"[CLIENT TO AGENT]: {text}")
+
+    async def bot_to_client_messaging(self):
+        """Bot to client communication, for testing"""
+        textes = ["booot mf", "booot mf 2", "booot mf 3", "'I'M A BOT MF"]
+        for text in textes:
+            await self.send(
+                text_data=json.dumps(
+                    {"text": {"msg": text, "source": "assistant", "end_turn": False}}
+                ),
+            )
+            print(f"[AGENT TO CLIENT]: {text}")
+            await asyncio.sleep(2)
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "text": {
+                        "msg": "Turn completed, brother",
+                        "source": "turn_end",
+                        "end_turn": True,
+                    }
+                }
+            ),
+        )
+        print("Done")

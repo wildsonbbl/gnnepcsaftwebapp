@@ -15,7 +15,6 @@ from google.adk.agents import LlmAgent
 
 from .utils import mixture_phase, prediction, pubchem_description, pure_phase
 
-assert os.environ["GOOGLE_API_KEY"]
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 PROMPT = """

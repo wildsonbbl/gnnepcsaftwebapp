@@ -182,7 +182,7 @@ CSRF_COOKIE_SECURE = True
 
 CSRF_TRUSTED_ORIGINS = config(
     "GNNEPCSAFT_DOMAIN_NAME",
-    default="*,*",
+    default="https://*, http://*",
     cast=Csv(),
 )
 

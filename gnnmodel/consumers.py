@@ -8,8 +8,26 @@ from channels.layers import InMemoryChannelLayer
 from google.adk.agents.run_config import RunConfig
 from google.genai.types import Content, Part
 from markdown import markdown
+from markdown.extensions import Extension
+from markdown.treeprocessors import Treeprocessor
 
 from .chat_utils import start_agent_session
+
+
+class BlankLinkExtension(Extension):
+    "extension to set links to target=_blank"
+
+    def extendMarkdown(self, md):
+        md.treeprocessors.register(BlankLinkProcessor(md), "blank_link_processor", 15)
+
+
+class BlankLinkProcessor(Treeprocessor):  # pylint: disable=too-few-public-methods
+    "processor to set links to target=_blank"
+
+    def run(self, root):
+        for element in root.iter("a"):
+            element.set("target", "_blank")
+        return root
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -75,7 +93,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         text_data=json.dumps(
                             {
                                 "text": {
-                                    "msg": markdown(text),
+                                    "msg": markdown(
+                                        text, extensions=[BlankLinkExtension()]
+                                    ),
                                     "source": "assistant",
                                     "end_turn": False,
                                 }
@@ -114,7 +134,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
         for text in textes:
             await self.send(
                 text_data=json.dumps(
-                    {"text": {"msg": text, "source": "assistant", "end_turn": False}}
+                    {
+                        "text": {
+                            "msg": markdown(text, extensions=[BlankLinkExtension()]),
+                            "source": "assistant",
+                            "end_turn": False,
+                        }
+                    }
                 ),
             )
             print(f"[AGENT TO CLIENT]: {text}")

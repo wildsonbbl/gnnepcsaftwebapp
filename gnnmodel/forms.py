@@ -176,21 +176,24 @@ class CustomPlotConfigForm(forms.Form):
 
     temp_min = forms.FloatField(
         label="Minimum Temperature (K)",
-        min_value=1.0,
+        min_value=100.0,
+        max_value=800.0,
         required=False,
         initial=300.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     temp_max = forms.FloatField(
         label="Maximum Temperature (K)",
-        min_value=1.0,
+        min_value=100.0,
+        max_value=800.0,
         required=False,
         initial=400.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     pressure = forms.FloatField(
         label="Pressure (Pa)",
-        min_value=1.0,
+        min_value=10_000.0,
+        max_value=10_000_000.0,
         required=False,
         initial=101325.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),

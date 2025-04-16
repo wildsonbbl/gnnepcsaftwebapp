@@ -29,10 +29,10 @@ chatSocket.onmessage = function (e) {
   });
 
   str += ` <div class="d-flex flex-row mb-4 justify-content-center" id="bottom-chat-log">
+  <div class="p-3 ms-3 bot-message">
       <p class="small mb-0">${
         message.end_turn == false ? "Generating response..." : ""
-      }</p>
-      </div>`;
+      }</p></div></div>`;
 
   document.querySelector("#chat-log").innerHTML = str;
   document.getElementById("bottom-chat-log").scrollIntoView();

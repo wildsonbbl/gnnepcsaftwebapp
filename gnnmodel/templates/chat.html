@@ -4,7 +4,7 @@
   AI CHAT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg">
+  <div class="col-lg my-5">
     {% if show_form %}
       <form action="" method="post" id="submitGoogleApiKey">
         {% csrf_token %}
@@ -32,30 +32,30 @@
         </ul>
       </div>
     {% else %}
-      <div class="row d-flex justify-content-center my-1" id="chatrow">
+      <div class="row d-flex justify-content-center" id="chatrow">
         <div class="col-md-12">
           <div class="card chat-card-style bg-light">
             <div id="chat-log" class="card-body overflow-auto"></div>
             <div class="row d-flex justify-content-center" id="formRow">
               <div class="col-lg-8">
                 <div class="row my-1 justify-content-center">
-                  <div class="col-lg-8 my-1">
+                  <div class="col-sm-6 my-1">
                     <input id="chat-message-input"
                            class="form-control"
                            type="text"
                            placeholder="Write your message here" />
                   </div>
-                  <div class="col-lg-2 my-1">
+                  <div class="col-sm-2 my-1">
                     <input id="chat-message-submit"
                            type="submit"
                            value="send"
                            class="form-control btn-outline-primary" />
                   </div>
-                  <div class="col-lg-2 my-1">
+                  <div class="col-sm-2 my-1">
                     <input id="chat-log-save_button"
                            type="submit"
                            value="save"
-                           class="form-control btn-outline-primary" />
+                           class="form-control btn-outline-secondary" />
                   </div>
                 </div>
               </div>

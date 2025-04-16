@@ -10,7 +10,7 @@ django-pwa
 whitenoise
 gunicorn
 fontawesomefree
-gnnepcsaft>=0.2.2
+gnnepcsaft>=0.2.3
 jq
 #teqp
 #PCSAFTsuperanc

@@ -37,7 +37,9 @@ const createWindow = async () => {
         overrideBrowserWindowOptions: {
           fullscreen: false,
           width: 600,
-          height: 600,
+          height: 680,
+          minWidth: 600,
+          minHeight: 680,
           title: "GNNePCSAFT",
         },
       };

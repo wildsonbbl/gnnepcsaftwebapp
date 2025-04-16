@@ -114,8 +114,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line,"
-                " example:\n\nCCO | 0.5\nCC | 0.5",
+                "placeholder": "One 'InChI/SMILES Mole Fraction' per line,"
+                " example:\n\nCCO 0.33\nCC 0.33\nInChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33",
             }
         ),
     )
@@ -129,13 +129,11 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         mole_fraction_list = []
         for full_line in lines:
             try:
-                query, mole_fraction = full_line.strip().split("|")
+                query, mole_fraction = full_line.strip().split(" ", maxsplit=1)
                 query = query.strip()
                 mole_fraction = mole_fraction.strip()
             except ValueError as e:
-                raise ValidationError(
-                    _(f'Missing/Extra " | " for line: {full_line}')
-                ) from e
+                raise ValidationError(_(f'Missing " " for line: {full_line}')) from e
 
             inchi_check = re.search("^InChI=", query)
             if inchi_check:

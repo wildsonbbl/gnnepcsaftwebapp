@@ -65,7 +65,9 @@ chemistry_agent = LlmAgent(
 root_agent = LlmAgent(
     model=MODEL_NAME,
     name="gnnepcsaft_agent",
-    description=textwrap.dedent(
+    description="The main agent in the system. It coordinates the team "
+    "and delegates tasks to the other agents.",
+    instruction=textwrap.dedent(
         """
     You are the main PCSAFT agent, coordinating a team. 
     - Your main task: Provide information using the ePC-SAFT tools. 

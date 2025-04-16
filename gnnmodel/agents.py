@@ -5,6 +5,7 @@ import textwrap
 
 from gnnepcsaft.data.rdkit_util import inchitosmiles, mw, smilestoinchi
 from gnnepcsaft.epcsaft.epcsaft_feos import (
+    critical_points_feos,
     mix_den_feos,
     mix_vp_feos,
     pure_den_feos,
@@ -31,6 +32,7 @@ tools = [
     smilestoinchi,
     inchitosmiles,
     pure_h_lv_feos,
+    critical_points_feos,
 ]
 
 chemistry_agent = LlmAgent(

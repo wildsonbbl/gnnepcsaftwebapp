@@ -112,7 +112,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 text_data=json.dumps(
                     {
                         "text": {
-                            "msg": f"***Error with agent**: `{e}`*",
+                            "msg": markdown(
+                                f"***Error with agent**: `{e}`*",
+                                extensions=[BlankLinkExtension()],
+                            ),
                             "source": "assistant",
                             "end_turn": False,
                         }

@@ -4,12 +4,12 @@
   Batch Mode
 {% endblock title %}
 {% block content %}
-  <div class="col-lg">
-    <div class="row" id="formRow">
-      <div class="col-md-12">
+  <div class="col-lg my-5">
+    <div class="row justify-content-center" id="formRow">
+      <div class="col-md-4">
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
-          <div class="row my-5 justify-content-center">
+          <div class="row justify-content-center">
             <div class="col">
               {{ form.text_area }}
               <input type="submit"

@@ -16,7 +16,9 @@ const createWindow = async () => {
 
   const win = new BrowserWindow({
     width: 1280,
-    height: 800,
+    height: 760,
+    minWidth: 600,
+    minHeight: 680,
     titleBarStyle: "default",
     title: "GNNePCSAFT",
   });

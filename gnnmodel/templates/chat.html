@@ -4,7 +4,7 @@
   AI CHAT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg">
+  <div class="col-lg my-5">
     {% if show_form %}
       <form action="" method="post" id="submitGoogleApiKey">
         {% csrf_token %}
@@ -14,7 +14,7 @@
             <p class="mx-2 my-1">
               You can find more about Gemini API Keys
               <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">here</a>.
-              This key is not stored for security reasons. The model <code>gemini-2.0-flash-exp</code> is used.
+              This key is not stored for security reasons. The model <code>gemini-2.0-flash</code> is used.
             </p>
           </div>
           <div class="col-md-6">
@@ -32,33 +32,33 @@
         </ul>
       </div>
     {% else %}
-      <div class="row d-flex justify-content-center my-1" id="chatrow">
+      <div class="row d-flex justify-content-center" id="chatrow">
         <div class="col-md-12">
-          <div class="card chat-card-style">
+          <div class="card chat-card-style bg-light">
             <div id="chat-log" class="card-body overflow-auto"></div>
-          </div>
-        </div>
-      </div>
-      <div class="row d-flex justify-content-center" id="formRow">
-        <div class="col-lg-8">
-          <div class="row my-1 justify-content-center">
-            <div class="col-lg-4 my-1">
-              <input id="chat-message-input"
-                     class="form-control"
-                     type="text"
-                     placeholder="Write your message here" />
-            </div>
-            <div class="col-lg-4 my-1">
-              <input id="chat-message-submit"
-                     type="submit"
-                     value="send"
-                     class="form-control btn-outline-primary" />
-            </div>
-            <div class="col-lg-4 my-1">
-              <input id="chat-log-save_button"
-                     type="submit"
-                     value="save chat history"
-                     class="form-control btn-outline-primary" />
+            <div class="row d-flex justify-content-center" id="formRow">
+              <div class="col-lg-8">
+                <div class="row my-1 justify-content-center">
+                  <div class="col-sm-6 my-1">
+                    <input id="chat-message-input"
+                           class="form-control"
+                           type="text"
+                           placeholder="Write your message here" />
+                  </div>
+                  <div class="col-sm-2 my-1">
+                    <input id="chat-message-submit"
+                           type="submit"
+                           value="send"
+                           class="form-control btn-outline-primary" />
+                  </div>
+                  <div class="col-sm-2 my-1">
+                    <input id="chat-log-save_button"
+                           type="submit"
+                           value="save"
+                           class="form-control btn-outline-secondary" />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

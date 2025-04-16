@@ -114,8 +114,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
             attrs={
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One 'InChI/SMILES | Mole Fraction' per line,"
-                " example:\n\nCCO | 0.5\nCC | 0.5",
+                "placeholder": "One 'InChI/SMILES Mole Fraction' per line,"
+                " example:\n\nCCO 0.33\nCC 0.33\nInChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33",
             }
         ),
     )
@@ -129,12 +129,12 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         mole_fraction_list = []
         for full_line in lines:
             try:
-                query, mole_fraction = full_line.strip().split("|")
+                query, mole_fraction = full_line.strip().split(" ", maxsplit=1)
                 query = query.strip()
                 mole_fraction = mole_fraction.strip()
             except ValueError as e:
                 raise ValidationError(
-                    _(f'Missing/Extra " | " for line: {full_line}')
+                    _(f'Missing " mole_fraction" for line: {full_line}')
                 ) from e
 
             inchi_check = re.search("^InChI=", query)
@@ -176,21 +176,24 @@ class CustomPlotConfigForm(forms.Form):
 
     temp_min = forms.FloatField(
         label="Minimum Temperature (K)",
-        min_value=1.0,
+        min_value=100.0,
+        max_value=800.0,
         required=False,
         initial=300.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     temp_max = forms.FloatField(
         label="Maximum Temperature (K)",
-        min_value=1.0,
+        min_value=100.0,
+        max_value=800.0,
         required=False,
         initial=400.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),
     )
     pressure = forms.FloatField(
         label="Pressure (Pa)",
-        min_value=1.0,
+        min_value=10_000.0,
+        max_value=10_000_000.0,
         required=False,
         initial=101325.0,
         widget=forms.NumberInput(attrs={"class": "form-control"}),

@@ -26,44 +26,47 @@
       {% endblock title %}
     </title>
   </head>
-  <body class="mt-1">
-    <div class="container-fluid bg-light text-dark">
-      <ul class="nav bg-dark justify-content-center">
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "chat" %}>AI CHAT</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
-        </li>
-        <li class="nav-item" id="installButton"></li>
-        <script src={% static "js/install.js" %} async></script>
-      </ul>
+  <body class="bg-light">
+    <div class="container-fluid text-dark min-vh-100">
+      <div class="row mt-1 justify-content-center fixed-top">
+        <div class="col-lg-6">
+          <ul class="nav bg-dark justify-content-center">
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "chat" %}>AI CHAT</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
+            </li>
+            <li class="nav-item" id="installButton"></li>
+            <script src={% static "js/install.js" %} async></script>
+          </ul>
+        </div>
+      </div>
       <div class="row">
         {% block content %}
         {% endblock content %}
       </div>
-      <div class="row">
+      <div class="row fixed-bottom">
         <!-- Remove the container if you want to extend the Footer to full width. -->
-        <div class="container my-5">
+        <div class="container">
           <footer class="text-center">
             <!-- Grid container -->
-            <div class="container pt-4">
+            <div class="container">
               <!-- Section: Social media -->
-              <section class="mb-4">
+              <section>
                 <!-- Linkedin -->
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://www.linkedin.com/in/wildsonbbl/"
                    role="button"
-                   data-mdb-ripple-color="dark"
                    name="Linkedin"
                    aria-label="Author Linkedin Page"
                    target="_blank"><i class="fab fa-linkedin" alt="Author Linkedin Page"></i></a>
@@ -71,7 +74,6 @@
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://github.com/wildsonbbl"
                    role="button"
-                   data-mdb-ripple-color="dark"
                    name="Github"
                    aria-label="Author Github Page"
                    target="_blank"><i class="fab fa-github" alt="Author Github Page"></i></a>
@@ -79,7 +81,6 @@
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://orcid.org/0000-0002-0189-6000"
                    role="button"
-                   data-mdb-ripple-color="dark"
                    name="ORCID"
                    aria-label="Author ORCID Page"
                    target="_blank"><i class="fab fa-orcid" alt="Author ORCID Page"></i></a>

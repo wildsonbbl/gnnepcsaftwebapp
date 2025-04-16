@@ -17,7 +17,7 @@ from .utils import mixture_phase, prediction, pubchem_description, pure_phase
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
-MODEL_NAME = "gemini-2.0-flash-exp"
+MODEL_NAME = "gemini-2.0-flash"
 
 pubchem_agent = LlmAgent(
     model=MODEL_NAME,

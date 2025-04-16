@@ -26,43 +26,43 @@
       {% endblock title %}
     </title>
   </head>
-  <body class="mt-1 bg-light">
+  <body class="bg-light">
     <div class="container-fluid text-dark min-vh-100">
-      <div class="row justify-content-center">
+      <div class="row mt-1 justify-content-center fixed-top">
         <div class="col-lg-6">
-      <ul class="nav bg-dark justify-content-center">
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "chat" %}>AI CHAT</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
-        </li>
-        <li class="nav-item" id="installButton"></li>
-        <script src={% static "js/install.js" %} async></script>
-      </ul>
+          <ul class="nav bg-dark justify-content-center">
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "chat" %}>AI CHAT</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
+            </li>
+            <li class="nav-item" id="installButton"></li>
+            <script src={% static "js/install.js" %} async></script>
+          </ul>
         </div>
       </div>
       <div class="row">
         {% block content %}
         {% endblock content %}
       </div>
-      <div class="row">
+      <div class="row fixed-bottom">
         <!-- Remove the container if you want to extend the Footer to full width. -->
-        <div class="container my-2">
+        <div class="container">
           <footer class="text-center">
             <!-- Grid container -->
             <div class="container">
               <!-- Section: Social media -->
-              <section class="mb-1">
+              <section>
                 <!-- Linkedin -->
                 <a class="btn btn-link btn-floating btn-lg text-dark m-1"
                    href="https://www.linkedin.com/in/wildsonbbl/"

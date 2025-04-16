@@ -4,11 +4,11 @@
   GNNePCSAFT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg">
+  <div class="col-lg my-5">
     <div class="row" id="queryForm">
       <form action="" method="post" id="submitQueryPred">
         {% csrf_token %}
-        <div class="row my-5 justify-content-center">
+        <div class="row justify-content-center">
           <div class="col-md-3 my-1">{{ form.query }}</div>
           <div class="col-md-3 my-1">
             <input type="submit"
@@ -52,33 +52,6 @@
             </tbody>
           </table>
         </div>
-        {% comment %}
-        <form action="{% url "description" %}" method="post" id="descriptionForm" target="_blank">
-          {% csrf_token %}
-          <div class="row my-1 justify-content-center">
-            <div class="col-md-6">
-              {{ google_api_key_form.google_api_key }}
-              <p class="mx-2 my-1">
-                You can find more about Gemini API Keys
-                <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">here</a>.
-                This key is not stored for security reasons. The model <code>gemma-3-27b-it</code> is used.
-              </p>
-            </div>
-            <div class="col-md-6" id="descriptionContainer">
-              <script>
-                let id_query = document.getElementById("id_query");
-                const hidden_input = document.createElement("input");
-                hidden_input.type = "hidden";
-                hidden_input.name = "query";
-                hidden_input.value = id_query.value;
-                hidden_input.id = "hidden_query";
-                document.getElementById("descriptionContainer").appendChild(hidden_input);
-</script>
-              <input type="submit" value="AI generated molecule description" class="form-control btn-outline-primary" />
-            </div>
-          </div>
-        </form> 
-        {% endcomment %}
       {% endif %}
     </div>
     <div class="row justify-content-center" id="results">

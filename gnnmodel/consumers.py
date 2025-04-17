@@ -104,7 +104,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         )
                     else:
                         all_texts += f"No text or function_call in part: {part}"
-                print(f"[AGENT TO CLIENT]: {all_texts}".encode("utf-8"))
+                # print(f"[AGENT TO CLIENT]: {all_texts}".encode("utf-8"))
                 await asyncio.sleep(0.5)
         except Exception as e:  # pylint: disable=w0718
             print(f"Error with agent: {e}")
@@ -123,7 +123,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 ),
             )
         finally:
-            print("[TURN COMPLETE]")
+            # print("[TURN COMPLETE]")
             await self.send(
                 text_data=json.dumps(
                     {
@@ -143,7 +143,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {"text": {"msg": text, "source": "user", "end_turn": False}}
             ),
         )
-        print(f"[CLIENT TO AGENT]: {text}")
+        # print(f"[CLIENT TO AGENT]: {text}")
 
     async def bot_to_client_messaging(self):
         """Bot to client communication, for testing"""
@@ -165,7 +165,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 ),
             )
-            print(f"[AGENT TO CLIENT]: {text}")
+            # print(f"[AGENT TO CLIENT]: {text}")
             await asyncio.sleep(2)
         await self.send(
             text_data=json.dumps(
@@ -178,4 +178,4 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             ),
         )
-        print("Done")
+        # print("Done")

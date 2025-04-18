@@ -149,154 +149,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # Handle different types of messages
         if "action" in text_data_json:
-            action = text_data_json["action"]
-
-            if action == "delete_session":
-                session_id = text_data_json["session_id"]
-                success = await self.delete_session(session_id)
-
-                # If the deleted session was the current one, load the most recent session
-                if success and session_id == self.session_id:
-                    last_session = await self.get_last_session()
-                    if last_session:
-                        self.session_id = str(last_session.session_id)
-                        session_name = last_session.name
-                        self.runner, self.runner_session = start_agent_session(
-                            self.session_id
-                        )
-
-                        # Send the current session info to the client
-                        await self.send(
-                            text_data=json.dumps(
-                                {
-                                    "action": "session_loaded",
-                                    "session_id": self.session_id,
-                                    "name": session_name,
-                                },
-                                cls=CustomJSONEncoder,
-                            )
-                        )
-
-                        # Load previous messages
-                        await self.send(
-                            text_data=json.dumps(
-                                {
-                                    "action": "load_messages",
-                                    "messages": last_session.messages,
-                                },
-                                cls=CustomJSONEncoder,
-                            )
-                        )
-                    else:
-                        # Create a new session if no other sessions exist
-                        new_session_id = str(uuid.uuid4())
-                        new_session_name = "New Session"
-                        await self.create_new_session(new_session_id, new_session_name)
-                        self.session_id = new_session_id
-                        self.runner, self.runner_session = start_agent_session(
-                            new_session_id
-                        )
-
-                        await self.send(
-                            text_data=json.dumps(
-                                {
-                                    "action": "session_loaded",
-                                    "session_id": new_session_id,
-                                    "name": new_session_name,
-                                },
-                                cls=CustomJSONEncoder,
-                            )
-                        )
-
-                        # Clear messages
-                        await self.send(
-                            text_data=json.dumps(
-                                {"action": "load_messages", "messages": []}
-                            )
-                        )
-
-                # Send confirmation and refresh sessions list
-                await self.send(
-                    text_data=json.dumps(
-                        {
-                            "action": "session_deleted",
-                            "success": success,
-                            "session_id": session_id,
-                        }
-                    )
-                )
-
-                # Send updated sessions list
-                sessions = await self.get_all_sessions()
-                await self.send(
-                    text_data=json.dumps(
-                        {"action": "sessions_list", "sessions": sessions},
-                        cls=CustomJSONEncoder,
-                    )
-                )
-
-            elif action == "get_sessions":
-                # Return list of available sessions
-                sessions = await self.get_all_sessions()
-
-                await self.send(
-                    text_data=json.dumps(
-                        {"action": "sessions_list", "sessions": sessions}
-                    )
-                )
-
-            elif action == "create_session":
-                # Create a new session
-                new_session_id = str(uuid.uuid4())
-                name = text_data_json.get("name", "New Session")
-                session = await database_sync_to_async(ChatSession.objects.create)(
-                    session_id=new_session_id, name=name
-                )
-
-                # Reset the agent session
-                self.session_id = new_session_id
-                self.runner, self.runner_session = start_agent_session(new_session_id)
-
-                await self.send(
-                    text_data=json.dumps(
-                        {
-                            "action": "session_created",
-                            "session_id": new_session_id,
-                            "name": name,
-                        }
-                    )
-                )
-
-            elif action == "load_session":
-                # Load an existing session
-                session_id = text_data_json["session_id"]
-                self.session_id = session_id
-                self.runner, self.runner_session = start_agent_session(session_id)
-
-                session = await self.get_or_create_session(session_id)
-                await self.send(
-                    text_data=json.dumps(
-                        {"action": "load_messages", "messages": session.messages}
-                    )
-                )
-
-            elif action == "rename_session":
-                # Rename a session
-                session_id = text_data_json["session_id"]
-                name = text_data_json["name"]
-                await database_sync_to_async(
-                    ChatSession.objects.filter(session_id=session_id).update
-                )(name=name)
-
-                await self.send(
-                    text_data=json.dumps(
-                        {
-                            "action": "session_renamed",
-                            "session_id": session_id,
-                            "name": name,
-                        }
-                    )
-                )
+            await self.handle_actions(text_data_json)
 
         elif "text" in text_data_json:
             if text_data_json["text"] == "":
@@ -308,6 +161,155 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.client_to_agent_messaging(text_data_json["text"])
             await self.agent_to_client_messaging(text_data_json["text"])
+
+    async def handle_actions(self, text_data_json):
+        """Handle actions such as creating a new session or deleting a session"""
+        action = text_data_json["action"]
+
+        if action == "delete_session":
+            session_id = text_data_json["session_id"]
+            success = await self.delete_session(session_id)
+
+            # If the deleted session was the current one, load the most recent session
+            if success and session_id == self.session_id:
+                last_session = await self.get_last_session()
+                if last_session:
+                    self.session_id = str(last_session.session_id)
+                    session_name = last_session.name
+                    self.runner, self.runner_session = start_agent_session(
+                        self.session_id
+                    )
+
+                    # Send the current session info to the client
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "action": "session_loaded",
+                                "session_id": self.session_id,
+                                "name": session_name,
+                            },
+                            cls=CustomJSONEncoder,
+                        )
+                    )
+
+                    # Load previous messages
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "action": "load_messages",
+                                "messages": last_session.messages,
+                            },
+                            cls=CustomJSONEncoder,
+                        )
+                    )
+                else:
+                    # Create a new session if no other sessions exist
+                    new_session_id = str(uuid.uuid4())
+                    new_session_name = "New Session"
+                    await self.create_new_session(new_session_id, new_session_name)
+                    self.session_id = new_session_id
+                    self.runner, self.runner_session = start_agent_session(
+                        new_session_id
+                    )
+
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "action": "session_loaded",
+                                "session_id": new_session_id,
+                                "name": new_session_name,
+                            },
+                            cls=CustomJSONEncoder,
+                        )
+                    )
+
+                    # Clear messages
+                    await self.send(
+                        text_data=json.dumps(
+                            {"action": "load_messages", "messages": []}
+                        )
+                    )
+
+                # Send confirmation and refresh sessions list
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_deleted",
+                        "success": success,
+                        "session_id": session_id,
+                    }
+                )
+            )
+
+            # Send updated sessions list
+            sessions = await self.get_all_sessions()
+            await self.send(
+                text_data=json.dumps(
+                    {"action": "sessions_list", "sessions": sessions},
+                    cls=CustomJSONEncoder,
+                )
+            )
+
+        elif action == "get_sessions":
+            # Return list of available sessions
+            sessions = await self.get_all_sessions()
+
+            await self.send(
+                text_data=json.dumps({"action": "sessions_list", "sessions": sessions})
+            )
+
+        elif action == "create_session":
+            # Create a new session
+            new_session_id = str(uuid.uuid4())
+            name = text_data_json.get("name", "New Session")
+            session = await database_sync_to_async(ChatSession.objects.create)(
+                session_id=new_session_id, name=name
+            )
+
+            # Reset the agent session
+            self.session_id = new_session_id
+            self.runner, self.runner_session = start_agent_session(new_session_id)
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_created",
+                        "session_id": new_session_id,
+                        "name": name,
+                    }
+                )
+            )
+
+        elif action == "load_session":
+            # Load an existing session
+            session_id = text_data_json["session_id"]
+            self.session_id = session_id
+            self.runner, self.runner_session = start_agent_session(session_id)
+
+            session = await self.get_or_create_session(session_id)
+            await self.send(
+                text_data=json.dumps(
+                    {"action": "load_messages", "messages": session.messages}
+                )
+            )
+
+        elif action == "rename_session":
+            # Rename a session
+            session_id = text_data_json["session_id"]
+            name = text_data_json["name"]
+            await database_sync_to_async(
+                ChatSession.objects.filter(session_id=session_id).update
+            )(name=name)
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_renamed",
+                        "session_id": session_id,
+                        "name": name,
+                    }
+                )
+            )
 
     @database_sync_to_async
     def delete_session(self, session_id):

@@ -1,6 +1,6 @@
 {
   "name": "gnnepcsaft",
-  "version": "6.0.1",
+  "version": "6.1.1",
   "description": "Thermodynamic Modeling with GNNePCSAFT",
   "main": "main.cjs",
   "scripts": {

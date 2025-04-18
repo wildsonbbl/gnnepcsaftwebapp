@@ -87,6 +87,68 @@
           </div>
         </div>
       </div>
+      <!-- New Session Modal -->
+      <div class="modal fade"
+           id="newSessionModal"
+           tabindex="-1"
+           aria-labelledby="newSessionModalLabel"
+           aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="newSessionModalLabel">Create New Session</h5>
+              <button type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="new-session-name" class="form-label">Session Name</label>
+                <input type="text"
+                       class="form-control"
+                       id="new-session-name"
+                       placeholder="Enter session name">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="create-session-btn">Create</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Rename Session Modal -->
+      <div class="modal fade"
+           id="renameSessionModal"
+           tabindex="-1"
+           aria-labelledby="renameSessionModalLabel"
+           aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="renameSessionModalLabel">Rename Session</h5>
+              <button type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="rename-session-name" class="form-label">New Session Name</label>
+                <input type="text"
+                       class="form-control"
+                       id="rename-session-name"
+                       placeholder="Enter new session name">
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="save-rename-btn">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
     {% endif %}
   </div>
   {% if not show_form %}

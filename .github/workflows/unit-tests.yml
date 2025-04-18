@@ -1,4 +1,4 @@
-name: Pylint check up
+name: Unit Tests
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
       - "**.py"
 
 jobs:
-  pylint:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:

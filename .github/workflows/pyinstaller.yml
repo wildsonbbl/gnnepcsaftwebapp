@@ -1,4 +1,4 @@
-name: PyInstaller check up
+name: PyInstaller check test
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
       - "**.py"
 
 jobs:
-  pyinstaller:
+  check:
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
@@ -42,7 +42,7 @@ jobs:
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
           pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
-      - name: Check up
+      - name: Check pyinstaller file
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
       - name: Check files
         run: ls -l ./apppkg/dist/gnnepcsaftwebapp

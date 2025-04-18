@@ -1,30 +1,45 @@
 """utils for adk agent runner"""
 
+from django.conf import settings
 from google.adk.runners import Runner
-from google.adk.sessions.in_memory_session_service import InMemorySessionService
+from google.adk.sessions.database_session_service import DatabaseSessionService
 
 from .agents import root_agent
 
 APP_NAME = "GNNePCSAFT Agent"
-session_service = InMemorySessionService()
+db_path = settings.BASE_DIR / "gnnepcsaft.db"
+DB_URL = "sqlite:///" + str(db_path)
+session_service = DatabaseSessionService(DB_URL)
+USER_ID = "LOCAL_USER_01"
 
-# Store active sessions to avoid recreating them
-active_sessions = {}
+
+def get_sessions_ids():
+    """Get the list of sessions ids"""
+    active_sessions = session_service.list_sessions(
+        app_name=APP_NAME, user_id=USER_ID
+    ).model_dump()
+    sessions_ids = [session["id"] for session in active_sessions["sessions"]]
+    return sessions_ids
 
 
 def start_agent_session(session_id: str):
     """Starts an agent session"""
-
-    # Check if we already have this session
-    if session_id in active_sessions:
-        return active_sessions[session_id]
+    sessions_ids = get_sessions_ids()
 
     # Create a Session
-    session = session_service.create_session(
-        app_name=APP_NAME,
-        user_id=session_id,
-        session_id=session_id,
-    )
+    if session_id not in sessions_ids:
+        session = session_service.create_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=session_id,
+        )
+    else:
+        session = session_service.get_session(
+            app_name=APP_NAME,
+            user_id=USER_ID,
+            session_id=session_id,
+        )
+        assert session
 
     # Create a Runner
     runner = Runner(
@@ -32,8 +47,5 @@ def start_agent_session(session_id: str):
         agent=root_agent,
         session_service=session_service,
     )
-
-    # Store the session
-    active_sessions[session_id] = (runner, session)
 
     return runner, session

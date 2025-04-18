@@ -15,7 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
-from .chat_utils import active_sessions, start_agent_session
+from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
 from .models import ChatSession
 
 
@@ -316,8 +316,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             session = ChatSession.objects.get(session_id=session_id)
             session.delete()
 
-            if session_id in active_sessions:
-                del active_sessions[session_id]
+            session_service.delete_session(
+                app_name=APP_NAME, user_id=USER_ID, session_id=session_id
+            )
 
             return True
         except ChatSession.DoesNotExist:
@@ -328,7 +329,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         try:
             async for event in self.runner.run_async(
                 new_message=Content(role="user", parts=[Part.from_text(text=text)]),
-                user_id=self.session_id,
+                user_id=USER_ID,
                 session_id=self.session_id,
                 run_config=self.run_config,
             ):

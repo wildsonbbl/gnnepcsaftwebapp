@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('./icons.json', '.'), ('./mydatabase', '.'), ('./gnnmodel/templates', './gnnmodel/templates'), ('./productionfiles', './productionfiles')]
+datas = [('./icons.json', '.'), ('./gnnepcsaft.db', '.'), ('./gnnmodel/templates', './gnnmodel/templates'), ('./productionfiles', './productionfiles')]
 datas += copy_metadata('django-bootstrap-v5')
 
 

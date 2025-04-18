@@ -117,10 +117,12 @@ ASGI_APPLICATION = "webapp.asgi.application"
 #     }
 # }
 
+DB_PATH = config("GNNEPCSAFT_DB_PATH", default=BASE_DIR / "gnnepcsaft.db")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "gnnepcsaft.db",
+        "NAME": DB_PATH,
     }
 }
 

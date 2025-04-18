@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          lfs: true
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,7 +32,6 @@ jobs:
           uv pip install pyinstaller
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
-          echo "${{ secrets.DESKTOP_ENV }}" > .env
       - name: Check versions
         run: |
           npm install -g npm@11.1.0
@@ -50,7 +51,7 @@ jobs:
           python manage.py migrate --no-input
           pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
 
-      - name: Check up
+      - name: Check pyinstaller file
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
       - name: Build and Publish
         env:

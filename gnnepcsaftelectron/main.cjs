@@ -5,6 +5,8 @@ const { signal } = controller;
 const path = require("path");
 const log = require("electron-log/main");
 const fetch = require("node-fetch");
+const fs = require("fs");
+
 // Optional, initialize the logger for any renderer process
 log.initialize();
 
@@ -12,7 +14,36 @@ if (require("electron-squirrel-startup")) app.quit();
 Menu.setApplicationMenu(null); // Hide the menu bar
 
 const createWindow = async () => {
-  const djangoBackend = startDjangoServer();
+  // Set up user data directory for database
+  const userDataPath = app.getPath("userData");
+  const dbDir = path.join(userDataPath, "db");
+
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+
+  // Path to the database in user data directory
+  const userDbPath = path.join(dbDir, "gnnepcsaft.db");
+
+  console.log(`User database path: ${userDbPath}`);
+
+  // Check if we need to copy the initial database
+  if (!fs.existsSync(userDbPath)) {
+    const resourceDbPath = path.join(
+      process.resourcesPath,
+      "gnnepcsaftwebapp/_internal/gnnepcsaft.db"
+    );
+
+    // Copy the database if it exists in resources
+    if (fs.existsSync(resourceDbPath)) {
+      fs.copyFileSync(resourceDbPath, userDbPath);
+      log.info(`Copied initial database to: ${userDbPath}`);
+    }
+  }
+
+  // Start Django with the user database path
+  const djangoBackend = startDjangoServer(userDbPath);
 
   const win = new BrowserWindow({
     width: 1280,
@@ -37,7 +68,9 @@ const createWindow = async () => {
         overrideBrowserWindowOptions: {
           fullscreen: false,
           width: 600,
-          height: 600,
+          height: 680,
+          minWidth: 600,
+          minHeight: 680,
           title: "GNNePCSAFT",
         },
       };
@@ -64,7 +97,7 @@ app.on("window-all-closed", () => {
   }
 });
 
-const startDjangoServer = () => {
+const startDjangoServer = (dbPath) => {
   let appPath;
   if (process.platform === "win32") {
     appPath = path.join(
@@ -77,10 +110,14 @@ const startDjangoServer = () => {
       "gnnepcsaftwebapp/gnnepcsaftwebapp"
     );
   }
+
+  // Pass the database path as an environment variable
+  const env = { ...process.env, GNNEPCSAFT_DB_PATH: dbPath };
+
   const djangoBackend = spawn(
     appPath,
     ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
-    { signal }
+    { signal, env }
   );
 
   djangoBackend.stdout.on("data", (data) => {

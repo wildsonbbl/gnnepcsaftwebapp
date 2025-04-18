@@ -13,4 +13,11 @@ urlpatterns = [
     path("chat/", views.chat, name="chat"),
     # path("", views.homepage, name="homepage"),
     # path("author/", views.authorpage, name="author"),
+    path("api/sessions/", views.get_sessions, name="get_sessions"),
+    path("api/sessions/create/", views.create_session, name="create_session"),
+    path(
+        "api/sessions/<uuid:session_id>/delete/",
+        views.delete_session,
+        name="delete_session",
+    ),
 ]

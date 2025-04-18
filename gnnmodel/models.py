@@ -1,5 +1,7 @@
 "Module for django models (dbs)."
 
+import uuid
+
 from django.db import models
 
 
@@ -48,3 +50,25 @@ def db_update(pred, inchi):
     )
     new_comp.save()
     return [new_comp]
+
+
+class ChatSession(models.Model):
+    """Model to store chat sessions"""
+
+    session_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, default="Unnamed Session")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    messages = models.JSONField(default=list)
+
+    def __str__(self):
+        return f"{self.name} ({self.session_id})"
+
+    def add_message(self, message):
+        """Add a message to the session"""
+        self.messages.append(message)  # pylint: disable=E1101
+        self.save()
+
+    def get_messages(self):
+        """Get all messages in the session"""
+        return self.messages

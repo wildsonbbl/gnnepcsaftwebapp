@@ -32,6 +32,30 @@
         </ul>
       </div>
     {% else %}
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="dropdown">
+              <button class="btn btn-outline-primary dropdown-toggle"
+                      type="button"
+                      id="sessionDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                <span id="current-session-name">Current Session</span>
+              </button>
+              <ul class="dropdown-menu"
+                  id="sessions-list"
+                  aria-labelledby="sessionDropdown">
+                <!-- Sessions will be populated here -->
+              </ul>
+            </div>
+            <div>
+              <button id="new-session-btn" class="btn btn-outline-success">New Session</button>
+              <button id="rename-session-btn" class="btn btn-outline-secondary">Rename</button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="row d-flex justify-content-center" id="chatrow">
         <div class="col-md-12">
           <div class="card chat-card-style bg-light">

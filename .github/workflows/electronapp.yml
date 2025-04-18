@@ -29,7 +29,7 @@ jobs:
           python-version: "3.10.16"
       - name: Install dependencies
         run: |
-          uv pip install pyinstaller
+          uv pip install pyinstaller tqdm
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
       - name: Check versions

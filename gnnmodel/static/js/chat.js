@@ -59,6 +59,9 @@ function setupChatSocketHandlers() {
 }
 
 // Handle action messages (session management)
+var deleteSessionId = null;
+var deleteSessionName = null;
+
 function handleActionMessage(data) {
   switch (data.action) {
     case "sessions_list":
@@ -117,8 +120,30 @@ function handleActionMessage(data) {
       <p class="small mb-0">Generating response...</p></div></div>`;
       document.querySelector("#chat-log").innerHTML += chat_log_end;
       document.getElementById("bottom-chat-log").scrollIntoView();
+      break;
+    case "session_deleted":
+      if (data.success) {
+        // If the current session was deleted, update UI
+        if (data.session_id === currentSessionId) {
+          messages = [];
+          updateChatLog();
+        }
+
+        // Close the modal
+        var modal = bootstrap.Modal.getInstance(
+          document.getElementById("deleteSessionModal")
+        );
+        if (modal) modal.hide();
+
+        // Show success message
+        showToast("Session deleted successfully");
+      } else {
+        showToast("Failed to delete session", "error");
+      }
+      break;
   }
 }
+
 // Handle chat messages
 function handleChatMessage(message) {
   if ((message.source == "assistant") | (message.source == "user")) {
@@ -158,8 +183,11 @@ function populateSessionsList(sessions) {
   } else {
     sessions.forEach(function (session) {
       var li = document.createElement("li");
+      li.className = "d-flex align-items-center";
+
+      // Create session link
       var a = document.createElement("a");
-      a.className = "dropdown-item";
+      a.className = "dropdown-item flex-grow-1";
       a.href = "#";
       a.textContent = session.name;
       a.dataset.sessionId = session.session_id;
@@ -167,7 +195,20 @@ function populateSessionsList(sessions) {
         loadSession(session.session_id, session.name);
         return false;
       };
+
+      // Create delete button
+      var deleteBtn = document.createElement("button");
+      deleteBtn.className = "btn btn-sm text-danger me-2";
+      deleteBtn.innerHTML = '<i class="fab fa-trash"></i>';
+      deleteBtn.title = "Delete session";
+      deleteBtn.onclick = function (e) {
+        e.stopPropagation(); // Prevent dropdown item click
+        showDeleteConfirmation(session.session_id, session.name);
+        return false;
+      };
+
       li.appendChild(a);
+      li.appendChild(deleteBtn);
       sessionsList.appendChild(li);
     });
   }
@@ -188,6 +229,76 @@ function populateSessionsList(sessions) {
   };
   newSessionLi.appendChild(newSessionA);
   sessionsList.appendChild(newSessionLi);
+}
+
+// Function to show delete confirmation modal
+function showDeleteConfirmation(sessionId, sessionName) {
+  deleteSessionId = sessionId;
+  deleteSessionName = sessionName;
+
+  document.getElementById("delete-session-name").textContent = sessionName;
+  var modal = new bootstrap.Modal(
+    document.getElementById("deleteSessionModal")
+  );
+  modal.show();
+}
+
+// Function to delete a session
+function deleteSession() {
+  if (!deleteSessionId) return;
+
+  chatSocket.send(
+    JSON.stringify({
+      action: "delete_session",
+      session_id: deleteSessionId,
+    })
+  );
+}
+
+// Simple toast notification function
+function showToast(message, type = "success") {
+  // Create toast container if it doesn't exist
+  let toastContainer = document.getElementById("toast-container");
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toast-container";
+    toastContainer.className = "position-fixed bottom-0 end-0 p-3";
+    document.body.appendChild(toastContainer);
+  }
+
+  // Create toast
+  const toastId = "toast-" + Date.now();
+  const toast = document.createElement("div");
+  toast.id = toastId;
+  toast.className = `toast align-items-center ${
+    type === "error" ? "bg-danger" : "bg-success"
+  } text-white`;
+  toast.setAttribute("role", "alert");
+  toast.setAttribute("aria-live", "assertive");
+  toast.setAttribute("aria-atomic", "true");
+
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  // Show toast
+  const bsToast = new bootstrap.Toast(toast, {
+    autohide: true,
+    delay: 3000,
+  });
+  bsToast.show();
+
+  // Remove toast after it's hidden
+  toast.addEventListener("hidden.bs.toast", function () {
+    toast.remove();
+  });
 }
 
 // Load a session
@@ -320,4 +431,8 @@ document.addEventListener("DOMContentLoaded", function () {
   document
     .getElementById("save-rename-btn")
     .addEventListener("click", renameCurrentSession);
+  // Add event listener for delete confirmation
+  document
+    .getElementById("confirm-delete-btn")
+    .addEventListener("click", deleteSession);
 });

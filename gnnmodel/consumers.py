@@ -15,7 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
-from .chat_utils import start_agent_session
+from .chat_utils import active_sessions, start_agent_session
 from .models import ChatSession
 
 
@@ -151,7 +151,91 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if "action" in text_data_json:
             action = text_data_json["action"]
 
-            if action == "get_sessions":
+            if action == "delete_session":
+                session_id = text_data_json["session_id"]
+                success = await self.delete_session(session_id)
+
+                # If the deleted session was the current one, load the most recent session
+                if success and session_id == self.session_id:
+                    last_session = await self.get_last_session()
+                    if last_session:
+                        self.session_id = str(last_session.session_id)
+                        session_name = last_session.name
+                        self.runner, self.runner_session = start_agent_session(
+                            self.session_id
+                        )
+
+                        # Send the current session info to the client
+                        await self.send(
+                            text_data=json.dumps(
+                                {
+                                    "action": "session_loaded",
+                                    "session_id": self.session_id,
+                                    "name": session_name,
+                                },
+                                cls=CustomJSONEncoder,
+                            )
+                        )
+
+                        # Load previous messages
+                        await self.send(
+                            text_data=json.dumps(
+                                {
+                                    "action": "load_messages",
+                                    "messages": last_session.messages,
+                                },
+                                cls=CustomJSONEncoder,
+                            )
+                        )
+                    else:
+                        # Create a new session if no other sessions exist
+                        new_session_id = str(uuid.uuid4())
+                        new_session_name = "New Session"
+                        await self.create_new_session(new_session_id, new_session_name)
+                        self.session_id = new_session_id
+                        self.runner, self.runner_session = start_agent_session(
+                            new_session_id
+                        )
+
+                        await self.send(
+                            text_data=json.dumps(
+                                {
+                                    "action": "session_loaded",
+                                    "session_id": new_session_id,
+                                    "name": new_session_name,
+                                },
+                                cls=CustomJSONEncoder,
+                            )
+                        )
+
+                        # Clear messages
+                        await self.send(
+                            text_data=json.dumps(
+                                {"action": "load_messages", "messages": []}
+                            )
+                        )
+
+                # Send confirmation and refresh sessions list
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "action": "session_deleted",
+                            "success": success,
+                            "session_id": session_id,
+                        }
+                    )
+                )
+
+                # Send updated sessions list
+                sessions = await self.get_all_sessions()
+                await self.send(
+                    text_data=json.dumps(
+                        {"action": "sessions_list", "sessions": sessions},
+                        cls=CustomJSONEncoder,
+                    )
+                )
+
+            elif action == "get_sessions":
                 # Return list of available sessions
                 sessions = await self.get_all_sessions()
 
@@ -224,6 +308,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.client_to_agent_messaging(text_data_json["text"])
             await self.agent_to_client_messaging(text_data_json["text"])
+
+    @database_sync_to_async
+    def delete_session(self, session_id):
+        """Delete a session"""
+        try:
+            session = ChatSession.objects.get(session_id=session_id)
+            session.delete()
+
+            if session_id in active_sessions:
+                del active_sessions[session_id]
+
+            return True
+        except ChatSession.DoesNotExist:
+            return False
 
     async def agent_to_client_messaging(self, text):
         """Agent to client communication"""

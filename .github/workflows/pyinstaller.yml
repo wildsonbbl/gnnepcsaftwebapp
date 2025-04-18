@@ -29,7 +29,6 @@ jobs:
           uv pip install pyinstaller
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
-          echo "${{ secrets.DESKTOP_ENV }}" > .env
       - name: Download models from HuggingFace
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
@@ -44,5 +43,4 @@ jobs:
       - name: Check up
         run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
       - name: Check files
-        run: |
-          ls -l ./apppkg/dist/gnnepcsaftwebapp
+        run: ls -l ./apppkg/dist/gnnepcsaftwebapp

@@ -120,7 +120,7 @@ ASGI_APPLICATION = "webapp.asgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "mydatabase",
+        "NAME": BASE_DIR / "gnnepcsaft.db",
     }
 }
 

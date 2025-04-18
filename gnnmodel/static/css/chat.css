@@ -1,0 +1,49 @@
+/* Session management styles */
+.dropdown-menu {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.chat-card-style {
+  height: 60vh;
+  border-radius: 15px;
+}
+
+#chat-log {
+  height: 50vh;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.bot-message {
+  background-color: rgba(147, 57, 237, 0.2);
+  border-radius: 15px;
+  max-width: 75%;
+}
+
+.user-message {
+  background-color: rgba(57, 192, 237, 0.2);
+  border-radius: 15px;
+  max-width: 75%;
+}
+
+/* Make sure the session dropdown doesn't get too wide */
+#sessionDropdown {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Style for session items with delete button */
+#sessions-list li {
+  position: relative;
+}
+
+#sessions-list .dropdown-item {
+  padding-right: 40px; /* Make room for delete button */
+}
+
+/* Toast container */
+#toast-container {
+  z-index: 1060;
+}

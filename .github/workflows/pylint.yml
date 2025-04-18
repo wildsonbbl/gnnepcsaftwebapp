@@ -25,7 +25,6 @@ jobs:
           uv pip install pylint pylint-django pyinstaller tqdm
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
-          echo "${{ secrets.DESKTOP_ENV }}" > .env
       - name: Download models from HuggingFace
         run: |
           git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
@@ -37,3 +36,7 @@ jobs:
         run: |
           pylint $(git ls-files '*.py') --load-plugins pylint_django \
           --django-settings-module=webapp.settings --rcfile=.pylintrc
+      - name: Unit tests
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+        run: python manage.py test gnnmodel

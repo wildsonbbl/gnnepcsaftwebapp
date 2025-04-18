@@ -13,3 +13,5 @@ gha-creds-*.json
 **dist
 **windows
 **apppkg
+gnnepcsaft.db
+mydata.csv

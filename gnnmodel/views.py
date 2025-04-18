@@ -1,9 +1,12 @@
 "request handler."
 
+import json
 import os
 import os.path as osp
 
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 from gnnepcsaft.data.rdkit_util import mw
 
 from .forms import (
@@ -20,6 +23,7 @@ from .forms import (
     STCheckForm,
     VPCheckForm,
 )
+from .models import ChatSession
 from .utils import (
     get_custom_plots_data,
     get_forms,
@@ -266,3 +270,34 @@ def chat(request):
         "chat.html",
         {"show_form": show_form, "google_api_key_form": google_api_key_form},
     )
+
+
+@require_http_methods(["GET"])
+def get_sessions(request):  # pylint: disable=unused-argument
+    """Get all sessions"""
+    sessions = list(
+        ChatSession.objects.values("session_id", "name", "created_at", "updated_at")
+    )
+    return JsonResponse({"sessions": sessions})
+
+
+@require_http_methods(["POST"])
+def create_session(request):
+    """Create a new session"""
+    data = json.loads(request.body)
+    name = data.get("name", "New Session")
+    session = ChatSession.objects.create(name=name)
+    return JsonResponse({"session_id": str(session.session_id), "name": session.name})
+
+
+@require_http_methods(["DELETE"])
+def delete_session(request, session_id):  # pylint: disable=unused-argument
+    """Delete a session"""
+    try:
+        session = ChatSession.objects.get(session_id=session_id)
+        session.delete()
+        return JsonResponse({"success": True})
+    except ChatSession.DoesNotExist:
+        return JsonResponse(
+            {"success": False, "error": "Session not found"}, status=404
+        )

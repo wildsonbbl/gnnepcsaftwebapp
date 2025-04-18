@@ -13,12 +13,15 @@ RUN apt-get update && apt-get install curl unzip gcc g++ libxrender1 libxext6 -y
 # Install pip requirements
 RUN python -m pip install -U pip wheel
 COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
+RUN pip install -r requirements.txt
+COPY requirements-llm.txt .
+RUN pip install -r requirements-llm.txt
 
 WORKDIR /app
 COPY . /app
 COPY daemon.json /etc/docker/daemon.json
 RUN python manage.py collectstatic --no-input
+RUN python manage.py makemigrations --no-input
 RUN python manage.py migrate --no-input
 
 # Creates a non-root user with an explicit UID and adds permission to access the /app folder
@@ -27,4 +30,4 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /
 USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "webapp.wsgi"]
+CMD ["daphne", "--bind", "0.0.0.0:8000", "webapp.asgi"]

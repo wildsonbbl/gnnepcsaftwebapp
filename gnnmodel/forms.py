@@ -134,7 +134,7 @@ class InChIorSMILESareaInputforMixture(forms.Form):
                 mole_fraction = mole_fraction.strip()
             except ValueError as e:
                 raise ValidationError(
-                    _(f'Missing " mole_fraction" for line: {full_line}')
+                    _(f"Missing mole fraction for line: {full_line}")
                 ) from e
 
             inchi_check = re.search("^InChI=", query)

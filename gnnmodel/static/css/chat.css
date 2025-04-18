@@ -34,3 +34,16 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Style for session items with delete button */
+#sessions-list li {
+  position: relative;
+}
+
+#sessions-list .dropdown-item {
+  padding-right: 40px; /* Make room for delete button */
+}
+
+/* Toast container */
+#toast-container {
+  z-index: 1060;
+}

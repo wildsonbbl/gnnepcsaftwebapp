@@ -75,18 +75,25 @@
       </div>
       <div class="row d-flex justify-content-center" id="chatrow">
         <div class="col-md-12">
-          <div class="card chat-card-style bg-light">
-            <div id="chat-log" class="card-body overflow-auto"></div>
-            <div class="row d-flex justify-content-center" id="chat-form">
-              <div class="col">
-                <input id="chat-message-input"
-                       class="form-control"
-                       type="text"
-                       placeholder="Write your message here" />
-              </div>
-              <div class="d-none">
-                <input id="chat-message-submit" type="submit" value="send" />
-              </div>
+          <div class="row">
+            <div class="card chat-card-style bg-light">
+              <div id="chat-log" class="card-body overflow-auto"></div>
+            </div>
+          </div>
+          <div class="row mt-3 d-flex justify-content-center" id="chat-form">
+            <div class="col-11">
+              <input id="chat-message-input"
+                     class="form-control"
+                     type="text"
+                     placeholder="Write your message here" />
+            </div>
+            <div class="col-1">
+              <button id="chat-message-submit"
+                      type="button"
+                      class="btn btn-outline-primary rounded-circle btn-sm"
+                      title="Send Message">
+                <i class="fas fa-paper-plane"></i>
+              </button>
             </div>
           </div>
         </div>

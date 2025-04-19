@@ -16,6 +16,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY requirements-llm.txt .
 RUN pip install -r requirements-llm.txt
+RUN pip install tqdm
 
 WORKDIR /app
 COPY . /app

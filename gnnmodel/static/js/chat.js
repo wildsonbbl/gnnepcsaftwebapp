@@ -199,7 +199,7 @@ function populateSessionsList(sessions) {
       // Create delete button
       var deleteBtn = document.createElement("button");
       deleteBtn.className = "btn btn-sm text-danger me-2";
-      deleteBtn.innerHTML = '<i class="fab fa-trash"></i>';
+      deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
       deleteBtn.title = "Delete session";
       deleteBtn.onclick = function (e) {
         e.stopPropagation(); // Prevent dropdown item click

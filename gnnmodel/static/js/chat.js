@@ -3,6 +3,8 @@ var chatSocket;
 var messages = [];
 var currentSessionId = null;
 var currentSessionName = "New Session";
+var availableModels = [];
+var currentModelName = "";
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -73,6 +75,26 @@ function handleActionMessage(data) {
       currentSessionName = data.name;
       document.getElementById("current-session-name").textContent =
         currentSessionName;
+
+      // Handle model information
+      if (data.model_name) {
+        currentModelName = data.model_name;
+        document.getElementById("current-model-name").textContent =
+          currentModelName;
+      }
+      // Populate available models if provided
+      if (data.available_models && Array.isArray(data.available_models)) {
+        availableModels = data.available_models;
+        populateModelsList(availableModels, currentModelName);
+      }
+      break;
+    case "model_changed":
+      // Update the current model when changed
+      if (data.model_name) {
+        currentModelName = data.model_name;
+        document.getElementById("current-model-name").textContent =
+          currentModelName;
+      }
       break;
     case "session_created":
       currentSessionId = data.session_id;
@@ -142,6 +164,38 @@ function handleActionMessage(data) {
       }
       break;
   }
+}
+
+// Add a function to populate the models dropdown
+function populateModelsList(models, currentModel) {
+  var modelsList = document.getElementById("models-list");
+  modelsList.innerHTML = "";
+
+  models.forEach(function (model) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.className = "dropdown-item" + (model === currentModel ? " active" : "");
+    a.href = "#";
+    a.textContent = model;
+    a.onclick = function () {
+      changeModel(model);
+      return false;
+    };
+    li.appendChild(a);
+    modelsList.appendChild(li);
+  });
+}
+
+// Add a function to change the model
+function changeModel(modelName) {
+  if (modelName === currentModelName) return;
+
+  chatSocket.send(
+    JSON.stringify({
+      action: "change_model",
+      model_name: modelName,
+    })
+  );
 }
 
 // Handle chat messages

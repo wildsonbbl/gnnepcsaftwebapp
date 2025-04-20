@@ -32,7 +32,7 @@
         </ul>
       </div>
     {% else %}
-      <div class="row mb-3">
+      <div class="row mb-1">
         <div class="col-md-12">
           <div class="d-flex justify-content-between align-items-center">
             <div class="dropdown">
@@ -49,40 +49,65 @@
                 <!-- Sessions will be populated here -->
               </ul>
             </div>
+            <div class="dropdown mx-2">
+              <button class="btn btn-outline-secondary dropdown-toggle"
+                      type="button"
+                      id="modelDropdown"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false">
+                <span id="current-model-name">Model</span>
+              </button>
+              <ul class="dropdown-menu"
+                  id="models-list"
+                  aria-labelledby="modelDropdown">
+                <!-- Models will be populated here -->
+              </ul>
+            </div>
             <div>
-              <button id="new-session-btn" class="btn btn-outline-success">New Session</button>
-              <button id="rename-session-btn" class="btn btn-outline-secondary">Rename</button>
+              <button id="new-session-btn"
+                      class="btn btn-outline-success rounded-circle"
+                      title="New Session"
+                      type="button">
+                <i class="fas fa-square-plus"></i>
+              </button>
+              <button id="rename-session-btn"
+                      class="btn btn-outline-secondary rounded-circle"
+                      title="Rename Session"
+                      type="button">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button id="chat-log-save_button"
+                      type="button"
+                      class="btn btn-outline-secondary rounded-circle"
+                      title="Save Chat Log"
+                      type="button">
+                <i class="fas fa-file-export"></i>
+              </button>
             </div>
           </div>
         </div>
       </div>
       <div class="row d-flex justify-content-center" id="chatrow">
         <div class="col-md-12">
-          <div class="card chat-card-style bg-light">
-            <div id="chat-log" class="card-body overflow-auto"></div>
-            <div class="row d-flex justify-content-center" id="formRow">
-              <div class="col-lg-8">
-                <div class="row my-1 justify-content-center">
-                  <div class="col-sm-6 my-1">
-                    <input id="chat-message-input"
-                           class="form-control"
-                           type="text"
-                           placeholder="Write your message here" />
-                  </div>
-                  <div class="col-sm-2 my-1">
-                    <input id="chat-message-submit"
-                           type="submit"
-                           value="send"
-                           class="form-control btn-outline-primary" />
-                  </div>
-                  <div class="col-sm-2 my-1">
-                    <input id="chat-log-save_button"
-                           type="submit"
-                           value="export"
-                           class="form-control btn-outline-secondary" />
-                  </div>
-                </div>
-              </div>
+          <div class="row">
+            <div class="card chat-card-style bg-light">
+              <div id="chat-log" class="card-body overflow-auto"></div>
+            </div>
+          </div>
+          <div class="row mt-3 d-flex justify-content-center" id="chat-form">
+            <div class="col-11">
+              <input id="chat-message-input"
+                     class="form-control"
+                     type="text"
+                     placeholder="Write your message here" />
+            </div>
+            <div class="col-1">
+              <button id="chat-message-submit"
+                      type="button"
+                      class="btn btn-outline-primary rounded-circle btn-sm"
+                      title="Send Message">
+                <i class="fas fa-paper-plane"></i>
+              </button>
             </div>
           </div>
         </div>

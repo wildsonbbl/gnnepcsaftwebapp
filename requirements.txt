@@ -11,6 +11,7 @@ whitenoise
 gunicorn
 fontawesomefree
 gnnepcsaft>=0.2.4
+gnnepcsaft-mcp-server
 jq
 #teqp
 #PCSAFTsuperanc

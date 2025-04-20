@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY requirements-llm.txt .
 RUN pip install -r requirements-llm.txt
-RUN pip install tqdm
+RUN pip install tqdm twisted[http2,tls]
 
 WORKDIR /app
 COPY . /app
@@ -31,4 +31,4 @@ RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /
 USER appuser
 
 # During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-CMD ["daphne", "--bind", "0.0.0.0:8000", "webapp.asgi"]
+CMD ["daphne", "--bind", "0.0.0.0:8000", "webapp.asgi:application"]

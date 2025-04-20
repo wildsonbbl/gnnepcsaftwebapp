@@ -3,6 +3,8 @@ var chatSocket;
 var messages = [];
 var currentSessionId = null;
 var currentSessionName = "New Session";
+var availableModels = [];
+var currentModelName = "";
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -73,6 +75,28 @@ function handleActionMessage(data) {
       currentSessionName = data.name;
       document.getElementById("current-session-name").textContent =
         currentSessionName;
+
+      // Handle model information
+      if (data.model_name) {
+        currentModelName = data.model_name;
+        document.getElementById("current-model-name").textContent =
+          currentModelName;
+      }
+      // Populate available models if provided
+      if (data.available_models && Array.isArray(data.available_models)) {
+        availableModels = data.available_models;
+        populateModelsList(availableModels, currentModelName);
+      }
+      break;
+    case "model_changed":
+      // Update the current model when changed
+      if (data.model_name) {
+        currentModelName = data.model_name;
+        document.getElementById("current-model-name").textContent =
+          currentModelName;
+        // Update the active class in the models dropdown
+        updateActiveModel(currentModelName);
+      }
       break;
     case "session_created":
       currentSessionId = data.session_id;
@@ -144,6 +168,54 @@ function handleActionMessage(data) {
   }
 }
 
+function updateActiveModel(modelName) {
+  // Remove active class from all items
+  var modelItems = document.querySelectorAll("#models-list .dropdown-item");
+  modelItems.forEach(function (item) {
+    item.classList.remove("active");
+  });
+
+  // Add active class to the selected model
+  var modelItems = document.querySelectorAll("#models-list .dropdown-item");
+  modelItems.forEach(function (item) {
+    if (item.textContent === modelName) {
+      item.classList.add("active");
+    }
+  });
+}
+
+// Add a function to populate the models dropdown
+function populateModelsList(models, currentModel) {
+  var modelsList = document.getElementById("models-list");
+  modelsList.innerHTML = "";
+
+  models.forEach(function (model) {
+    var li = document.createElement("li");
+    var a = document.createElement("a");
+    a.className = "dropdown-item" + (model === currentModel ? " active" : "");
+    a.href = "#";
+    a.textContent = model;
+    a.onclick = function () {
+      changeModel(model);
+      return false;
+    };
+    li.appendChild(a);
+    modelsList.appendChild(li);
+  });
+}
+
+// Add a function to change the model
+function changeModel(modelName) {
+  if (modelName === currentModelName) return;
+
+  chatSocket.send(
+    JSON.stringify({
+      action: "change_model",
+      model_name: modelName,
+    })
+  );
+}
+
 // Handle chat messages
 function handleChatMessage(message) {
   if ((message.source == "assistant") | (message.source == "user")) {
@@ -199,7 +271,7 @@ function populateSessionsList(sessions) {
       // Create delete button
       var deleteBtn = document.createElement("button");
       deleteBtn.className = "btn btn-sm text-danger me-2";
-      deleteBtn.innerHTML = '<i class="fab fa-trash"></i>';
+      deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
       deleteBtn.title = "Delete session";
       deleteBtn.onclick = function (e) {
         e.stopPropagation(); // Prevent dropdown item click

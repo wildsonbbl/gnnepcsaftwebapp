@@ -143,7 +143,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
             smiles = inchitosmiles(inchi, False, False)
             para = predict_epcsaft_parameters(smiles)
         except ValueError as e:
-            print(e, inchi)
+            print(f"\n\n{e}: \n\n{inchi}\n")
             continue
         if para[0] is None:
             continue

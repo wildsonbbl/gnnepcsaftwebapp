@@ -135,8 +135,9 @@ function handleActionMessage(data) {
       if (modal) modal.hide();
       break;
     case "end_turn":
-      document.getElementById("bottom-chat-log").innerHTML = "";
-      document.getElementById("bottom-chat-log").scrollIntoView();
+      const generatingContainer = document.getElementById("bottom-chat-log");
+      generatingContainer.innerHTML = "";
+      generatingContainer.scrollIntoView();
       break;
     case "ongoing_turn":
       showGeneratingMessage();
@@ -166,12 +167,8 @@ function handleActionMessage(data) {
 
 // For the "ongoing_turn" action handler
 function showGeneratingMessage() {
-  const chatLog = document.querySelector("#chat-log");
-
   // Create container for the "generating" message
-  const generatingContainer = document.createElement("div");
-  generatingContainer.className = "d-flex flex-row mb-4 justify-content-center";
-  generatingContainer.id = "bottom-chat-log";
+  const generatingContainer = document.getElementById("bottom-chat-log");
 
   // Create message bubble
   const messageBubble = document.createElement("div");
@@ -185,9 +182,6 @@ function showGeneratingMessage() {
   // Assemble the elements
   messageBubble.appendChild(messageText);
   generatingContainer.appendChild(messageBubble);
-
-  // Add to chat log
-  chatLog.appendChild(generatingContainer);
 
   // Scroll to the bottom
   generatingContainer.scrollIntoView();
@@ -285,13 +279,20 @@ function updateChatLog() {
     // Create message text
     const messageText = document.createElement("p");
     messageText.className = "small mb-0";
-    messageText.textContent = msg.msg;
+    messageText.innerHTML = msg.msg;
 
     // Assemble the elements
     messageBubble.appendChild(messageText);
     messageContainer.appendChild(messageBubble);
     chatLog.appendChild(messageContainer);
   });
+
+  // Create container for the "generating" message
+  const generatingContainer = document.createElement("div");
+  generatingContainer.className = "d-flex flex-row mb-4 justify-content-center";
+  generatingContainer.id = "bottom-chat-log";
+  chatLog.appendChild(generatingContainer);
+  generatingContainer.scrollIntoView();
 }
 
 // Populate the sessions dropdown

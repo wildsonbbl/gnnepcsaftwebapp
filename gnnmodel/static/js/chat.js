@@ -94,6 +94,8 @@ function handleActionMessage(data) {
         currentModelName = data.model_name;
         document.getElementById("current-model-name").textContent =
           currentModelName;
+        // Update the active class in the models dropdown
+        updateActiveModel(currentModelName);
       }
       break;
     case "session_created":
@@ -164,6 +166,22 @@ function handleActionMessage(data) {
       }
       break;
   }
+}
+
+function updateActiveModel(modelName) {
+  // Remove active class from all items
+  var modelItems = document.querySelectorAll("#models-list .dropdown-item");
+  modelItems.forEach(function (item) {
+    item.classList.remove("active");
+  });
+
+  // Add active class to the selected model
+  var modelItems = document.querySelectorAll("#models-list .dropdown-item");
+  modelItems.forEach(function (item) {
+    if (item.textContent === modelName) {
+      item.classList.add("active");
+    }
+  });
 }
 
 // Add a function to populate the models dropdown

@@ -63,27 +63,6 @@
                 <!-- Models will be populated here -->
               </ul>
             </div>
-            <div>
-              <button id="new-session-btn"
-                      class="btn btn-outline-success rounded-circle"
-                      title="New Session"
-                      type="button">
-                <i class="fas fa-square-plus"></i>
-              </button>
-              <button id="rename-session-btn"
-                      class="btn btn-outline-secondary rounded-circle"
-                      title="Rename Session"
-                      type="button">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button id="chat-log-save_button"
-                      type="button"
-                      class="btn btn-outline-secondary rounded-circle"
-                      title="Save Chat Log"
-                      type="button">
-                <i class="fas fa-file-export"></i>
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -101,12 +80,35 @@
                       <textarea id="chat-message-input"
                                 class="form-control bg-light py-5"
                                 placeholder="Write your message here"></textarea>
-                      <button id="chat-message-submit"
-                              type="button"
-                              class="btn btn-sm btn-outline-primary rounded-circle position-absolute bottom-0 end-0 me-4 mb-1"
-                              title="Send Message">
-                        <i class="fas fa-paper-plane"></i>
-                      </button>
+                      <div class="position-absolute bottom-0 end-0 m-1">
+                        <button id="chat-message-submit"
+                                type="button"
+                                class="btn btn-sm btn-outline-primary rounded-circle"
+                                title="Send Message">
+                          <i class="fas fa-paper-plane"></i>
+                        </button>
+                      </div>
+                      <div class="position-absolute top-0 start-0 m-1">
+                        <button id="new-session-btn"
+                                class="btn btn-sm btn-outline-success rounded-circle"
+                                title="New Session"
+                                type="button">
+                          <i class="fas fa-square-plus"></i>
+                        </button>
+                        <button id="rename-session-btn"
+                                class="btn btn-sm btn-outline-secondary rounded-circle"
+                                title="Rename Session"
+                                type="button">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button id="chat-log-save_button"
+                                type="button"
+                                class="btn btn-sm btn-outline-secondary rounded-circle"
+                                title="Save Chat Log"
+                                type="button">
+                          <i class="fas fa-file-export"></i>
+                        </button>
+                      </div>
                     </div>
                   </form>
                 </div>

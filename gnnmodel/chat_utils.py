@@ -6,7 +6,7 @@ from google.adk.sessions.database_session_service import DatabaseSessionService
 
 from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, create_root_agent
 
-APP_NAME = "GNNePCSAFT Agent"
+APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)
 session_service = DatabaseSessionService(DB_URL)
 USER_ID = "LOCAL_USER_01"

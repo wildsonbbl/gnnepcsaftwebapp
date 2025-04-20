@@ -425,7 +425,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def client_to_agent_messaging(self, text):
         """Client to agent communication"""
         # Store user message in database
-        user_message = {"msg": text, "source": "user"}
+        user_message = {
+            "msg": markdown(text, extensions=[BlankLinkExtension()]),
+            "source": "user",
+        }
         await self.save_message_to_db(user_message)
         await self.send(
             text_data=json.dumps({"text": user_message}),

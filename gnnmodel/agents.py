@@ -3,36 +3,46 @@
 import os
 import textwrap
 
-from gnnepcsaft.data.rdkit_util import inchitosmiles, mw, smilestoinchi
-from gnnepcsaft.epcsaft.epcsaft_feos import (
-    critical_points_feos,
-    mix_den_feos,
-    mix_vp_feos,
-    pure_den_feos,
-    pure_h_lv_feos,
-    pure_vp_feos,
-)
 from google.adk.agents import LlmAgent
 
-from .utils import mixture_phase, prediction, pubchem_description, pure_phase
+from gnnepcsaft_mcp_server.utils import (
+    batch_convert_pure_density_to_kg_per_m3,
+    batch_critical_points,
+    batch_inchi_to_smiles,
+    batch_molecular_weights,
+    batch_pa_to_bar,
+    batch_predict_epcsaft_parameters,
+    batch_pure_density,
+    batch_pure_h_lv,
+    batch_pure_vapor_pressure,
+    batch_smiles_to_inchi,
+    mixture_density,
+    mixture_phase,
+    mixture_vapor_pressure,
+    pubchem_description,
+    pure_phase,
+)
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 MODEL_NAME = "gemini-2.0-flash"
 
 tools = [
-    pure_vp_feos,
-    pure_den_feos,
-    mix_den_feos,
-    mix_vp_feos,
-    pure_phase,
+    batch_convert_pure_density_to_kg_per_m3,
+    batch_critical_points,
+    batch_inchi_to_smiles,
+    batch_molecular_weights,
+    batch_pa_to_bar,
+    batch_predict_epcsaft_parameters,
+    batch_pure_density,
+    batch_pure_h_lv,
+    batch_pure_vapor_pressure,
+    batch_smiles_to_inchi,
+    mixture_density,
     mixture_phase,
-    mw,
-    prediction,
-    smilestoinchi,
-    inchitosmiles,
-    pure_h_lv_feos,
-    critical_points_feos,
+    mixture_vapor_pressure,
+    pubchem_description,
+    pure_phase,
 ]
 
 chemistry_agent = LlmAgent(
@@ -53,15 +63,19 @@ chemistry_agent = LlmAgent(
         - Can it do hydrogen bonds? 
         - Is it a hydrogen bond donor or acceptor?
     - You ALWAYS have to check if there's info about the molecule in PubChem with 
-      the `pubchem_descriton` tool. If you only have SMILES, convert to InChI with 
-      the `smilestoinchi` tool.
+      the `pubchem_descriton` tool.
     - Do not perform any other action. Use the InChI or SMILES 
       info received in previous turns to make the analysis.
     - When you can't answer or when you are finished, transfer back to the `gnnepcsaft_agent`.
     """
     ),
     description="A chemistry expert that handles analyses of molecules from InChI and SMILES.",
-    tools=[pubchem_description, smilestoinchi, inchitosmiles, mw],
+    tools=[
+        pubchem_description,
+        batch_smiles_to_inchi,
+        batch_inchi_to_smiles,
+        batch_molecular_weights,
+    ],
 )
 
 root_agent = LlmAgent(

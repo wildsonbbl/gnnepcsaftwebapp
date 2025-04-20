@@ -118,6 +118,9 @@ ASGI_APPLICATION = "webapp.asgi.application"
 # }
 
 DB_PATH = config("GNNEPCSAFT_DB_PATH", default=BASE_DIR / "gnnepcsaft.db")
+DB_CHAT_PATH = config(
+    "GNNEPCSAFT_DB_CHAT_PATH", default=BASE_DIR / "gnnepcsaft.chat.db"
+)
 
 DATABASES = {
     "default": {

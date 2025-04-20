@@ -202,8 +202,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 # Add a system message to indicate model change
                 system_message = {
-                    "msg": f"Model changed to {model_name}",
-                    "source": "system",
+                    "msg": f"Model changed to `{model_name}`",
+                    "source": "user",
                 }
                 await self.save_message_to_db(system_message)
                 await self.send(text_data=json.dumps({"text": system_message}))

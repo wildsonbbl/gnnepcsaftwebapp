@@ -97,16 +97,14 @@
           <div class="row mt-3 d-flex justify-content-center" id="chat-form-row">
             <form>
               <div class="row">
-                <div class="col-11">
-                  <input id="chat-message-input"
-                         class="form-control"
-                         type="text"
-                         placeholder="Write your message here" />
-                </div>
-                <div class="col-1">
+                <div class="col-12 position-relative">
+                  <textarea id="chat-message-input"
+                            class="form-control py-5"
+                            type="text"
+                            placeholder="Write your message here"></textarea>
                   <button id="chat-message-submit"
                           type="button"
-                          class="btn btn-outline-primary rounded-circle"
+                          class="btn btn-sm btn-outline-primary rounded-circle position-absolute bottom-0 end-0 me-4 mb-1"
                           title="Send Message">
                     <i class="fas fa-paper-plane"></i>
                   </button>

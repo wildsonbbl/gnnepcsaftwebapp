@@ -15,6 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
+from .agents import AVAILABLE_MODELS, DEFAULT_MODEL
 from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
 from .models import ChatSession
 
@@ -63,14 +64,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if last_session:
             self.session_id = str(last_session.session_id)
             session_name = last_session.name
+            model_name = (
+                last_session.model_name
+                if hasattr(last_session, "model_name") and last_session.model_name
+                else DEFAULT_MODEL
+            )
         else:
             # Create a default session if none exists
             self.session_id = str(uuid.uuid4())
             session_name = "New Session"
-            await self.create_new_session(self.session_id, session_name)
+            model_name = DEFAULT_MODEL
+            await self.create_new_session(self.session_id, session_name, model_name)
 
         # Initialize the agent with the session
-        self.runner, self.runner_session = start_agent_session(self.session_id)
+        self.runner, self.runner_session = start_agent_session(
+            self.session_id, model_name
+        )
 
         # Send the current session info to the client
         await self.send(
@@ -79,6 +88,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "action": "session_loaded",
                     "session_id": self.session_id,
                     "name": session_name,
+                    "model_name": model_name,
+                    "available_models": AVAILABLE_MODELS,
                 },
                 cls=CustomJSONEncoder,
             )
@@ -102,9 +113,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def create_new_session(self, session_id, name):
+    def create_new_session(self, session_id, name, model_name=DEFAULT_MODEL):
         """Create a new session"""
-        return ChatSession.objects.create(session_id=session_id, name=name)
+        return ChatSession.objects.create(
+            session_id=session_id, name=name, model_name=model_name
+        )
 
     @database_sync_to_async
     def get_or_create_session(self, session_id):
@@ -165,8 +178,37 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def handle_actions(self, text_data_json):
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
+        if action == "change_model":
+            model_name = text_data_json["model_name"]
+            if model_name in AVAILABLE_MODELS:
+                # Update the session with the new model
+                await database_sync_to_async(
+                    ChatSession.objects.filter(session_id=self.session_id).update
+                )(model_name=model_name)
 
-        if action == "delete_session":
+                # Reinitialize the agent with the new model
+                self.runner, self.runner_session = start_agent_session(
+                    self.session_id, model_name
+                )
+
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "action": "model_changed",
+                            "model_name": model_name,
+                        }
+                    )
+                )
+
+                # Add a system message to indicate model change
+                system_message = {
+                    "msg": f"Model changed to {model_name}",
+                    "source": "system",
+                }
+                await self.save_message_to_db(system_message)
+                await self.send(text_data=json.dumps({"text": system_message}))
+
+        elif action == "delete_session":
             session_id = text_data_json["session_id"]
             success = await self.delete_session(session_id)
 

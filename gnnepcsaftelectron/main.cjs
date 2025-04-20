@@ -23,27 +23,12 @@ const createWindow = async () => {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
-  // Path to the database in user data directory
-  const userDbPath = path.join(dbDir, "gnnepcsaft.db");
-
-  console.log(`User database path: ${userDbPath}`);
-
   // Check if we need to copy the initial database
-  if (!fs.existsSync(userDbPath)) {
-    const resourceDbPath = path.join(
-      process.resourcesPath,
-      "gnnepcsaftwebapp/_internal/gnnepcsaft.db"
-    );
-
-    // Copy the database if it exists in resources
-    if (fs.existsSync(resourceDbPath)) {
-      fs.copyFileSync(resourceDbPath, userDbPath);
-      log.info(`Copied initial database to: ${userDbPath}`);
-    }
-  }
+  copyDB(dbDir, "gnnepcsaft.db");
+  copyDB(dbDir, "gnnepcsaft.chat.db");
 
   // Start Django with the user database path
-  const djangoBackend = startDjangoServer(userDbPath);
+  const djangoBackend = startDjangoServer(dbDir);
 
   const win = new BrowserWindow({
     width: 1280,
@@ -97,7 +82,7 @@ app.on("window-all-closed", () => {
   }
 });
 
-const startDjangoServer = (dbPath) => {
+const startDjangoServer = (dbDir) => {
   let appPath;
   if (process.platform === "win32") {
     appPath = path.join(
@@ -112,7 +97,13 @@ const startDjangoServer = (dbPath) => {
   }
 
   // Pass the database path as an environment variable
-  const env = { ...process.env, GNNEPCSAFT_DB_PATH: dbPath };
+  const dbPath = path.join(dbDir, "gnnepcsaft.db");
+  const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
+  const env = {
+    ...process.env,
+    GNNEPCSAFT_DB_PATH: dbPath,
+    GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
+  };
 
   const djangoBackend = spawn(
     appPath,
@@ -157,3 +148,25 @@ const waitForDjangoServer = () => {
     }, 1000);
   });
 };
+
+function copyDB(dbDir, dbName) {
+  // Path to the database in user data directory
+  const userDbPath = path.join(dbDir, dbName);
+
+  log.info(`User database path: ${userDbPath}`);
+
+  // Check if the database already exists in user data directory
+  if (!fs.existsSync(userDbPath)) {
+    const resourceDbPath = path.join(
+      process.resourcesPath,
+      "gnnepcsaftwebapp/_internal",
+      dbName
+    );
+
+    // Copy the database if it exists in resources
+    if (fs.existsSync(resourceDbPath)) {
+      fs.copyFileSync(resourceDbPath, userDbPath);
+      log.info(`Copied initial database to: ${userDbPath}`);
+    }
+  }
+}

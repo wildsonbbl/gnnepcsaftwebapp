@@ -175,7 +175,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.client_to_agent_messaging(text_data_json["text"])
             await self.agent_to_client_messaging(text_data_json["text"])
 
-    async def handle_actions(self, text_data_json):
+    async def handle_actions(self, text_data_json):  # pylint: disable=R0915
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
         if action == "change_model":

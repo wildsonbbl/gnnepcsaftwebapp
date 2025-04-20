@@ -39,7 +39,7 @@ const createWindow = async () => {
     title: "GNNePCSAFT",
   });
 
-  win.loadFile(path.join(__dirname, "index.html")); //from loading.io
+  win.loadFile(path.join(__dirname, "index.html"));
 
   await waitForDjangoServer();
 

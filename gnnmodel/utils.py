@@ -27,6 +27,7 @@ from rdkit.Chem import AllChem as Chem
 
 from gnnepcsaft_mcp_server.utils import predict_epcsaft_parameters
 
+from . import logger
 from .forms import (
     CustomPlotCheckForm,
     CustomPlotConfigForm,
@@ -61,7 +62,7 @@ def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
         try:
             molw = mw(inchi)
         except (TypeError, ValueError) as e:
-            print(f"Error for InChI:\n {inchi}", e, sep="\n\n", end="\n\n")
+            logger.debug("Error for InChI: %s \n\n %s", inchi, e)
             continue
         vp = (
             data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 3)
@@ -143,7 +144,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
             smiles = inchitosmiles(inchi, False, False)
             para = predict_epcsaft_parameters(smiles)
         except ValueError as e:
-            print(f"\n\n{e}: \n\n{inchi}\n")
+            logger.debug("%s: \n\n%s", e, inchi)
             continue
         if para[0] is None:
             continue
@@ -183,7 +184,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
             ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]
         )
         writer.writerows(data)
-    print("Updated database with epcsaft parameters")
+    logger.info("Updated database with epcsaft parameters")
 
 
 def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
@@ -214,7 +215,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
         if plotvp:
             new_comp = ThermoMLVPData(inchi=inchi, vp=json.dumps(plotvp))
             new_comp.save()
-    print("Updated database with plotden, plotvp")
+    logger.info("Updated database with plotden, plotvp")
 
 
 def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
@@ -300,7 +301,7 @@ def custom_plot(
                     plot_data["T"].append(state[0])
                     plot_data["GNN"].append(prop_for_state)
                 except (AssertionError, RuntimeError) as e:
-                    print(e)
+                    logger.debug(e)
             all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
     if plot_sf:
         surface_tension, temp_st = pure_surface_tension_feos(
@@ -426,7 +427,7 @@ def get_custom_plots_data(
             ],
         )
     except RuntimeError as err:
-        print(err)
+        logger.debug(err)
         custom_plots = []
     phase_diagrams = []
     if phase_diagram_checkbox_.cleaned_data["phase_diagram_checkbox"]:
@@ -444,7 +445,7 @@ def get_custom_plots_data(
                 phase_diagrams_all_data["density vapor"],
             ]
         except RuntimeError as err:
-            print(err)
+            logger.debug(err)
             phase_diagrams = []
     return phase_diagrams, custom_plots
 
@@ -499,7 +500,7 @@ def mixture_plots(
             plot_data_dew["T"].append(state[0])
             plot_data_dew["GNN"].append(dew_for_state)
         except (AssertionError, RuntimeError) as e:
-            print(e)
+            logger.debug(e)
     all_plots.append(
         (json.dumps(plot_data), 0, "Liquid Density (mol / m³)", "den_plot")
     )

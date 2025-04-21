@@ -1,11 +1,41 @@
 const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("child_process");
-const controller = new AbortController();
-const { signal } = controller;
 const path = require("path");
 const log = require("electron-log/main");
 const fetch = require("node-fetch");
 const fs = require("fs");
+
+const controller = new AbortController();
+const { signal } = controller;
+
+// Set up user data directory for database
+const appVersion = app.getVersion();
+const userDataPath = app.getPath("userData");
+const dbDir = path.join(userDataPath, "db");
+const dbPath = path.join(dbDir, "gnnepcsaft.db");
+const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
+const migrateFlag = path.join(dbDir, `.db_migrated_v${appVersion}`);
+const logPath = path.join(userDataPath, "logs");
+
+const env = {
+  ...process.env,
+  GNNEPCSAFT_DB_PATH: dbPath,
+  GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
+  GNNEPCSAFT_LOG_PATH: logPath,
+};
+
+let appPath;
+if (process.platform === "win32") {
+  appPath = path.join(
+    process.resourcesPath,
+    "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+  );
+} else {
+  appPath = path.join(
+    process.resourcesPath,
+    "gnnepcsaftwebapp/gnnepcsaftwebapp"
+  );
+}
 
 // Optional, initialize the logger for any renderer process
 log.initialize();
@@ -14,21 +44,14 @@ if (require("electron-squirrel-startup")) app.quit();
 Menu.setApplicationMenu(null); // Hide the menu bar
 
 const createWindow = async () => {
-  // Set up user data directory for database
-  const userDataPath = app.getPath("userData");
-  const dbDir = path.join(userDataPath, "db");
-
   // Create directory if it doesn't exist
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
   // Check if we need to copy the initial database
-  copyDB(dbDir, "gnnepcsaft.db");
-  copyDB(dbDir, "gnnepcsaft.chat.db");
-
-  // Start Django with the user database path
-  const djangoBackend = startDjangoServer(dbDir);
+  copyDB("gnnepcsaft.db");
+  copyDB("gnnepcsaft.chat.db");
 
   const win = new BrowserWindow({
     width: 1280,
@@ -41,10 +64,14 @@ const createWindow = async () => {
 
   win.loadFile(path.join(__dirname, "index.html"));
 
+  await ensureDbMigrated();
+
+  // Start Django with the user database path
+  const djangoBackend = startDjangoServer();
+
   await waitForDjangoServer();
 
   win.loadURL("http://localhost:19770");
-  win.maximize();
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http://localhost:19770")) {
@@ -82,50 +109,19 @@ app.on("window-all-closed", () => {
   }
 });
 
-const startDjangoServer = (dbDir) => {
-  let appPath;
-  if (process.platform === "win32") {
-    appPath = path.join(
-      process.resourcesPath,
-      "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
-    );
-  } else {
-    appPath = path.join(
-      process.resourcesPath,
-      "gnnepcsaftwebapp/gnnepcsaftwebapp"
-    );
-  }
-
-  // Pass the database path as an environment variable
-  const dbPath = path.join(dbDir, "gnnepcsaft.db");
-  const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
-  const env = {
-    ...process.env,
-    GNNEPCSAFT_DB_PATH: dbPath,
-    GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
-  };
-
+const startDjangoServer = () => {
   const djangoBackend = spawn(
     appPath,
     ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
     { signal, env }
   );
 
-  djangoBackend.stdout.on("data", (data) => {
-    log.info(`stdout:\n${data}`);
-  });
-  djangoBackend.stderr.on("data", (data) => {
-    log.info(`stderr:\n${data}`);
-  });
   djangoBackend.on("error", (error) => {
-    log.error(`error:\n${error.message}`);
+    log.error(error.message);
   });
   djangoBackend.on("close", (code) => {
     log.info(`child process exited with code ${code}`);
     app.quit();
-  });
-  djangoBackend.on("message", (message) => {
-    log.info(`message:\n${message}`);
   });
   return djangoBackend;
 };
@@ -149,7 +145,7 @@ const waitForDjangoServer = () => {
   });
 };
 
-function copyDB(dbDir, dbName) {
+function copyDB(dbName) {
   // Path to the database in user data directory
   const userDbPath = path.join(dbDir, dbName);
 
@@ -169,4 +165,28 @@ function copyDB(dbDir, dbName) {
       log.info(`Copied initial database to: ${userDbPath}`);
     }
   }
+}
+
+async function ensureDbMigrated() {
+  if (!fs.existsSync(migrateFlag)) {
+    await runDbMigrate();
+    fs.writeFileSync(migrateFlag, "ok");
+  }
+}
+
+function runDbMigrate() {
+  return new Promise((resolve, reject) => {
+    const dbMigrate = spawn(
+      appPath,
+      ["migrate", "--noinput", "--skip-checks"],
+      { env }
+    );
+
+    dbMigrate.on("close", (code) => {
+      resolve();
+    });
+    dbMigrate.on("error", (err) => {
+      reject(err);
+    });
+  });
 }

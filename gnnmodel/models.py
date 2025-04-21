@@ -1,8 +1,15 @@
 "Module for django models (dbs)."
 
+import os
+import shutil
+import sqlite3
+import time
 import uuid
 
+from django.conf import settings
 from django.db import models
+
+from . import logger
 
 
 class GnnepcsaftPara(models.Model):
@@ -34,24 +41,6 @@ class ThermoMLVPData(models.Model):
     vp = models.JSONField()
 
 
-def db_update(pred, inchi):
-    "Updates the gnnepcsaft db."
-
-    new_comp = GnnepcsaftPara(
-        inchi=inchi,
-        m=pred[0],
-        sigma=pred[1],
-        e=pred[2],
-        k_ab=pred[3],
-        e_ab=pred[4],
-        mu=pred[5],
-        na=pred[6],
-        nb=pred[7],
-    )
-    new_comp.save()
-    return [new_comp]
-
-
 class ChatSession(models.Model):
     """Model to store chat sessions"""
 
@@ -73,3 +62,35 @@ class ChatSession(models.Model):
     def get_messages(self):
         """Get all messages in the session"""
         return self.messages
+
+
+def database_compatibility():
+    """Check if the local database is compatible with the django models schema."""
+
+    app_db = settings.BASE_DIR / "gnnepcsaft.db"
+    local_db = settings.DB_PATH
+    conn = sqlite3.connect(local_db)
+    cursor = conn.cursor()
+    # code to check the tables in mydatabase
+    logger.info("Verifying database compatibility...")
+    tables = cursor.execute(
+        "SELECT name FROM sqlite_master WHERE type='table';"
+    ).fetchall()
+    conn.close()
+    chat_tables = [
+        "sessions",
+        "app_states",
+        "user_states",
+        "events",
+    ]
+
+    if any((chat_table,) in tables for chat_table in chat_tables):
+        # Backup do banco antigo
+        backup_path = f"{local_db}.broken_{int(time.time())}"
+        os.rename(local_db, backup_path)
+        logger.warning("Broken database detected. Backup saved in %s", backup_path)
+        # Substitui pelo novo
+        shutil.copyfile(app_db, local_db)
+        logger.info("Database substituted by new copy from %s", app_db)
+    else:
+        logger.info("Database is compatible with django models schema.")

@@ -11,6 +11,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from markdown import markdown
 from pydantic import SecretStr
 
+from . import logger
+
 
 def resume_mol(inchi: str, smiles: str, api_key: SecretStr):
     "Describe the molecule with google's gemini."
@@ -87,5 +89,5 @@ def is_api_key_valid(api_key: str) -> bool:
             ans = ans.read().decode("utf8").rstrip()
             return True
     except HTTPError as e:
-        print(e)
+        logger.error(e)
         return False

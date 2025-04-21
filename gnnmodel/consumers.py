@@ -15,6 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
+from . import logger
 from .agents import AVAILABLE_MODELS, DEFAULT_MODEL
 from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
 from .models import ChatSession
@@ -378,7 +379,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ):
 
                 if event.interrupted:
-                    print("[INTERRUPTED]")
                     await self.send(text_data=json.dumps({"action": "end_turn"}))
                     break
 
@@ -410,7 +410,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         all_texts += f"No text or function_call in part: {part}"
                 await asyncio.sleep(0.5)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"Error with agent: {e}")
+            logger.error(e)
             message = {
                 "msg": markdown(
                     f"***Error with agent**: `{e}`*", extensions=[BlankLinkExtension()]
@@ -434,7 +434,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             text_data=json.dumps({"text": user_message}),
         )
         await self.send(text_data=json.dumps({"action": "ongoing_turn"}))
-        # print(f"[CLIENT TO AGENT]: {text}")
 
     async def bot_to_client_messaging(self):
         """Bot to client communication, for testing"""
@@ -455,7 +454,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 ),
             )
-            # print(f"[AGENT TO CLIENT]: {text}")
             await asyncio.sleep(2)
         await self.send(
             text_data=json.dumps(
@@ -467,4 +465,3 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             ),
         )
-        # print("Done")

@@ -34,24 +34,6 @@ class ThermoMLVPData(models.Model):
     vp = models.JSONField()
 
 
-def db_update(pred, inchi):
-    "Updates the gnnepcsaft db."
-
-    new_comp = GnnepcsaftPara(
-        inchi=inchi,
-        m=pred[0],
-        sigma=pred[1],
-        e=pred[2],
-        k_ab=pred[3],
-        e_ab=pred[4],
-        mu=pred[5],
-        na=pred[6],
-        nb=pred[7],
-    )
-    new_comp.save()
-    return [new_comp]
-
-
 class ChatSession(models.Model):
     """Model to store chat sessions"""
 

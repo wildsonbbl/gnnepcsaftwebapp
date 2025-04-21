@@ -24,6 +24,19 @@ const env = {
   GNNEPCSAFT_LOG_PATH: logPath,
 };
 
+let appPath;
+if (process.platform === "win32") {
+  appPath = path.join(
+    process.resourcesPath,
+    "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+  );
+} else {
+  appPath = path.join(
+    process.resourcesPath,
+    "gnnepcsaftwebapp/gnnepcsaftwebapp"
+  );
+}
+
 // Optional, initialize the logger for any renderer process
 log.initialize();
 

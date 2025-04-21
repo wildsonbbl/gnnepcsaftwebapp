@@ -191,6 +191,39 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv(),
 )
 
+LOG_PATH = config("GNNEPCSAFT_LOG_PATH", default=BASE_DIR, cast=Path)
+
+assert isinstance(LOG_PATH, Path), "LOG_PATH must be a Path object"
+
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": LOG_PATH / "gnnepcsaft.log",
+            "level": "INFO",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "": {
+            "level": "INFO",
+            "handlers": ["file"],
+        },
+    },
+    "formatters": {
+        "verbose": {
+            "format": "{name} {levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
+        },
+    },
+}
+
 
 # DJANGO-PWA for manifest.json
 PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"

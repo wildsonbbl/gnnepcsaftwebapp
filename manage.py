@@ -34,4 +34,7 @@ def main():
 
 
 if __name__ == "__main__":
+    from gnnmodel.models import database_compatibility
+
+    database_compatibility()
     main()

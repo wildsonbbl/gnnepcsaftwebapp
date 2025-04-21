@@ -28,7 +28,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from pydantic import SecretStr, ValidationError
 
-from .utils import prediction
+from .utils import predict_epcsaft_parameters
 from .utils_llm import pubchem_description
 
 
@@ -324,7 +324,7 @@ if __name__ == "__main__":
         pubchem_description,
         mw,
         smilestoinchi,
-        prediction,
+        predict_epcsaft_parameters,
     ]
 
     _tools = {fn.__name__: tool(fn, parse_docstring=True) for fn in _fn_list}

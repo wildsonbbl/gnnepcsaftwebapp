@@ -15,6 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
+from . import logger
 from .agents import AVAILABLE_MODELS, DEFAULT_MODEL
 from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
 from .models import ChatSession
@@ -409,7 +410,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         all_texts += f"No text or function_call in part: {part}"
                 await asyncio.sleep(0.5)
         except Exception as e:  # pylint: disable=broad-exception-caught
-
+            logger.error(e)
             message = {
                 "msg": markdown(
                     f"***Error with agent**: `{e}`*", extensions=[BlankLinkExtension()]

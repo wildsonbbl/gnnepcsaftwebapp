@@ -91,6 +91,6 @@ def database_compatibility():
         logger.warning("Broken database detected. Backup saved in %s", backup_path)
         # Substitui pelo novo
         shutil.copyfile(app_db, local_db)
-        logger.info("Database substitued by new copy from %s", app_db)
+        logger.info("Database substituted by new copy from %s", app_db)
     else:
         logger.info("Database is compatible with django models schema.")

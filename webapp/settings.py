@@ -192,6 +192,7 @@ CSRF_TRUSTED_ORIGINS = config(
 )
 
 LOG_PATH = config("GNNEPCSAFT_LOG_PATH", default=BASE_DIR, cast=Path)
+LOG_LEVEL = config("GNNEPCSAFT_LOG_LEVEL", default="INFO")
 
 assert isinstance(LOG_PATH, Path), "LOG_PATH must be a Path object"
 
@@ -202,13 +203,13 @@ LOGGING = {
         "file": {
             "class": "logging.FileHandler",
             "filename": LOG_PATH / "gnnepcsaft.log",
-            "level": "INFO",
+            "level": LOG_LEVEL,
             "formatter": "verbose",
         },
     },
     "loggers": {
         "": {
-            "level": "INFO",
+            "level": LOG_LEVEL,
             "handlers": ["file"],
         },
     },

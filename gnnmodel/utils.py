@@ -62,7 +62,7 @@ def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
         try:
             molw = mw(inchi)
         except (TypeError, ValueError) as e:
-            logger.error("Error for InChI: %s \n\n %s", inchi, e)
+            logger.debug("Error for InChI: %s \n\n %s", inchi, e)
             continue
         vp = (
             data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 3)
@@ -144,7 +144,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
             smiles = inchitosmiles(inchi, False, False)
             para = predict_epcsaft_parameters(smiles)
         except ValueError as e:
-            logger.error("%s: \n\n%s", e, inchi)
+            logger.debug("%s: \n\n%s", e, inchi)
             continue
         if para[0] is None:
             continue
@@ -301,7 +301,7 @@ def custom_plot(
                     plot_data["T"].append(state[0])
                     plot_data["GNN"].append(prop_for_state)
                 except (AssertionError, RuntimeError) as e:
-                    logger.error(e)
+                    logger.debug(e)
             all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
     if plot_sf:
         surface_tension, temp_st = pure_surface_tension_feos(
@@ -427,7 +427,7 @@ def get_custom_plots_data(
             ],
         )
     except RuntimeError as err:
-        logger.error(err)
+        logger.debug(err)
         custom_plots = []
     phase_diagrams = []
     if phase_diagram_checkbox_.cleaned_data["phase_diagram_checkbox"]:
@@ -445,7 +445,7 @@ def get_custom_plots_data(
                 phase_diagrams_all_data["density vapor"],
             ]
         except RuntimeError as err:
-            logger.error(err)
+            logger.debug(err)
             phase_diagrams = []
     return phase_diagrams, custom_plots
 
@@ -500,7 +500,7 @@ def mixture_plots(
             plot_data_dew["T"].append(state[0])
             plot_data_dew["GNN"].append(dew_for_state)
         except (AssertionError, RuntimeError) as e:
-            logger.error(e)
+            logger.debug(e)
     all_plots.append(
         (json.dumps(plot_data), 0, "Liquid Density (mol / m³)", "den_plot")
     )

@@ -26,6 +26,13 @@
   max-width: 75%;
 }
 
+#modelDropdown {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Make sure the session dropdown doesn't get too wide */
 #sessionDropdown {
   max-width: 200px;

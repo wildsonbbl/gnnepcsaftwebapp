@@ -5,6 +5,8 @@ var currentSessionId = null;
 var currentSessionName = "New Session";
 var availableModels = [];
 var currentModelName = "";
+var deleteSessionId = null;
+var deleteSessionName = null;
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -61,9 +63,6 @@ function setupChatSocketHandlers() {
 }
 
 // Handle action messages (session management)
-var deleteSessionId = null;
-var deleteSessionName = null;
-
 function handleActionMessage(data) {
   switch (data.action) {
     case "sessions_list":

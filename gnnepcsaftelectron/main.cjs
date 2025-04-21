@@ -44,7 +44,6 @@ const createWindow = async () => {
   await waitForDjangoServer();
 
   win.loadURL("http://localhost:19770");
-  win.maximize();
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http://localhost:19770")) {

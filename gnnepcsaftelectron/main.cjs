@@ -8,6 +8,22 @@ const fs = require("fs");
 const controller = new AbortController();
 const { signal } = controller;
 
+// Set up user data directory for database
+const appVersion = app.getVersion();
+const userDataPath = app.getPath("userData");
+const dbDir = path.join(userDataPath, "db");
+const dbPath = path.join(dbDir, "gnnepcsaft.db");
+const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
+const migrateFlag = path.join(dbDir, `.db_migrated_v${appVersion}`);
+const logPath = path.join(userDataPath, "logs");
+
+const env = {
+  ...process.env,
+  GNNEPCSAFT_DB_PATH: dbPath,
+  GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
+  GNNEPCSAFT_LOG_PATH: logPath,
+};
+
 // Optional, initialize the logger for any renderer process
 log.initialize();
 
@@ -15,21 +31,19 @@ if (require("electron-squirrel-startup")) app.quit();
 Menu.setApplicationMenu(null); // Hide the menu bar
 
 const createWindow = async () => {
-  // Set up user data directory for database
-  const userDataPath = app.getPath("userData");
-  const dbDir = path.join(userDataPath, "db");
-
   // Create directory if it doesn't exist
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
   // Check if we need to copy the initial database
-  copyDB(dbDir, "gnnepcsaft.db");
-  copyDB(dbDir, "gnnepcsaft.chat.db");
+  copyDB("gnnepcsaft.db");
+  copyDB("gnnepcsaft.chat.db");
+
+  await ensureDbMigrated();
 
   // Start Django with the user database path
-  const djangoBackend = startDjangoServer(dbDir);
+  const djangoBackend = startDjangoServer();
 
   const win = new BrowserWindow({
     width: 1280,
@@ -82,7 +96,7 @@ app.on("window-all-closed", () => {
   }
 });
 
-const startDjangoServer = (dbDir) => {
+const startDjangoServer = () => {
   let appPath;
   if (process.platform === "win32") {
     appPath = path.join(
@@ -95,15 +109,6 @@ const startDjangoServer = (dbDir) => {
       "gnnepcsaftwebapp/gnnepcsaftwebapp"
     );
   }
-
-  // Pass the database path as an environment variable
-  const dbPath = path.join(dbDir, "gnnepcsaft.db");
-  const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
-  const env = {
-    ...process.env,
-    GNNEPCSAFT_DB_PATH: dbPath,
-    GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
-  };
 
   const djangoBackend = spawn(
     appPath,
@@ -149,7 +154,7 @@ const waitForDjangoServer = () => {
   });
 };
 
-function copyDB(dbDir, dbName) {
+function copyDB(dbName) {
   // Path to the database in user data directory
   const userDbPath = path.join(dbDir, dbName);
 
@@ -169,4 +174,41 @@ function copyDB(dbDir, dbName) {
       log.info(`Copied initial database to: ${userDbPath}`);
     }
   }
+}
+
+async function ensureDbMigrated() {
+  if (!fs.existsSync(migrateFlag)) {
+    await runDbMigrate();
+    fs.writeFileSync(migrateFlag, "ok");
+  }
+}
+
+function runDbMigrate() {
+  return new Promise((resolve, reject) => {
+    let appPath;
+    if (process.platform === "win32") {
+      appPath = path.join(
+        process.resourcesPath,
+        "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+      );
+    } else {
+      appPath = path.join(
+        process.resourcesPath,
+        "gnnepcsaftwebapp/gnnepcsaftwebapp"
+      );
+    }
+
+    const dbMigrate = spawn(
+      appPath,
+      ["migrate", "--noinput", "--skip-checks"],
+      { env }
+    );
+
+    dbMigrate.on("close", (code) => {
+      resolve();
+    });
+    dbMigrate.on("error", (err) => {
+      reject(err);
+    });
+  });
 }

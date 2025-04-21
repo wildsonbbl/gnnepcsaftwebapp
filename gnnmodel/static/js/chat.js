@@ -496,13 +496,20 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeChat();
 
   // Set up input and send button
-  document.querySelector("#chat-message-input").focus();
-  document.querySelector("#chat-message-input").onkeyup = function (e) {
-    if (e.keyCode === 13) {
+
+  const textarea = document.getElementById("chat-message-input");
+  textarea.focus();
+  textarea.onkeyup = function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
       // enter, return
       document.querySelector("#chat-message-submit").click();
     }
   };
+
+  textarea.addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 300) + "px"; // 300px é o limite máximo
+  });
 
   document.querySelector("#chat-message-submit").onclick = function (e) {
     var messageInputDom = document.querySelector("#chat-message-input");

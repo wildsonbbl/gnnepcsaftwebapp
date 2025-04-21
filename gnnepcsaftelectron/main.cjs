@@ -53,11 +53,6 @@ const createWindow = async () => {
   copyDB("gnnepcsaft.db");
   copyDB("gnnepcsaft.chat.db");
 
-  await ensureDbMigrated();
-
-  // Start Django with the user database path
-  const djangoBackend = startDjangoServer();
-
   const win = new BrowserWindow({
     width: 1280,
     height: 760,
@@ -68,6 +63,11 @@ const createWindow = async () => {
   });
 
   win.loadFile(path.join(__dirname, "index.html"));
+
+  await ensureDbMigrated();
+
+  // Start Django with the user database path
+  const djangoBackend = startDjangoServer();
 
   await waitForDjangoServer();
 

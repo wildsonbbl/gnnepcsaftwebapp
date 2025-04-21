@@ -110,19 +110,6 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  let appPath;
-  if (process.platform === "win32") {
-    appPath = path.join(
-      process.resourcesPath,
-      "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
-    );
-  } else {
-    appPath = path.join(
-      process.resourcesPath,
-      "gnnepcsaftwebapp/gnnepcsaftwebapp"
-    );
-  }
-
   const djangoBackend = spawn(
     appPath,
     ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
@@ -198,19 +185,6 @@ async function ensureDbMigrated() {
 
 function runDbMigrate() {
   return new Promise((resolve, reject) => {
-    let appPath;
-    if (process.platform === "win32") {
-      appPath = path.join(
-        process.resourcesPath,
-        "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
-      );
-    } else {
-      appPath = path.join(
-        process.resourcesPath,
-        "gnnepcsaftwebapp/gnnepcsaftwebapp"
-      );
-    }
-
     const dbMigrate = spawn(
       appPath,
       ["migrate", "--noinput", "--skip-checks"],

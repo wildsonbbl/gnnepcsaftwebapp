@@ -11,8 +11,7 @@ from urllib.request import HTTPError, urlopen
 import numpy as np
 import onnxruntime as ort
 from django.conf import settings
-from gnnepcsaft.data.ogb_utils import smiles2graph
-from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, mw, smilestoinchi
+from gnnepcsaft.data.rdkit_util import inchitosmiles, mw
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     critical_points_feos,
     mix_den_feos,
@@ -25,6 +24,8 @@ from gnnepcsaft.epcsaft.epcsaft_feos import (
     pure_vp_feos,
 )
 from rdkit.Chem import AllChem as Chem
+
+from gnnepcsaft_mcp_server.utils import predict_epcsaft_parameters
 
 from .forms import (
     CustomPlotCheckForm,
@@ -47,9 +48,6 @@ ort.set_default_logger_severity(3)
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
-
-msigmae_onnx = ort.InferenceSession(settings.STATIC_ROOT / "msigmae_7.onnx")
-assoc_onnx = ort.InferenceSession(settings.STATIC_ROOT / "assoc_8.onnx")
 
 
 def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
@@ -143,9 +141,9 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
     for inchi in tqdm(tml_data):
         try:
             smiles = inchitosmiles(inchi, False, False)
-            para = prediction(smiles)
+            para = predict_epcsaft_parameters(smiles)
         except ValueError as e:
-            print(e, inchi)
+            print(f"\n\n{e}: \n\n{inchi}\n")
             continue
         if para[0] is None:
             continue
@@ -217,56 +215,6 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
             new_comp = ThermoMLVPData(inchi=inchi, vp=json.dumps(plotvp))
             new_comp.save()
     print("Updated database with plotden, plotvp")
-
-
-def prediction(
-    smiles: str,
-) -> List[float]:
-    """Predict ePC-SAFT parameters
-    `[m, sigma, epsilon/kB, kappa_ab, epsilon_ab/kB, dipole moment, na, nb]`
-
-    Args:
-      smiles (str): SMILES of the molecule.
-    """
-    lower_bounds = np.asarray([1.0, 1.9, 50.0, 0.0, 0.0, 0, 0, 0])
-    upper_bounds = np.asarray([25.0, 4.5, 550.0, 0.9, 5000.0, np.inf, np.inf, np.inf])
-
-    inchi = smilestoinchi(smiles)
-
-    graph = smiles2graph(smiles)
-    na, nb = assoc_number(inchi)
-    x, edge_index, edge_attr = (
-        graph["node_feat"],
-        graph["edge_index"],
-        graph["edge_feat"],
-    )
-
-    assoc = 10 ** (
-        assoc_onnx.run(
-            None,
-            {
-                "x": x,
-                "edge_index": edge_index,
-                "edge_attr": edge_attr,
-            },
-        )[0][0]
-        * np.asarray([-1.0, 1.0])
-    )
-    if na == 0 and nb == 0:
-        assoc *= 0
-    msigmae = msigmae_onnx.run(
-        None,
-        {
-            "x": x,
-            "edge_index": edge_index,
-            "edge_attr": edge_attr,
-        },
-    )[0][0]
-    munanb = np.asarray([0.0, na, nb])
-    pred = np.hstack([msigmae, assoc, munanb], dtype=np.float64)
-    np.clip(pred, lower_bounds, upper_bounds, out=pred)
-
-    return pred.tolist()  # type: ignore
 
 
 def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
@@ -375,7 +323,7 @@ def get_pred(smiles: str, inchi: str) -> list[float]:
         inchi=inchi
     ).all()
     if len(all_comp_matched) == 0:
-        pred = prediction(smiles)
+        pred = predict_epcsaft_parameters(smiles)
     else:
         comp = all_comp_matched[0]
         pred: List[float] = [

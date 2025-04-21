@@ -1,20 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('./icons.json', '.'), ('./gnnepcsaft.db', '.'), ('./gnnmodel/templates', './gnnmodel/templates'), ('./productionfiles', './productionfiles')]
-datas += copy_metadata('django-bootstrap-v5')
+datas = [
+    ("./icons.json", "."),
+    ("./gnnepcsaft.db", "."),
+    ("./gnnmodel/templates", "./gnnmodel/templates"),
+    ("./productionfiles", "./productionfiles"),
+]
+datas += copy_metadata("django-bootstrap-v5")
 
 
 a = Analysis(
-    ['manage.py'],
+    ["manage.py"],
     pathex=[],
     binaries=[],
     datas=datas,
     hiddenimports=[],
-    hookspath=['./hooks'],
+    hookspath=["./hooks"],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=['polars'],
+    excludes=["polars"],
     noarchive=False,
     optimize=0,
 )
@@ -25,7 +30,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='gnnepcsaftwebapp',
+    name="gnnepcsaftwebapp",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -44,5 +49,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='gnnepcsaftwebapp',
+    name="gnnepcsaftwebapp",
 )

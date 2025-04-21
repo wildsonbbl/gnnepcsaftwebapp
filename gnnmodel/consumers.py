@@ -168,10 +168,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if text_data_json["text"] == "":
                 return
 
-            # Store user message in database
-            user_message = {"msg": text_data_json["text"], "source": "user"}
-            await self.save_message_to_db(user_message)
-
             await self.client_to_agent_messaging(text_data_json["text"])
             await self.agent_to_client_messaging(text_data_json["text"])
 
@@ -202,8 +198,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
                 # Add a system message to indicate model change
                 system_message = {
-                    "msg": f"Model changed to {model_name}",
-                    "source": "system",
+                    "msg": markdown(
+                        f"Model changed to `{model_name}`",
+                        extensions=[BlankLinkExtension()],
+                    ),
+                    "source": "user",
                 }
                 await self.save_message_to_db(system_message)
                 await self.send(text_data=json.dumps({"text": system_message}))
@@ -425,8 +424,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def client_to_agent_messaging(self, text):
         """Client to agent communication"""
+        # Store user message in database
+        user_message = {
+            "msg": markdown(text, extensions=[BlankLinkExtension()]),
+            "source": "user",
+        }
+        await self.save_message_to_db(user_message)
         await self.send(
-            text_data=json.dumps({"text": {"msg": text, "source": "user"}}),
+            text_data=json.dumps({"text": user_message}),
         )
         await self.send(text_data=json.dumps({"action": "ongoing_turn"}))
         # print(f"[CLIENT TO AGENT]: {text}")

@@ -5,8 +5,7 @@
 }
 
 .chat-card-style {
-  height: 70vh;
-  border-radius: 15px;
+  height: 85vh;
 }
 
 #chat-log {
@@ -25,6 +24,13 @@
   background-color: rgba(57, 192, 237, 0.2);
   border-radius: 15px;
   max-width: 75%;
+}
+
+#modelDropdown {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Make sure the session dropdown doesn't get too wide */

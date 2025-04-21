@@ -5,6 +5,8 @@ var currentSessionId = null;
 var currentSessionName = "New Session";
 var availableModels = [];
 var currentModelName = "";
+var deleteSessionId = null;
+var deleteSessionName = null;
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -61,9 +63,6 @@ function setupChatSocketHandlers() {
 }
 
 // Handle action messages (session management)
-var deleteSessionId = null;
-var deleteSessionName = null;
-
 function handleActionMessage(data) {
   switch (data.action) {
     case "sessions_list":
@@ -135,15 +134,12 @@ function handleActionMessage(data) {
       if (modal) modal.hide();
       break;
     case "end_turn":
-      document.getElementById("bottom-chat-log").innerHTML = "";
-      document.getElementById("bottom-chat-log").scrollIntoView();
+      const generatingContainer = document.getElementById("bottom-chat-log");
+      generatingContainer.innerHTML = "";
+      generatingContainer.scrollIntoView();
       break;
     case "ongoing_turn":
-      chat_log_end = ` <div class="d-flex flex-row mb-4 justify-content-center" id="bottom-chat-log">
-  <div class="p-3 ms-3 bot-message">
-      <p class="small mb-0">Generating response...</p></div></div>`;
-      document.querySelector("#chat-log").innerHTML += chat_log_end;
-      document.getElementById("bottom-chat-log").scrollIntoView();
+      showGeneratingMessage();
       break;
     case "session_deleted":
       if (data.success) {
@@ -166,6 +162,28 @@ function handleActionMessage(data) {
       }
       break;
   }
+}
+
+// For the "ongoing_turn" action handler
+function showGeneratingMessage() {
+  // Create container for the "generating" message
+  const generatingContainer = document.getElementById("bottom-chat-log");
+
+  // Create message bubble
+  const messageBubble = document.createElement("div");
+  messageBubble.className = "p-3 ms-3 bot-message";
+
+  // Create message text
+  const messageText = document.createElement("p");
+  messageText.className = "small mb-0";
+  messageText.textContent = "Generating response...";
+
+  // Assemble the elements
+  messageBubble.appendChild(messageText);
+  generatingContainer.appendChild(messageBubble);
+
+  // Scroll to the bottom
+  generatingContainer.scrollIntoView();
 }
 
 function updateActiveModel(modelName) {
@@ -226,20 +244,54 @@ function handleChatMessage(message) {
 
 // Update the chat log display
 function updateChatLog() {
-  var str = "";
+  const chatLog = document.querySelector("#chat-log");
+
+  if (!chatLog) return; // Ensure chatLog exists
+
+  // Clear existing content
+  chatLog.innerHTML = "";
+
+  // Create DOM elements for each message
   messages.forEach(function (msg) {
-    str += `<div class="d-flex flex-row mb-4 ${
-      msg.source == "assistant"
-        ? "justify-content-start"
-        : "justify-content-end"
-    }">
-          <div class="p-3 ms-3 ${
-            msg.source == "assistant" ? "bot-message" : "user-message"
-          }">
-          <p class="small mb-0">${msg.msg}</p></div></div>`;
+    // Create main container
+    const messageContainer = document.createElement("div");
+    messageContainer.className = "d-flex flex-row mb-4";
+
+    // Set alignment based on message source
+    if (msg.source === "assistant") {
+      messageContainer.classList.add("justify-content-start");
+    } else {
+      messageContainer.classList.add("justify-content-end");
+    }
+
+    // Create message bubble
+    const messageBubble = document.createElement("div");
+    messageBubble.className = "p-3 ms-3";
+
+    // Set bubble style based on message source
+    if (msg.source === "assistant") {
+      messageBubble.classList.add("bot-message");
+    } else {
+      messageBubble.classList.add("user-message");
+    }
+
+    // Create message text
+    const messageText = document.createElement("p");
+    messageText.className = "small mb-0";
+    messageText.innerHTML = msg.msg;
+
+    // Assemble the elements
+    messageBubble.appendChild(messageText);
+    messageContainer.appendChild(messageBubble);
+    chatLog.appendChild(messageContainer);
   });
 
-  document.querySelector("#chat-log").innerHTML = str;
+  // Create container for the "generating" message
+  const generatingContainer = document.createElement("div");
+  generatingContainer.className = "d-flex flex-row mb-4 justify-content-center";
+  generatingContainer.id = "bottom-chat-log";
+  chatLog.appendChild(generatingContainer);
+  generatingContainer.scrollIntoView();
 }
 
 // Populate the sessions dropdown
@@ -444,13 +496,20 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeChat();
 
   // Set up input and send button
-  document.querySelector("#chat-message-input").focus();
-  document.querySelector("#chat-message-input").onkeyup = function (e) {
-    if (e.keyCode === 13) {
+
+  const textarea = document.getElementById("chat-message-input");
+  textarea.focus();
+  textarea.onkeyup = function (e) {
+    if (e.key === "Enter" && !e.shiftKey) {
       // enter, return
       document.querySelector("#chat-message-submit").click();
     }
   };
+
+  textarea.addEventListener("input", function () {
+    this.style.height = "auto";
+    this.style.height = Math.min(this.scrollHeight, 300) + "px"; // 300px é o limite máximo
+  });
 
   document.querySelector("#chat-message-submit").onclick = function (e) {
     var messageInputDom = document.querySelector("#chat-message-input");

@@ -14,7 +14,7 @@
             <p class="mx-2 my-1">
               You can find more about Gemini API Keys
               <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">here</a>.
-              This key is not stored for security reasons. The model <code>gemini-2.0-flash</code> is used.
+              This key is not stored for security reasons.
             </p>
           </div>
           <div class="col-md-6">
@@ -32,82 +32,92 @@
         </ul>
       </div>
     {% else %}
-      <div class="row mb-1">
-        <div class="col-md-12">
-          <div class="d-flex justify-content-between align-items-center">
-            <div class="dropdown">
-              <button class="btn btn-outline-primary dropdown-toggle"
-                      type="button"
-                      id="sessionDropdown"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">
-                <span id="current-session-name">Current Session</span>
-              </button>
-              <ul class="dropdown-menu"
-                  id="sessions-list"
-                  aria-labelledby="sessionDropdown">
-                <!-- Sessions will be populated here -->
-              </ul>
+      <div class="row justify-content-center" id="chatrow">
+        <div class="col-12">
+          <div class="card rounded chat-card-style bg-light">
+            <div id="chat-log" class="card-body overflow-auto">
+              <!-- Chat messages will be populated here -->
             </div>
-            <div class="dropdown mx-2">
-              <button class="btn btn-outline-secondary dropdown-toggle"
-                      type="button"
-                      id="modelDropdown"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false">
-                <span id="current-model-name">Model</span>
-              </button>
-              <ul class="dropdown-menu"
-                  id="models-list"
-                  aria-labelledby="modelDropdown">
-                <!-- Models will be populated here -->
-              </ul>
-            </div>
-            <div>
-              <button id="new-session-btn"
-                      class="btn btn-outline-success rounded-circle"
-                      title="New Session"
-                      type="button">
-                <i class="fas fa-square-plus"></i>
-              </button>
-              <button id="rename-session-btn"
-                      class="btn btn-outline-secondary rounded-circle"
-                      title="Rename Session"
-                      type="button">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button id="chat-log-save_button"
-                      type="button"
-                      class="btn btn-outline-secondary rounded-circle"
-                      title="Save Chat Log"
-                      type="button">
-                <i class="fas fa-file-export"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row d-flex justify-content-center" id="chatrow">
-        <div class="col-md-12">
-          <div class="row">
-            <div class="card chat-card-style bg-light">
-              <div id="chat-log" class="card-body overflow-auto"></div>
-            </div>
-          </div>
-          <div class="row mt-3 d-flex justify-content-center" id="chat-form">
-            <div class="col-11">
-              <input id="chat-message-input"
-                     class="form-control"
-                     type="text"
-                     placeholder="Write your message here" />
-            </div>
-            <div class="col-1">
-              <button id="chat-message-submit"
-                      type="button"
-                      class="btn btn-outline-primary rounded-circle btn-sm"
-                      title="Send Message">
-                <i class="fas fa-paper-plane"></i>
-              </button>
+            <div class="row d-flex justify-content-center" id="chat-form-row">
+              <form>
+                <div class="col-12 position-relative">
+                  <div class="pt-5 w-100 rounded bg-light position-absolute bottom-0">
+                    <!-- Chat textarea bottom buttons will be added on top of here -->
+                  </div>
+                  <div class="pt-5 w-100 rounded bg-light position-absolute top-0">
+                    <!-- Chat textarea top buttons will be added on top of here -->
+                  </div>
+                  <textarea id="chat-message-input"
+                            class="form-control bg-light py-5"
+                            placeholder="Write your message here"
+                            style="overflow-y:auto;
+                                   max-height: 300px;
+                                   resize: none"></textarea>
+                  <div class="d-flex position-absolute bottom-0 end-0 m-1">
+                    <!-- Chat textarea bottom buttons will be added here -->
+                    <button id="chat-message-submit"
+                            type="button"
+                            class="btn btn-sm btn-outline-primary rounded-circle"
+                            title="Send Message">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                  <div class="d-flex position-absolute top-0 start-0 m-1">
+                    <!-- Chat textarea top buttons will be added here -->
+                    <div class="m-1">
+                      <button id="new-session-btn"
+                              class="btn btn-sm btn-outline-success rounded-circle"
+                              title="New Session"
+                              type="button">
+                        <i class="fas fa-square-plus"></i>
+                      </button>
+                      <button id="rename-session-btn"
+                              class="btn btn-sm btn-outline-secondary rounded-circle"
+                              title="Rename Session"
+                              type="button">
+                        <i class="fas fa-edit"></i>
+                      </button>
+                      <button id="chat-log-save_button"
+                              type="button"
+                              class="btn btn-sm btn-outline-secondary rounded-circle"
+                              title="Save Chat Log"
+                              type="button">
+                        <i class="fas fa-file-export"></i>
+                      </button>
+                    </div>
+                    <div class="m-1 d-flex">
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle "
+                                type="button"
+                                id="modelDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                          <span id="current-model-name">Model</span>
+                        </button>
+                        <ul class="dropdown-menu"
+                            id="models-list"
+                            aria-labelledby="modelDropdown">
+                          <!-- Models will be populated here -->
+                        </ul>
+                      </div>
+                      <div class="dropdown mx-1">
+                        <button class="btn btn-sm btn-outline-primary rounded dropdown-toggle"
+                                type="button"
+                                id="sessionDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                          <span id="current-session-name">Current Session</span>
+                        </button>
+                        <ul class="dropdown-menu"
+                            id="sessions-list"
+                            aria-labelledby="sessionDropdown">
+                          <!-- Sessions will be populated here -->
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
             </div>
           </div>
         </div>

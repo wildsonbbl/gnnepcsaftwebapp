@@ -32,13 +32,6 @@ jobs:
           uv pip install pyinstaller tqdm
           uv pip install -r requirements.txt
           uv pip install -r requirements-llm.txt
-      - name: Download models from HuggingFace
-        run: |
-          git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
-          cp hfdata/*.onnx* ./gnnmodel/static
-          mkdir ./productionfiles
-          cp hfdata/*.onnx* ./productionfiles
-          python manage.py collectstatic --no-input
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to docker hub

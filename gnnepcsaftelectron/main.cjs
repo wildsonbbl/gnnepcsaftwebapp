@@ -116,21 +116,12 @@ const startDjangoServer = () => {
     { signal, env }
   );
 
-  djangoBackend.stdout.on("data", (data) => {
-    log.info(`stdout:\n${data}`);
-  });
-  djangoBackend.stderr.on("data", (data) => {
-    log.info(`stderr:\n${data}`);
-  });
   djangoBackend.on("error", (error) => {
-    log.error(`error:\n${error.message}`);
+    log.error(error.message);
   });
   djangoBackend.on("close", (code) => {
     log.info(`child process exited with code ${code}`);
     app.quit();
-  });
-  djangoBackend.on("message", (message) => {
-    log.info(`message:\n${message}`);
   });
   return djangoBackend;
 };

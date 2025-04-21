@@ -1,11 +1,12 @@
 const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("child_process");
-const controller = new AbortController();
-const { signal } = controller;
 const path = require("path");
 const log = require("electron-log/main");
 const fetch = require("node-fetch");
 const fs = require("fs");
+
+const controller = new AbortController();
+const { signal } = controller;
 
 // Optional, initialize the logger for any renderer process
 log.initialize();

@@ -355,6 +355,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
+
         elif action == "stop_generating":
             if self.agent_task and not self.agent_task.done():
                 self.agent_task.cancel()

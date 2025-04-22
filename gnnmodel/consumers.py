@@ -106,6 +106,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 )
             )
 
+    async def receive(self, text_data=None, bytes_data=None):
+        assert text_data is not None
+        text_data_json = json.loads(text_data)
+
+        # Handle different types of messages
+        if "action" in text_data_json:
+            await self.handle_actions(text_data_json)
+
+        elif "text" in text_data_json:
+            if text_data_json["text"] == "":
+                return
+
+            await self.client_to_agent_messaging(text_data_json["text"])
+            self.agent_task = asyncio.create_task(
+                self.agent_to_client_messaging(text_data_json["text"])
+            )
+
     @database_sync_to_async
     def get_last_session(self):
         """Get the most recently updated session"""
@@ -157,23 +174,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
-
-    async def receive(self, text_data=None, bytes_data=None):
-        assert text_data is not None
-        text_data_json = json.loads(text_data)
-
-        # Handle different types of messages
-        if "action" in text_data_json:
-            await self.handle_actions(text_data_json)
-
-        elif "text" in text_data_json:
-            if text_data_json["text"] == "":
-                return
-
-            await self.client_to_agent_messaging(text_data_json["text"])
-            self.agent_task = asyncio.create_task(
-                self.agent_to_client_messaging(text_data_json["text"])
-            )
 
     async def handle_actions(self, text_data_json):  # pylint: disable=R0915
         """Handle actions such as creating a new session or deleting a session"""

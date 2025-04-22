@@ -35,7 +35,6 @@ function setupChatSocketHandlers() {
     console.log("Connected to chat server");
     // Request list of sessions
     setTimeout(function () {
-      console.log("Requesting sessions list");
       chatSocket.send(
         JSON.stringify({
           action: "get_sessions",
@@ -46,11 +45,9 @@ function setupChatSocketHandlers() {
 
   chatSocket.onmessage = function (e) {
     var data = JSON.parse(e.data);
-    console.log("Received message:", data);
 
     // Handle different types of messages
     if (data.action) {
-      console.log("Handling action:", data.action);
       handleActionMessage(data);
     } else if (data.text) {
       handleChatMessage(data.text);
@@ -169,17 +166,31 @@ function showGeneratingMessage() {
   // Create container for the "generating" message
   const generatingContainer = document.getElementById("bottom-chat-log");
 
+  // Limpa o conteúdo anterior
+  generatingContainer.innerHTML = "";
+
   // Create message bubble
   const messageBubble = document.createElement("div");
-  messageBubble.className = "p-3 ms-3 bot-message";
+  messageBubble.className = "p-3 ms-3 bot-message d-flex align-items-center";
 
   // Create message text
   const messageText = document.createElement("p");
-  messageText.className = "small mb-0";
+  messageText.className = "small mb-0 me-3";
   messageText.textContent = "Generating response...";
 
-  // Assemble the elements
+  // Botão de parar
+  const stopButton = document.createElement("button");
+  stopButton.className = "btn btn-sm btn-danger";
+  stopButton.textContent = "Stop";
+  stopButton.onclick = function () {
+    chatSocket.send(JSON.stringify({ action: "stop_generating" }));
+    stopButton.disabled = true;
+    stopButton.textContent = "Stoping...";
+  };
+
+  // Monta os elementos
   messageBubble.appendChild(messageText);
+  messageBubble.appendChild(stopButton);
   generatingContainer.appendChild(messageBubble);
 
   // Scroll to the bottom

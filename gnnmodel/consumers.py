@@ -55,6 +55,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     runner_session: Session
     runner: Runner
     run_config = RunConfig(response_modalities=["TEXT"])
+    agent_task = None
 
     async def connect(self):
         """Connect to the websocket"""
@@ -170,7 +171,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             await self.client_to_agent_messaging(text_data_json["text"])
-            await self.agent_to_client_messaging(text_data_json["text"])
+            self.agent_task = asyncio.create_task(
+                self.agent_to_client_messaging(text_data_json["text"])
+            )
 
     async def handle_actions(self, text_data_json):  # pylint: disable=R0915
         """Handle actions such as creating a new session or deleting a session"""
@@ -352,6 +355,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
+        elif action == "stop_generating":
+            if self.agent_task and not self.agent_task.done():
+                self.agent_task.cancel()
+            await self.send(text_data=json.dumps({"action": "end_turn"}))
 
     @database_sync_to_async
     def delete_session(self, session_id):
@@ -409,6 +416,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     else:
                         all_texts += f"No text or function_call in part: {part}"
                 await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            # Task foi cancelada (usuário clicou em Parar)
+            pass
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(e)
             message = {

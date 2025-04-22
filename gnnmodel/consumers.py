@@ -119,6 +119,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 return
 
             await self.client_to_agent_messaging(text_data_json["text"])
+            if self.agent_task and not self.agent_task.done():
+                self.agent_task.cancel()
             self.agent_task = asyncio.create_task(
                 self.agent_to_client_messaging(text_data_json["text"])
             )

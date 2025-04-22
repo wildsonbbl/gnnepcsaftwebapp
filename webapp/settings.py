@@ -192,7 +192,7 @@ CSRF_TRUSTED_ORIGINS = config(
 )
 
 LOG_PATH = config("GNNEPCSAFT_LOG_PATH", default=BASE_DIR, cast=Path)
-LOG_LEVEL = config("GNNEPCSAFT_LOG_LEVEL", default="INFO")
+LOG_LEVEL = config("GNNEPCSAFT_LOG_LEVEL", default="WARNING")
 
 assert isinstance(LOG_PATH, Path), "LOG_PATH must be a Path object"
 

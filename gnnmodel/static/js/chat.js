@@ -140,6 +140,12 @@ function handleActionMessage(data) {
       const generatingContainer = document.getElementById("bottom-chat-log");
       generatingContainer.innerHTML = "";
       generatingContainer.scrollIntoView();
+      if (data.type === "stop_action") {
+        showToast("Stopped generating", "error");
+      }
+      if (data.type === "interrupted") {
+        showToast("LLM interrupted generating", "error");
+      }
       break;
     case "ongoing_turn":
       showGeneratingMessage();
@@ -191,7 +197,7 @@ function showGeneratingMessage() {
   stopButton.onclick = function () {
     chatSocket.send(JSON.stringify({ action: "stop_generating" }));
     stopButton.disabled = true;
-    stopButton.textContent = "Stoping...";
+    stopButton.textContent = "Stopping...";
   };
 
   // Monta os elementos

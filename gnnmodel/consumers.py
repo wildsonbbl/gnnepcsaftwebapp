@@ -361,7 +361,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         elif action == "stop_generating":
             if self.agent_task and not self.agent_task.done():
                 self.agent_task.cancel()
-            await self.send(text_data=json.dumps({"action": "end_turn"}))
+            await self.send(
+                text_data=json.dumps({"action": "end_turn", "type": "stop_action"})
+            )
 
     @database_sync_to_async
     def delete_session(self, session_id):
@@ -389,7 +391,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ):
 
                 if event.interrupted:
-                    await self.send(text_data=json.dumps({"action": "end_turn"}))
+                    await self.send(
+                        text_data=json.dumps(
+                            {"action": "end_turn", "type": "interrupted"}
+                        )
+                    )
                     break
 
                 all_parts = event.content and event.content.parts
@@ -433,7 +439,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"text": message}))
             await self.save_message_to_db(message)
         finally:
-            await self.send(text_data=json.dumps({"action": "end_turn"}))
+            await self.send(
+                text_data=json.dumps({"action": "end_turn", "type": "end_of_turn"})
+            )
 
     async def client_to_agent_messaging(self, text):
         """Client to agent communication"""

@@ -8,7 +8,6 @@ import bootstrap5
 import debug_toolbar
 import feos
 import gunicorn
-import pwa
 import webapp.asgi
 import webapp.wsgi
 import whitenoise

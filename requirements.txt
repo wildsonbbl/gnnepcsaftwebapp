@@ -6,7 +6,6 @@ rdkit
 polars
 django-debug-toolbar
 django-bootstrap-v5
-django-pwa
 whitenoise
 gunicorn
 fontawesomefree

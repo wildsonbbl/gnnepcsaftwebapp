@@ -1,9 +1,9 @@
-// Base Service Worker implementation.  To use your own Service Worker, set the PWA_SERVICE_WORKER_PATH variable in settings.py
+// Service Worker for Django PWA
+// This service worker is used to cache files for offline access in a Django PWA application.
 
 var staticCacheName = "django-pwa-v" + new Date().getTime();
 var filesToCache = [
   "/offline/",
-  "/static/css/django-pwa-app.css",
   "/static/fontawesomefree/css/brands.css",
   "/static/fontawesomefree/css/fontawesome.css",
   "/static/fontawesomefree/webfonts/fa-brands-400.woff2",

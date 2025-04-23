@@ -10,7 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-import json
 from pathlib import Path
 
 from decouple import Csv, config
@@ -49,7 +48,6 @@ INSTALLED_APPS = [
     "debug_toolbar",
     "bootstrap5",
     "fontawesomefree",
-    "pwa",
 ]
 
 MIDDLEWARE = [
@@ -224,124 +222,3 @@ LOGGING = {
         },
     },
 }
-
-
-# DJANGO-PWA for manifest.json
-PWA_SERVICE_WORKER_PATH = STATIC_ROOT / "js/serviceworker.js"
-
-PWA_APP_NAME = "GNNePCSAFT"
-PWA_APP_ID = "/"
-PWA_APP_DESCRIPTION = "Thermodynamic Modeling with GNNePCSAFT"
-PWA_APP_THEME_COLOR = "#000000"
-PWA_APP_BACKGROUND_COLOR = "#f8f9fa"
-PWA_APP_DISPLAY = "fullscreen"
-PWA_APP_DISPLAY_OVERRIDE = [
-    "fullscreen",
-    "standalone",
-    "browser",
-    "window-controls-overlay",
-]
-PWA_APP_SCOPE = "/"
-PWA_APP_ORIENTATION = "any"
-PWA_APP_START_URL = "/"
-PWA_APP_STATUS_BAR_COLOR = "default"
-# Open and read the icons.JSON file
-with open(BASE_DIR / "icons.json", "r", encoding="UTF-8") as file:
-    data = json.load(file)
-PWA_APP_ICONS = data["icons"]
-PWA_APP_ICONS_APPLE = data["icons"]
-PWA_APP_SPLASH_SCREEN = data["icons"]
-PWA_APP_SCREENSHOTS = [
-    {
-        "src": "/static/images/icons/Screenshot-wide.png",
-        "sizes": "2560x1600",
-        "type": "image/png",
-        "form_factor": "wide",
-    },
-    {
-        "src": "/static/images/icons/Screenshot-wide-2.png",
-        "sizes": "2560x1600",
-        "type": "image/png",
-        "form_factor": "wide",
-    },
-    {
-        "src": "/static/images/icons/Screenshot-wide-3.png",
-        "sizes": "2560x1600",
-        "type": "image/png",
-        "form_factor": "wide",
-    },
-    {
-        "src": "/static/images/icons/Screenshot-narrow.png",
-        "sizes": "1290x2796",
-        "type": "image/png",
-        "form_factor": "narrow",
-    },
-    {
-        "src": "/static/images/icons/Screenshot-narrow-2.png",
-        "sizes": "1290x2796",
-        "type": "image/png",
-        "form_factor": "narrow",
-    },
-    {
-        "src": "/static/images/icons/Screenshot-narrow-3.png",
-        "sizes": "1290x2796",
-        "type": "image/png",
-        "form_factor": "narrow",
-    },
-]
-PWA_APP_DIR = "ltr"
-PWA_APP_LANG = "en-US"
-PWA_APP_EDGE_SIDE_PANEL = {}
-PWA_APP_SHORTCUTS = [
-    {
-        "name": "Offline Mode",
-        "short_name": "Off",
-        "url": "/offline",
-        "description": "Offline Mode access a local database to give the model results.",
-        "icons": [
-            {
-                "src": "/static/images/icons/android/android-launchericon-96-96.png",
-                "sizes": "96x96",
-            },
-            {
-                "src": "/static/images/icons/android/android-launchericon-72-72.png",
-                "sizes": "72x72",
-            },
-            {
-                "src": "/static/images/icons/android/android-launchericon-48-48.png",
-                "sizes": "48x48",
-            },
-        ],
-    },
-    {
-        "name": "Online Mode",
-        "short_name": "On",
-        "url": "/",
-        "description": "Online Mode access the server to give updated model results.",
-        "icons": [
-            {
-                "src": "/static/images/icons/android/android-launchericon-96-96.png",
-                "sizes": "96x96",
-            },
-            {
-                "src": "/static/images/icons/android/android-launchericon-72-72.png",
-                "sizes": "72x72",
-            },
-            {
-                "src": "/static/images/icons/android/android-launchericon-48-48.png",
-                "sizes": "48x48",
-            },
-        ],
-    },
-]
-PWA_APP_CATEGORIES = ["education", "productivity", "utilities"]
-PWA_APP_LAUNCH_HANDLER = {"client_mode": ["navigate-existing", "auto"]}
-PWA_APP_PREFER_RELATED_APPLICATIONS = False
-PWA_APP_RELATED_APPLICATIONS = [
-    {
-        "platform": "python",
-        "url": "https://pypi.org/project/pcsaft/",
-        "id": "pcsaft",
-    },
-]
-PWA_APP_HANDLE_LINKS = "not-preferred"

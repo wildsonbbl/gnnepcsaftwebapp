@@ -1,5 +1,7 @@
 """utils for adk agent runner"""
 
+from typing import Callable, List, Optional
+
 from django.conf import settings
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
@@ -21,12 +23,16 @@ def get_sessions_ids():
     return sessions_ids
 
 
-def start_agent_session(session_id: str, model_name: str = DEFAULT_MODEL):
+def start_agent_session(
+    session_id: str,
+    model_name: str = DEFAULT_MODEL,
+    tools: Optional[List[Callable]] = None,
+):
     """Starts an agent session"""
     sessions_ids = get_sessions_ids()
 
     root_agent = (
-        create_root_agent(model_name)
+        create_root_agent(model_name, tools)
         if model_name in AVAILABLE_MODELS
         else create_root_agent()
     )

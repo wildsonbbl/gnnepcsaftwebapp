@@ -398,6 +398,47 @@ function populateSessionsList(sessions) {
 function populateToolsList(tools) {
   var toolsList = document.getElementById("tools-list");
   toolsList.innerHTML = "";
+  var confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn btn-sm btn-outline-success rounded-circle mx-1";
+  confirmBtn.innerHTML = "<i class='fas fa-check'></i>";
+  confirmBtn.title = "Confirm";
+  confirmBtn.type = "button";
+  confirmBtn.onclick = function () {
+    chatSocket.send(
+      JSON.stringify({
+        action: "change_tools",
+        tools: selectedTools,
+      })
+    );
+  };
+  toolsList.appendChild(confirmBtn);
+
+  var confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn btn-sm btn-outline-secondary rounded-circle mx-1";
+  confirmBtn.innerHTML = "<i class='fas fa-list-check'></i>";
+  confirmBtn.title = "Select/Deselect all tools";
+  confirmBtn.type = "button";
+  confirmBtn.onclick = function () {
+    var checkboxes = toolsList.querySelectorAll("input[type='checkbox']");
+    var allChecked = Array.from(checkboxes).every(
+      (checkbox) => checkbox.checked
+    );
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = !allChecked;
+      if (checkbox.checked) {
+        selectedTools.push(checkbox.value);
+      } else {
+        selectedTools = selectedTools.filter((t) => t !== checkbox.value);
+      }
+    });
+  };
+  toolsList.appendChild(confirmBtn);
+
+  // Add divider and confirm button
+  var divider = document.createElement("li");
+  divider.innerHTML = '<hr class="dropdown-divider">';
+  toolsList.appendChild(divider);
+
   tools.forEach(function (tool) {
     var li = document.createElement("li");
     var label = document.createElement("label");
@@ -412,12 +453,6 @@ function populateToolsList(tools) {
       } else {
         selectedTools = selectedTools.filter((t) => t !== tool);
       }
-      chatSocket.send(
-        JSON.stringify({
-          action: "change_tools",
-          tools: selectedTools,
-        })
-      );
     };
     label.appendChild(checkbox);
     label.appendChild(document.createTextNode(" " + tool));

@@ -5,34 +5,36 @@
 {% endblock title %}
 {% block content %}
   <div class="col-lg my-5">
-    <div class="row" id="queryForm">
-      <form action="" method="post" id="submitQueryPred">
-        {% csrf_token %}
-        <div class="row justify-content-center">
-          <div class="col-md-2 my-1">{{ form.query }}</div>
-          <div class="col-md-2 my-1">
-            <input type="submit"
-                   value="Analyse SMILES/InChI"
-                   class="form-control btn-outline-primary" />
-            <button class="form-control my-1 btn-outline-secondary"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#AdvancedOptions"
-                    aria-expanded="false"
-                    aria-controls="AdvancedOptions">Advanced Options</button>
-            <div class="collapse" id="AdvancedOptions">
-              {% for checkbox in plot_checkboxes %}<div class="form-check form-switch">{{ checkbox }}</div>{% endfor %}
-              <div class="form-control my-1">{{ plot_config }}</div>
+    <div class="row justify-content-center" id="queryForm">
+      <div class="col-md-6">
+        <form action="" method="post" id="submitQueryPred">
+          {% csrf_token %}
+          <div class="row justify-content-center">
+            <div class="col-lg-6 my-1">{{ form.query }}</div>
+            <div class="col-lg-6 my-1">
+              <input type="submit"
+                     value="Analyse SMILES/InChI"
+                     class="form-control btn-outline-primary" />
+              <button class="form-control my-1 btn-outline-secondary"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#AdvancedOptions"
+                      aria-expanded="false"
+                      aria-controls="AdvancedOptions">Advanced Options</button>
+              <div class="collapse" id="AdvancedOptions">
+                {% for checkbox in plot_checkboxes %}<div class="form-check form-switch">{{ checkbox }}</div>{% endfor %}
+                <div class="form-control my-1">{{ plot_config }}</div>
+              </div>
             </div>
           </div>
+        </form>
+        <div id="loadingIndicator" class="loading-indicator">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
         </div>
-      </form>
-      <div id="loadingIndicator" class="loading-indicator">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
+        <script src={% static "js/loading.js" %}></script>
       </div>
-      <script src={% static "js/loading.js" %}></script>
     </div>
     <div class="row" id="mol_identifiers">
       {% if output %}

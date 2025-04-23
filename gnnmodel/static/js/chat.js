@@ -185,6 +185,12 @@ function showGeneratingMessage() {
   const messageBubble = document.createElement("div");
   messageBubble.className = "p-3 ms-3 bot-message d-flex align-items-center";
 
+  // Bootstrap spinner
+  const spinner = document.createElement("div");
+  spinner.className = "spinner-border spinner-border-sm text-primary me-2";
+  spinner.setAttribute("role", "status");
+  spinner.innerHTML = '<span class="visually-hidden">Loading...</span>';
+
   // Create message text
   const messageText = document.createElement("p");
   messageText.className = "small mb-0 me-3";
@@ -201,6 +207,7 @@ function showGeneratingMessage() {
   };
 
   // Monta os elementos
+  messageBubble.appendChild(spinner);
   messageBubble.appendChild(messageText);
   messageBubble.appendChild(stopButton);
   generatingContainer.appendChild(messageBubble);

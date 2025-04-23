@@ -1,7 +1,7 @@
 // Service Worker for Django PWA
 // This service worker is used to cache files for offline access in a Django PWA application.
 
-var staticCacheName = "django-pwa-v" + new Date().getTime();
+var staticCacheName = "pwa-v" + new Date().getTime();
 var filesToCache = [
   "/offline/",
   "/static/fontawesomefree/css/brands.css",
@@ -40,7 +40,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((cacheName) => cacheName.startsWith("django-pwa-"))
+          .filter((cacheName) => cacheName.startsWith("pwa-"))
           .filter((cacheName) => cacheName !== staticCacheName)
           .map((cacheName) => caches.delete(cacheName))
       );

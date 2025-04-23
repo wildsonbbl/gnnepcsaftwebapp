@@ -7,6 +7,8 @@ var availableModels = [];
 var currentModelName = "";
 var deleteSessionId = null;
 var deleteSessionName = null;
+var availableTools = [];
+var selectedTools = [];
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -82,6 +84,13 @@ function handleActionMessage(data) {
       if (data.available_models && Array.isArray(data.available_models)) {
         availableModels = data.available_models;
         populateModelsList(availableModels, currentModelName);
+      }
+      // Populate available tools if provided
+      if (data.available_tools && Array.isArray(data.available_tools)) {
+        availableTools = data.available_tools;
+        // Por padrão, todas selecionadas
+        selectedTools = [...availableTools];
+        populateToolsList(availableTools);
       }
       break;
     case "model_changed":
@@ -260,6 +269,7 @@ function changeModel(modelName) {
     JSON.stringify({
       action: "change_model",
       model_name: modelName,
+      tools: selectedTools,
     })
   );
 }
@@ -383,6 +393,37 @@ function populateSessionsList(sessions) {
   };
   newSessionLi.appendChild(newSessionA);
   sessionsList.appendChild(newSessionLi);
+}
+
+function populateToolsList(tools) {
+  var toolsList = document.getElementById("tools-list");
+  toolsList.innerHTML = "";
+  tools.forEach(function (tool) {
+    var li = document.createElement("li");
+    var label = document.createElement("label");
+    label.className = "dropdown-item";
+    var checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = tool;
+    checkbox.checked = selectedTools.includes(tool);
+    checkbox.onchange = function () {
+      if (this.checked) {
+        selectedTools.push(tool);
+      } else {
+        selectedTools = selectedTools.filter((t) => t !== tool);
+      }
+      chatSocket.send(
+        JSON.stringify({
+          action: "change_tools",
+          tools: selectedTools,
+        })
+      );
+    };
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(" " + tool));
+    li.appendChild(label);
+    toolsList.appendChild(li);
+  });
 }
 
 // Function to show delete confirmation modal
@@ -533,6 +574,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Enter" && !e.shiftKey) {
       // enter, return
       document.querySelector("#chat-message-submit").click();
+      this.style.height = "auto";
     }
   };
 

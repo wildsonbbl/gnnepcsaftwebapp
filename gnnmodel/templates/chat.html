@@ -55,6 +55,19 @@
                                    resize: none"></textarea>
                   <div class="d-flex position-absolute bottom-0 end-0 m-1">
                     <!-- Chat textarea bottom buttons will be added here -->
+                    <div class="dropdown me-2">
+                      <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle"
+                              type="button"
+                              id="toolsDropdown"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
+                              title="Tools">
+                        <i class="fas fa-tools"></i>
+                      </button>
+                      <ul class="dropdown-menu" id="tools-list" aria-labelledby="toolsDropdown">
+                        <!-- Tools will be populated here -->
+                      </ul>
+                    </div>
                     <button id="chat-message-submit"
                             type="button"
                             class="btn btn-sm btn-outline-primary rounded-circle"

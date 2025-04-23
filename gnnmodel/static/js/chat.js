@@ -107,6 +107,12 @@ function handleActionMessage(data) {
         document.getElementById("newSessionModal")
       );
       if (modal) modal.hide();
+      // Atualiza a lista de sessões
+      chatSocket.send(
+        JSON.stringify({
+          action: "get_sessions",
+        })
+      );
       break;
     case "load_messages":
       messages = data.messages;

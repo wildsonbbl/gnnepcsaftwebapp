@@ -69,7 +69,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = str(last_session.session_id)
             session = last_session
         else:
-            # Create a default session if none exists
+            # Create a new session
             self.session_id = str(uuid.uuid4())
             session = await self.get_or_create_session(self.session_id)
         assert isinstance(session, ChatSession)
@@ -168,7 +168,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
 
-    async def handle_actions(self, text_data_json):  # pylint: disable=R0915
+    async def handle_actions(self, text_data_json):  # pylint: disable=R0915,R0912
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
         if action == "change_model":
@@ -219,10 +219,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     self.session_id = str(last_session.session_id)
                     session = last_session
                 else:
-                    # Create a new session if no other sessions exist
+                    # Create a new session
                     self.session_id = str(uuid.uuid4())
                     session = await self.get_or_create_session(self.session_id)
-
                 assert isinstance(session, ChatSession)
 
                 self.runner, self.runner_session = start_agent_session(

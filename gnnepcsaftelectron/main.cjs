@@ -183,6 +183,7 @@ function runDbMigrate() {
     );
 
     dbMigrate.on("close", (code) => {
+      log.info("Database migration completed");
       resolve();
     });
     dbMigrate.on("error", (err) => {

@@ -50,6 +50,7 @@ class ChatSession(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     messages = models.JSONField(default=list)
     model_name = models.CharField(max_length=100, default="gemini-2.0-flash")
+    selected_tools = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.name} ({self.session_id})"

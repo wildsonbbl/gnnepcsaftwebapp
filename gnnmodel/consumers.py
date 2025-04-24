@@ -75,7 +75,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         assert isinstance(session, ChatSession)
         # Initialize the agent with the session
         self.runner, self.runner_session = start_agent_session(
-            self.session_id, session.model_name
+            self.session_id,
+            session.model_name,
+            tools=[tool_map[tool] for tool in session.selected_tools],
         )
 
         # Send the current session info to the client
@@ -88,6 +90,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "model_name": session.model_name,
                     "available_models": AVAILABLE_MODELS,
                     "available_tools": [t.__name__ for t in all_tools],
+                    "selected_tools": session.selected_tools,
                 },
                 cls=CustomJSONEncoder,
             )
@@ -129,7 +132,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_or_create_session(
-        self, session_id, name="New Session", model_name=DEFAULT_MODEL
+        self,
+        session_id,
+        name="New Session",
+        model_name=DEFAULT_MODEL,
+        selected_tools=None,
     ):
         """Get or create a session"""
         try:
@@ -137,8 +144,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return ChatSession.objects.get(session_id=session_id)
         except ChatSession.DoesNotExist:
             # Create new session
+            if selected_tools is None:
+                selected_tools = [t.__name__ for t in all_tools]
             return ChatSession.objects.create(
-                session_id=session_id, name=name, model_name=model_name
+                session_id=session_id,
+                name=name,
+                model_name=model_name,
+                selected_tools=selected_tools,
             )
 
     @database_sync_to_async
@@ -225,7 +237,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 assert isinstance(session, ChatSession)
 
                 self.runner, self.runner_session = start_agent_session(
-                    self.session_id, session.model_name
+                    self.session_id,
+                    session.model_name,
+                    tools=[tool_map[name] for name in session.selected_tools],
                 )
 
                 await self.send(
@@ -237,6 +251,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             "model_name": session.model_name,
                             "available_models": AVAILABLE_MODELS,
                             "available_tools": [t.__name__ for t in all_tools],
+                            "selected_tools": session.selected_tools,
                         },
                         cls=CustomJSONEncoder,
                     )
@@ -281,11 +296,20 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = str(uuid.uuid4())
             name = text_data_json.get("name", "New Session")
             model_name = text_data_json.get("model_name", DEFAULT_MODEL)
-            session = await self.get_or_create_session(
-                self.session_id, name=name, model_name=model_name
+            selected_tools = text_data_json.get(
+                "tools", [t.__name__ for t in all_tools]
             )
+            session = await self.get_or_create_session(
+                self.session_id,
+                name=name,
+                model_name=model_name,
+                selected_tools=selected_tools,
+            )
+            assert isinstance(session, ChatSession)
             self.runner, self.runner_session = start_agent_session(
-                self.session_id, model_name=session.model_name
+                self.session_id,
+                model_name=session.model_name,
+                tools=[tool_map[t] for t in session.selected_tools],
             )
 
             await self.send(
@@ -307,6 +331,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "model_name": session.model_name,
                         "available_models": AVAILABLE_MODELS,
                         "available_tools": [t.__name__ for t in all_tools],
+                        "selected_tools": session.selected_tools,
                     },
                     cls=CustomJSONEncoder,
                 )
@@ -317,8 +342,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = text_data_json["session_id"]
 
             session = await self.get_or_create_session(self.session_id)
+            assert isinstance(session, ChatSession)
             self.runner, self.runner_session = start_agent_session(
-                self.session_id, session.model_name
+                self.session_id,
+                session.model_name,
+                tools=[tool_map[t] for t in session.selected_tools],
             )
 
             await self.send(
@@ -330,6 +358,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "model_name": session.model_name,
                         "available_models": AVAILABLE_MODELS,
                         "available_tools": [t.__name__ for t in all_tools],
+                        "selected_tools": session.selected_tools,
                     },
                     cls=CustomJSONEncoder,
                 )
@@ -368,12 +397,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         elif action == "change_tools":
             selected_tools = [
-                tool_map[name] for name in text_data_json["tools"] if name in tool_map
+                tool_map[t] for t in text_data_json["tools"] if t in tool_map
             ]
+            await database_sync_to_async(
+                ChatSession.objects.filter(session_id=self.session_id).update
+            )(selected_tools=[t.__name__ for t in selected_tools])
 
             session = await self.get_or_create_session(self.session_id)
             self.runner, self.runner_session = start_agent_session(
                 self.session_id, session.model_name, tools=selected_tools
+            )
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "tools_changed",
+                        "selected_tools": [t.__name__ for t in selected_tools],
+                    }
+                )
             )
 
     @database_sync_to_async

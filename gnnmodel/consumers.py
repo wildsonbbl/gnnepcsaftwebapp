@@ -21,6 +21,9 @@ from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
 from .models import ChatSession
 
 tool_map = {t.__name__: t for t in all_tools}
+tool_descriptions = {
+    t.__name__: markdown(t.__doc__) or "No description available" for t in all_tools
+}
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -91,6 +94,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "available_models": AVAILABLE_MODELS,
                     "available_tools": [t.__name__ for t in all_tools],
                     "selected_tools": session.selected_tools,
+                    "tool_descriptions": tool_descriptions,
                 },
                 cls=CustomJSONEncoder,
             )

@@ -9,6 +9,12 @@ var deleteSessionId = null;
 var deleteSessionName = null;
 var availableTools = [];
 var selectedTools = [];
+const toolDescriptions = {
+  ToolA: "Descrição da ToolA.",
+  ToolB: "Descrição da ToolB.",
+  ToolC: "Descrição da ToolC.",
+  // Adicione mais ferramentas aqui
+};
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -94,6 +100,9 @@ function handleActionMessage(data) {
       if (data.available_tools && Array.isArray(data.available_tools)) {
         availableTools = data.available_tools;
         populateToolsList(availableTools);
+      }
+      if (data.tool_descriptions) {
+        Object.assign(toolDescriptions, data.tool_descriptions);
       }
       break;
     case "tools_changed":
@@ -462,8 +471,11 @@ function populateToolsList(tools) {
     li.onclick = function (event) {
       event.stopPropagation();
     };
+    li.className = "d-flex align-items-center";
+
     var label = document.createElement("label");
     label.className = "dropdown-item";
+
     var checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = tool;
@@ -478,11 +490,39 @@ function populateToolsList(tools) {
         selectedTools = selectedTools.filter((t) => t !== tool);
       }
     };
+
     label.appendChild(checkbox);
     label.appendChild(document.createTextNode(" " + tool));
+
+    toolInfoBtn = document.createElement("button");
+    toolInfoBtn.className = "btn btn-sm btn-outline-info rounded-circle mx-1";
+    toolInfoBtn.innerHTML = "<i class='fas fa-info-circle'></i>";
+    toolInfoBtn.title = "Info";
+    toolInfoBtn.type = "button";
+    toolInfoBtn.setAttribute("data-bs-toggle", "modal");
+    toolInfoBtn.setAttribute("data-bs-target", "#toolInfoModal");
+    toolInfoBtn.onclick = function (event) {
+      event.stopPropagation();
+      showToolInfo(tool);
+    };
     li.appendChild(label);
+    li.appendChild(toolInfoBtn);
     toolsList.appendChild(li);
   });
+}
+
+function showToolInfo(toolName) {
+  let modal = document.getElementById("toolInfoModal");
+  modal.onclick = (event) => {
+    event.stopPropagation();
+  };
+
+  // Define o conteúdo do modal
+  document.getElementById(
+    "tool-info-body"
+  ).innerHTML = `<strong>${toolName}</strong><br>${
+    toolDescriptions[toolName] || "No description available."
+  }`;
 }
 
 // Function to show delete confirmation modal

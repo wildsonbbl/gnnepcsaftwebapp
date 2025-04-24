@@ -85,12 +85,22 @@ function handleActionMessage(data) {
         availableModels = data.available_models;
         populateModelsList(availableModels, currentModelName);
       }
+      if (data.selected_tools && Array.isArray(data.selected_tools)) {
+        selectedTools = [...data.selected_tools];
+      } else if (data.available_tools && Array.isArray(data.available_tools)) {
+        selectedTools = [...data.available_tools];
+      }
       // Populate available tools if provided
       if (data.available_tools && Array.isArray(data.available_tools)) {
         availableTools = data.available_tools;
-        // Por padrão, todas selecionadas
-        selectedTools = [...availableTools];
         populateToolsList(availableTools);
+      }
+      break;
+    case "tools_changed":
+      if (data.selected_tools) {
+        selectedTools = [...data.selected_tools];
+        populateToolsList(availableTools);
+        showToast("Tools changed successfully");
       }
       break;
     case "model_changed":
@@ -589,6 +599,7 @@ function createNewSession() {
       action: "create_session",
       name: sessionName,
       model_name: currentModelName,
+      tools: selectedTools,
     })
   );
 }

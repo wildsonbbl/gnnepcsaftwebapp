@@ -372,6 +372,7 @@ function populateSessionsList(sessions) {
 
       // Create delete button
       var deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
       deleteBtn.className = "btn btn-sm text-danger me-2";
       deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
       deleteBtn.title = "Delete session";
@@ -467,6 +468,7 @@ function populateToolsList(tools) {
     checkbox.type = "checkbox";
     checkbox.value = tool;
     checkbox.checked = selectedTools.includes(tool);
+    checkbox.name = "tool-item";
     checkbox.onchange = function (event) {
       if (this.checked) {
         if (!selectedTools.includes(tool)) {

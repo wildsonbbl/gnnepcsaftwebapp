@@ -588,6 +588,7 @@ function createNewSession() {
     JSON.stringify({
       action: "create_session",
       name: sessionName,
+      model_name: currentModelName,
     })
   );
 }

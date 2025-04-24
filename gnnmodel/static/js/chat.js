@@ -398,12 +398,14 @@ function populateSessionsList(sessions) {
 function populateToolsList(tools) {
   var toolsList = document.getElementById("tools-list");
   toolsList.innerHTML = "";
+
+  var li = document.createElement("li");
   var confirmBtn = document.createElement("button");
   confirmBtn.className = "btn btn-sm btn-outline-success rounded-circle mx-1";
   confirmBtn.innerHTML = "<i class='fas fa-check'></i>";
   confirmBtn.title = "Confirm";
   confirmBtn.type = "button";
-  confirmBtn.onclick = function () {
+  confirmBtn.onclick = function (event) {
     chatSocket.send(
       JSON.stringify({
         action: "change_tools",
@@ -411,14 +413,16 @@ function populateToolsList(tools) {
       })
     );
   };
-  toolsList.appendChild(confirmBtn);
+  li.appendChild(confirmBtn);
 
-  var confirmBtn = document.createElement("button");
-  confirmBtn.className = "btn btn-sm btn-outline-secondary rounded-circle mx-1";
-  confirmBtn.innerHTML = "<i class='fas fa-list-check'></i>";
-  confirmBtn.title = "Select/Deselect all tools";
-  confirmBtn.type = "button";
-  confirmBtn.onclick = function () {
+  var selectAllBtn = document.createElement("button");
+  selectAllBtn.className =
+    "btn btn-sm btn-outline-secondary rounded-circle mx-1";
+  selectAllBtn.innerHTML = "<i class='fas fa-list-check'></i>";
+  selectAllBtn.title = "Select/Deselect all tools";
+  selectAllBtn.type = "button";
+  selectAllBtn.onclick = function (event) {
+    event.stopPropagation();
     var checkboxes = toolsList.querySelectorAll("input[type='checkbox']");
     var allChecked = Array.from(checkboxes).every(
       (checkbox) => checkbox.checked
@@ -426,30 +430,38 @@ function populateToolsList(tools) {
     checkboxes.forEach((checkbox) => {
       checkbox.checked = !allChecked;
       if (checkbox.checked) {
-        selectedTools.push(checkbox.value);
+        if (!selectedTools.includes(checkbox.value)) {
+          selectedTools.push(checkbox.value);
+        }
       } else {
         selectedTools = selectedTools.filter((t) => t !== checkbox.value);
       }
     });
   };
-  toolsList.appendChild(confirmBtn);
+  li.appendChild(selectAllBtn);
+  toolsList.appendChild(li);
 
-  // Add divider and confirm button
+  // Add divider
   var divider = document.createElement("li");
   divider.innerHTML = '<hr class="dropdown-divider">';
   toolsList.appendChild(divider);
 
   tools.forEach(function (tool) {
     var li = document.createElement("li");
+    li.onclick = function (event) {
+      event.stopPropagation();
+    };
     var label = document.createElement("label");
     label.className = "dropdown-item";
     var checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.value = tool;
     checkbox.checked = selectedTools.includes(tool);
-    checkbox.onchange = function () {
+    checkbox.onchange = function (event) {
       if (this.checked) {
-        selectedTools.push(tool);
+        if (!selectedTools.includes(tool)) {
+          selectedTools.push(tool);
+        }
       } else {
         selectedTools = selectedTools.filter((t) => t !== tool);
       }

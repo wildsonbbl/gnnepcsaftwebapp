@@ -38,8 +38,8 @@ services:
       - --log.level=error
 
   webapp:
-    scale: 1
-    image: wildsonbbl/gnnepcsaft:v2
+    scale: 3
+    image: wildsonbbl/gnnepcsaft:latest
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.webapp-route.rule=HostRegexp(`gnnepcsaft.wildsonbbl.com`)"
@@ -52,7 +52,7 @@ services:
       # - "traefik.http.routers.webapp-route.tls.domains[0].sans=gnnepcsaft.wildsonbbl.com"
 
     env_file:
-      - .env
+      - .traefik-env
     deploy:
       resources:
         limits:
@@ -60,8 +60,7 @@ services:
         reservations:
           memory: 256M
     memswap_limit: 1G
-    command:
-      ["gunicorn", "--timeout", "120", "--bind", "0.0.0.0:8000", "webapp.wsgi"]
+    command: ["bash", "-c", "daphne -b 0.0.0.0 -p 8000 webapp.asgi:application"]
     networks:
       - ip6net1
 

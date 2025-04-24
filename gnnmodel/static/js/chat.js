@@ -7,6 +7,14 @@ var availableModels = [];
 var currentModelName = "";
 var deleteSessionId = null;
 var deleteSessionName = null;
+var availableTools = [];
+var selectedTools = [];
+const toolDescriptions = {
+  ToolA: "Descrição da ToolA.",
+  ToolB: "Descrição da ToolB.",
+  ToolC: "Descrição da ToolC.",
+  // Adicione mais ferramentas aqui
+};
 
 // Initialize the chat
 function initializeChat(sessionId = null) {
@@ -35,7 +43,6 @@ function setupChatSocketHandlers() {
     console.log("Connected to chat server");
     // Request list of sessions
     setTimeout(function () {
-      console.log("Requesting sessions list");
       chatSocket.send(
         JSON.stringify({
           action: "get_sessions",
@@ -46,11 +53,9 @@ function setupChatSocketHandlers() {
 
   chatSocket.onmessage = function (e) {
     var data = JSON.parse(e.data);
-    console.log("Received message:", data);
 
     // Handle different types of messages
     if (data.action) {
-      console.log("Handling action:", data.action);
       handleActionMessage(data);
     } else if (data.text) {
       handleChatMessage(data.text);
@@ -86,6 +91,26 @@ function handleActionMessage(data) {
         availableModels = data.available_models;
         populateModelsList(availableModels, currentModelName);
       }
+      if (data.selected_tools && Array.isArray(data.selected_tools)) {
+        selectedTools = [...data.selected_tools];
+      } else if (data.available_tools && Array.isArray(data.available_tools)) {
+        selectedTools = [...data.available_tools];
+      }
+      // Populate available tools if provided
+      if (data.available_tools && Array.isArray(data.available_tools)) {
+        availableTools = data.available_tools;
+        populateToolsList(availableTools);
+      }
+      if (data.tool_descriptions) {
+        Object.assign(toolDescriptions, data.tool_descriptions);
+      }
+      break;
+    case "tools_changed":
+      if (data.selected_tools) {
+        selectedTools = [...data.selected_tools];
+        populateToolsList(availableTools);
+        showToast("Tools changed successfully");
+      }
       break;
     case "model_changed":
       // Update the current model when changed
@@ -110,6 +135,12 @@ function handleActionMessage(data) {
         document.getElementById("newSessionModal")
       );
       if (modal) modal.hide();
+      // Atualiza a lista de sessões
+      chatSocket.send(
+        JSON.stringify({
+          action: "get_sessions",
+        })
+      );
       break;
     case "load_messages":
       messages = data.messages;
@@ -137,6 +168,12 @@ function handleActionMessage(data) {
       const generatingContainer = document.getElementById("bottom-chat-log");
       generatingContainer.innerHTML = "";
       generatingContainer.scrollIntoView();
+      if (data.type === "stop_action") {
+        showToast("Stopped generating", "error");
+      }
+      if (data.type === "interrupted") {
+        showToast("LLM interrupted generating", "error");
+      }
       break;
     case "ongoing_turn":
       showGeneratingMessage();
@@ -169,17 +206,38 @@ function showGeneratingMessage() {
   // Create container for the "generating" message
   const generatingContainer = document.getElementById("bottom-chat-log");
 
+  // Limpa o conteúdo anterior
+  generatingContainer.innerHTML = "";
+
   // Create message bubble
   const messageBubble = document.createElement("div");
-  messageBubble.className = "p-3 ms-3 bot-message";
+  messageBubble.className = "p-3 ms-3 bot-message d-flex align-items-center";
+
+  // Bootstrap spinner
+  const spinner = document.createElement("div");
+  spinner.className = "spinner-border spinner-border-sm text-primary me-2";
+  spinner.setAttribute("role", "status");
+  spinner.innerHTML = '<span class="visually-hidden">Loading...</span>';
 
   // Create message text
   const messageText = document.createElement("p");
-  messageText.className = "small mb-0";
+  messageText.className = "small mb-0 me-3";
   messageText.textContent = "Generating response...";
 
-  // Assemble the elements
+  // Botão de parar
+  const stopButton = document.createElement("button");
+  stopButton.className = "btn btn-sm btn-danger";
+  stopButton.textContent = "Stop";
+  stopButton.onclick = function () {
+    chatSocket.send(JSON.stringify({ action: "stop_generating" }));
+    stopButton.disabled = true;
+    stopButton.textContent = "Stopping...";
+  };
+
+  // Monta os elementos
+  messageBubble.appendChild(spinner);
   messageBubble.appendChild(messageText);
+  messageBubble.appendChild(stopButton);
   generatingContainer.appendChild(messageBubble);
 
   // Scroll to the bottom
@@ -230,6 +288,7 @@ function changeModel(modelName) {
     JSON.stringify({
       action: "change_model",
       model_name: modelName,
+      tools: selectedTools,
     })
   );
 }
@@ -322,6 +381,7 @@ function populateSessionsList(sessions) {
 
       // Create delete button
       var deleteBtn = document.createElement("button");
+      deleteBtn.type = "button";
       deleteBtn.className = "btn btn-sm text-danger me-2";
       deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
       deleteBtn.title = "Delete session";
@@ -353,6 +413,116 @@ function populateSessionsList(sessions) {
   };
   newSessionLi.appendChild(newSessionA);
   sessionsList.appendChild(newSessionLi);
+}
+
+function populateToolsList(tools) {
+  var toolsList = document.getElementById("tools-list");
+  toolsList.innerHTML = "";
+
+  var li = document.createElement("li");
+  var confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn btn-sm btn-outline-success rounded-circle mx-1";
+  confirmBtn.innerHTML = "<i class='fas fa-check'></i>";
+  confirmBtn.title = "Confirm";
+  confirmBtn.type = "button";
+  confirmBtn.onclick = function (event) {
+    chatSocket.send(
+      JSON.stringify({
+        action: "change_tools",
+        tools: selectedTools,
+      })
+    );
+  };
+  li.appendChild(confirmBtn);
+
+  var selectAllBtn = document.createElement("button");
+  selectAllBtn.className =
+    "btn btn-sm btn-outline-secondary rounded-circle mx-1";
+  selectAllBtn.innerHTML = "<i class='fas fa-list-check'></i>";
+  selectAllBtn.title = "Select/Deselect all tools";
+  selectAllBtn.type = "button";
+  selectAllBtn.onclick = function (event) {
+    event.stopPropagation();
+    var checkboxes = toolsList.querySelectorAll("input[type='checkbox']");
+    var allChecked = Array.from(checkboxes).every(
+      (checkbox) => checkbox.checked
+    );
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = !allChecked;
+      if (checkbox.checked) {
+        if (!selectedTools.includes(checkbox.value)) {
+          selectedTools.push(checkbox.value);
+        }
+      } else {
+        selectedTools = selectedTools.filter((t) => t !== checkbox.value);
+      }
+    });
+  };
+  li.appendChild(selectAllBtn);
+  toolsList.appendChild(li);
+
+  // Add divider
+  var divider = document.createElement("li");
+  divider.innerHTML = '<hr class="dropdown-divider">';
+  toolsList.appendChild(divider);
+
+  tools.forEach(function (tool) {
+    var li = document.createElement("li");
+    li.onclick = function (event) {
+      event.stopPropagation();
+    };
+    li.className = "d-flex align-items-center";
+
+    var label = document.createElement("label");
+    label.className = "dropdown-item";
+
+    var checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = tool;
+    checkbox.checked = selectedTools.includes(tool);
+    checkbox.name = "tool-item";
+    checkbox.onchange = function (event) {
+      if (this.checked) {
+        if (!selectedTools.includes(tool)) {
+          selectedTools.push(tool);
+        }
+      } else {
+        selectedTools = selectedTools.filter((t) => t !== tool);
+      }
+    };
+
+    label.appendChild(checkbox);
+    label.appendChild(document.createTextNode(" " + tool));
+
+    toolInfoBtn = document.createElement("button");
+    toolInfoBtn.className = "btn btn-sm btn-outline-info rounded-circle mx-1";
+    toolInfoBtn.innerHTML = "<i class='fas fa-info-circle'></i>";
+    toolInfoBtn.title = "Info";
+    toolInfoBtn.type = "button";
+    toolInfoBtn.setAttribute("data-bs-toggle", "modal");
+    toolInfoBtn.setAttribute("data-bs-target", "#toolInfoModal");
+    toolInfoBtn.onclick = function (event) {
+      event.stopPropagation();
+      showToolInfo(tool);
+    };
+    li.appendChild(label);
+    li.appendChild(toolInfoBtn);
+    toolsList.appendChild(li);
+  });
+}
+
+function showToolInfo(toolName) {
+  let modal = document.getElementById("toolInfoModal");
+  modal.onclick = (event) => {
+    event.stopPropagation();
+  };
+
+  // Define o conteúdo do modal
+  document.getElementById(
+    "tool-info-body"
+  ).innerHTML = `<strong>${toolName}</strong><br>${
+    toolDescriptions[toolName] || "No description available."
+  }`;
 }
 
 // Function to show delete confirmation modal
@@ -470,6 +640,8 @@ function createNewSession() {
     JSON.stringify({
       action: "create_session",
       name: sessionName,
+      model_name: currentModelName,
+      tools: selectedTools,
     })
   );
 }
@@ -503,6 +675,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (e.key === "Enter" && !e.shiftKey) {
       // enter, return
       document.querySelector("#chat-message-submit").click();
+      this.style.height = "auto";
     }
   };
 

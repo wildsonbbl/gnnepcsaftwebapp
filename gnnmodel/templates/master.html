@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 {% load static %}
-{% load pwa %}
 {% load bootstrap5 %}
 <html lang="en">
   <head>
@@ -21,7 +20,15 @@
     <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
     <link href="{% static 'css/chat.css' %}" rel="stylesheet" type="text/css" />
     {% bootstrap_css %} {% bootstrap_javascript %}
-    {% progressive_web_app_meta %}
+    <link rel="manifest" href="{% static "/manifest.json" %}">
+    <link rel="icon"
+          href="{% static "images/icons/ios/16.png" %}"
+          type="image/png"
+          sizes="16x16">
+    <link rel="apple-touch-icon"
+          href="{% static "images/icons/ios/16.png" %}"
+          type="image/png"
+          sizes="16x16">
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="https://cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
     <script src={% static "js/myidb.js" %} async></script>

@@ -3,7 +3,6 @@
 import asyncio
 import json
 import uuid
-from datetime import datetime
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -12,40 +11,25 @@ from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import Session
 from google.genai.types import Content, Part
 from markdown import markdown
-from markdown.extensions import Extension
-from markdown.treeprocessors import Treeprocessor
 
 from . import logger
-from .agents import AVAILABLE_MODELS, DEFAULT_MODEL
-from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
+from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, all_tools
+from .chat_utils import (
+    APP_NAME,
+    USER_ID,
+    BlankLinkExtension,
+    CustomJSONEncoder,
+    docstring_to_html,
+    session_service,
+    start_agent_session,
+)
 from .models import ChatSession
 
-
-class CustomJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles UUIDs and datetimes"""
-
-    def default(self, o):
-        if isinstance(o, uuid.UUID):
-            return str(o)
-        if isinstance(o, datetime):
-            return o.isoformat()
-        return super().default(o)
-
-
-class BlankLinkExtension(Extension):
-    "extension to set links to target=_blank"
-
-    def extendMarkdown(self, md):
-        md.treeprocessors.register(BlankLinkProcessor(md), "blank_link_processor", 15)
-
-
-class BlankLinkProcessor(Treeprocessor):  # pylint: disable=too-few-public-methods
-    "processor to set links to target=_blank"
-
-    def run(self, root):
-        for element in root.iter("a"):
-            element.set("target", "_blank")
-        return root
+tool_map = {t.__name__: t for t in all_tools}
+tool_descriptions = {
+    t.__name__: docstring_to_html(t.__doc__) or "No description available"
+    for t in all_tools
+}
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -55,6 +39,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     runner_session: Session
     runner: Runner
     run_config = RunConfig(response_modalities=["TEXT"])
+    agent_task = None
 
     async def connect(self):
         """Connect to the websocket"""
@@ -64,22 +49,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         last_session = await self.get_last_session()
         if last_session:
             self.session_id = str(last_session.session_id)
-            session_name = last_session.name
-            model_name = (
-                last_session.model_name
-                if hasattr(last_session, "model_name") and last_session.model_name
-                else DEFAULT_MODEL
-            )
+            session = last_session
         else:
-            # Create a default session if none exists
+            # Create a new session
             self.session_id = str(uuid.uuid4())
-            session_name = "New Session"
-            model_name = DEFAULT_MODEL
-            await self.create_new_session(self.session_id, session_name, model_name)
-
+            session = await self.get_or_create_session(self.session_id)
+        assert isinstance(session, ChatSession)
         # Initialize the agent with the session
         self.runner, self.runner_session = start_agent_session(
-            self.session_id, model_name
+            self.session_id,
+            session.model_name,
+            tools=[tool_map[tool] for tool in session.selected_tools],
         )
 
         # Send the current session info to the client
@@ -88,21 +68,41 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 {
                     "action": "session_loaded",
                     "session_id": self.session_id,
-                    "name": session_name,
-                    "model_name": model_name,
+                    "name": session.name,
+                    "model_name": session.model_name,
                     "available_models": AVAILABLE_MODELS,
+                    "available_tools": [t.__name__ for t in all_tools],
+                    "selected_tools": session.selected_tools,
+                    "tool_descriptions": tool_descriptions,
                 },
                 cls=CustomJSONEncoder,
             )
         )
 
-        # Load previous messages if session exists
-        if last_session and last_session.messages:
-            await self.send(
-                text_data=json.dumps(
-                    {"action": "load_messages", "messages": last_session.messages},
-                    cls=CustomJSONEncoder,
-                )
+        await self.send(
+            text_data=json.dumps(
+                {"action": "load_messages", "messages": session.messages},
+                cls=CustomJSONEncoder,
+            )
+        )
+
+    async def receive(self, text_data=None, bytes_data=None):
+        assert text_data is not None
+        text_data_json = json.loads(text_data)
+
+        # Handle different types of messages
+        if "action" in text_data_json:
+            await self.handle_actions(text_data_json)
+
+        elif "text" in text_data_json:
+            if text_data_json["text"] == "":
+                return
+
+            await self.client_to_agent_messaging(text_data_json["text"])
+            if self.agent_task and not self.agent_task.done():
+                self.agent_task.cancel()
+            self.agent_task = asyncio.create_task(
+                self.agent_to_client_messaging(text_data_json["text"])
             )
 
     @database_sync_to_async
@@ -114,21 +114,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def create_new_session(self, session_id, name, model_name=DEFAULT_MODEL):
-        """Create a new session"""
-        return ChatSession.objects.create(
-            session_id=session_id, name=name, model_name=model_name
-        )
-
-    @database_sync_to_async
-    def get_or_create_session(self, session_id):
+    def get_or_create_session(
+        self,
+        session_id,
+        name="New Session",
+        model_name=DEFAULT_MODEL,
+        selected_tools=None,
+    ):
         """Get or create a session"""
         try:
             # Try to get existing session
             return ChatSession.objects.get(session_id=session_id)
         except ChatSession.DoesNotExist:
             # Create new session
-            return ChatSession.objects.create(session_id=session_id)
+            if selected_tools is None:
+                selected_tools = [t.__name__ for t in all_tools]
+            return ChatSession.objects.create(
+                session_id=session_id,
+                name=name,
+                model_name=model_name,
+                selected_tools=selected_tools,
+            )
 
     @database_sync_to_async
     def save_message_to_db(self, message):
@@ -157,22 +163,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
 
-    async def receive(self, text_data=None, bytes_data=None):
-        assert text_data is not None
-        text_data_json = json.loads(text_data)
-
-        # Handle different types of messages
-        if "action" in text_data_json:
-            await self.handle_actions(text_data_json)
-
-        elif "text" in text_data_json:
-            if text_data_json["text"] == "":
-                return
-
-            await self.client_to_agent_messaging(text_data_json["text"])
-            await self.agent_to_client_messaging(text_data_json["text"])
-
-    async def handle_actions(self, text_data_json):  # pylint: disable=R0915
+    async def handle_actions(self, text_data_json: dict):  # pylint: disable=R0915,R0912
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
         if action == "change_model":
@@ -183,9 +174,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     ChatSession.objects.filter(session_id=self.session_id).update
                 )(model_name=model_name)
 
-                # Reinitialize the agent with the new model
+                selected_tools = [
+                    tool_map[name]
+                    for name in text_data_json["tools"]
+                    if name in tool_map
+                ]
                 self.runner, self.runner_session = start_agent_session(
-                    self.session_id, model_name
+                    self.session_id, model_name, selected_tools
                 )
 
                 await self.send(
@@ -217,60 +212,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 last_session = await self.get_last_session()
                 if last_session:
                     self.session_id = str(last_session.session_id)
-                    session_name = last_session.name
-                    self.runner, self.runner_session = start_agent_session(
-                        self.session_id
-                    )
-
-                    # Send the current session info to the client
-                    await self.send(
-                        text_data=json.dumps(
-                            {
-                                "action": "session_loaded",
-                                "session_id": self.session_id,
-                                "name": session_name,
-                            },
-                            cls=CustomJSONEncoder,
-                        )
-                    )
-
-                    # Load previous messages
-                    await self.send(
-                        text_data=json.dumps(
-                            {
-                                "action": "load_messages",
-                                "messages": last_session.messages,
-                            },
-                            cls=CustomJSONEncoder,
-                        )
-                    )
+                    session = last_session
                 else:
-                    # Create a new session if no other sessions exist
-                    new_session_id = str(uuid.uuid4())
-                    new_session_name = "New Session"
-                    await self.create_new_session(new_session_id, new_session_name)
-                    self.session_id = new_session_id
-                    self.runner, self.runner_session = start_agent_session(
-                        new_session_id
-                    )
+                    # Create a new session
+                    self.session_id = str(uuid.uuid4())
+                    session = await self.get_or_create_session(self.session_id)
+                assert isinstance(session, ChatSession)
 
-                    await self.send(
-                        text_data=json.dumps(
-                            {
-                                "action": "session_loaded",
-                                "session_id": new_session_id,
-                                "name": new_session_name,
-                            },
-                            cls=CustomJSONEncoder,
-                        )
-                    )
+                self.runner, self.runner_session = start_agent_session(
+                    self.session_id,
+                    session.model_name,
+                    tools=[tool_map[name] for name in session.selected_tools],
+                )
 
-                    # Clear messages
-                    await self.send(
-                        text_data=json.dumps(
-                            {"action": "load_messages", "messages": []}
-                        )
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "action": "session_loaded",
+                            "session_id": self.session_id,
+                            "name": session.name,
+                            "model_name": session.model_name,
+                            "available_models": AVAILABLE_MODELS,
+                            "available_tools": [t.__name__ for t in all_tools],
+                            "selected_tools": session.selected_tools,
+                        },
+                        cls=CustomJSONEncoder,
                     )
+                )
+
+                await self.send(
+                    text_data=json.dumps(
+                        {"action": "load_messages", "messages": session.messages}
+                    )
+                )
 
                 # Send confirmation and refresh sessions list
             await self.send(
@@ -302,33 +276,77 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         elif action == "create_session":
             # Create a new session
-            new_session_id = str(uuid.uuid4())
+            self.session_id = str(uuid.uuid4())
             name = text_data_json.get("name", "New Session")
-            session = await database_sync_to_async(ChatSession.objects.create)(
-                session_id=new_session_id, name=name
+            model_name = text_data_json.get("model_name", DEFAULT_MODEL)
+            selected_tools = text_data_json.get(
+                "tools", [t.__name__ for t in all_tools]
             )
-
-            # Reset the agent session
-            self.session_id = new_session_id
-            self.runner, self.runner_session = start_agent_session(new_session_id)
+            session = await self.get_or_create_session(
+                self.session_id,
+                name=name,
+                model_name=model_name,
+                selected_tools=selected_tools,
+            )
+            assert isinstance(session, ChatSession)
+            self.runner, self.runner_session = start_agent_session(
+                self.session_id,
+                model_name=session.model_name,
+                tools=[tool_map[t] for t in session.selected_tools],
+            )
 
             await self.send(
                 text_data=json.dumps(
                     {
                         "action": "session_created",
-                        "session_id": new_session_id,
-                        "name": name,
+                        "session_id": self.session_id,
+                        "name": session.name,
                     }
+                )
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_loaded",
+                        "session_id": self.session_id,
+                        "name": session.name,
+                        "model_name": session.model_name,
+                        "available_models": AVAILABLE_MODELS,
+                        "available_tools": [t.__name__ for t in all_tools],
+                        "selected_tools": session.selected_tools,
+                    },
+                    cls=CustomJSONEncoder,
                 )
             )
 
         elif action == "load_session":
             # Load an existing session
-            session_id = text_data_json["session_id"]
-            self.session_id = session_id
-            self.runner, self.runner_session = start_agent_session(session_id)
+            self.session_id = text_data_json["session_id"]
 
-            session = await self.get_or_create_session(session_id)
+            session = await self.get_or_create_session(self.session_id)
+            assert isinstance(session, ChatSession)
+            self.runner, self.runner_session = start_agent_session(
+                self.session_id,
+                session.model_name,
+                tools=[tool_map[t] for t in session.selected_tools],
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_loaded",
+                        "session_id": self.session_id,
+                        "name": session.name,
+                        "model_name": session.model_name,
+                        "available_models": AVAILABLE_MODELS,
+                        "available_tools": [t.__name__ for t in all_tools],
+                        "selected_tools": session.selected_tools,
+                    },
+                    cls=CustomJSONEncoder,
+                )
+            )
+
             await self.send(
                 text_data=json.dumps(
                     {"action": "load_messages", "messages": session.messages}
@@ -349,6 +367,34 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "action": "session_renamed",
                         "session_id": session_id,
                         "name": name,
+                    }
+                )
+            )
+
+        elif action == "stop_generating":
+            if self.agent_task and not self.agent_task.done():
+                self.agent_task.cancel()
+            await self.send(
+                text_data=json.dumps({"action": "end_turn", "type": "stop_action"})
+            )
+
+        elif action == "change_tools":
+            selected_tools = [
+                tool_map[t] for t in text_data_json["tools"] if t in tool_map
+            ]
+            await database_sync_to_async(
+                ChatSession.objects.filter(session_id=self.session_id).update
+            )(selected_tools=[t.__name__ for t in selected_tools])
+
+            session = await self.get_or_create_session(self.session_id)
+            self.runner, self.runner_session = start_agent_session(
+                self.session_id, session.model_name, tools=selected_tools
+            )
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "tools_changed",
+                        "selected_tools": [t.__name__ for t in selected_tools],
                     }
                 )
             )
@@ -379,7 +425,11 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ):
 
                 if event.interrupted:
-                    await self.send(text_data=json.dumps({"action": "end_turn"}))
+                    await self.send(
+                        text_data=json.dumps(
+                            {"action": "end_turn", "type": "interrupted"}
+                        )
+                    )
                     break
 
                 all_parts = event.content and event.content.parts
@@ -409,6 +459,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     else:
                         all_texts += f"No text or function_call in part: {part}"
                 await asyncio.sleep(0.5)
+        except asyncio.CancelledError:
+            # Task foi cancelada (usuário clicou em Parar)
+            pass
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(e)
             message = {
@@ -420,7 +473,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps({"text": message}))
             await self.save_message_to_db(message)
         finally:
-            await self.send(text_data=json.dumps({"action": "end_turn"}))
+            await self.send(
+                text_data=json.dumps({"action": "end_turn", "type": "end_of_turn"})
+            )
 
     async def client_to_agent_messaging(self, text):
         """Client to agent communication"""

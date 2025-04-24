@@ -2,6 +2,7 @@
 
 import os
 import textwrap
+from typing import List, Optional
 
 from google.adk.agents import LlmAgent
 
@@ -41,7 +42,7 @@ AVAILABLE_MODELS = [
     "gemini-1.5-flash-8b",
 ]
 
-tools = [
+all_tools = [
     batch_convert_pure_density_to_kg_per_m3,
     batch_critical_points,
     batch_inchi_to_smiles,
@@ -96,9 +97,14 @@ def create_chemistry_agent(model_name=DEFAULT_MODEL):
     )
 
 
-def create_root_agent(model_name=DEFAULT_MODEL):
+def create_root_agent(model_name: str = DEFAULT_MODEL, tools: Optional[List] = None):
     """Create a root agent with the specified model"""
     chemistry_agent_ = create_chemistry_agent(model_name)
+
+    if tools is None:
+        tools_ = all_tools
+    else:
+        tools_ = tools
 
     return LlmAgent(
         model=model_name,
@@ -125,7 +131,7 @@ def create_root_agent(model_name=DEFAULT_MODEL):
           
         """
         ),
-        tools=tools,
+        tools=tools_,
         sub_agents=[chemistry_agent_],
     )
 

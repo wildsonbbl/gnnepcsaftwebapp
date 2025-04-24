@@ -1,4 +1,4 @@
-const dbname = "myidatabase",
+const dbname = "gnnepcsaft_idb",
   storename = "gnnepcsaftparameters";
 
 async function makingdb() {
@@ -11,12 +11,12 @@ async function makingdb() {
       gnnstore.createIndex("smiles", "smiles", { unique: false });
 
       alasql(
-        'ATTACH INDEXEDDB DATABASE myidatabase; \
-         USE myidatabase; \
-         SELECT ROUND(m, 4) as m, ROUND(sigma, 4) as sigma, ROUND(e, 4) as e, \
-          ROUND(k_ab, 4) as k_ab, ROUND(e_ab, 4) as e_ab, mu, na, nb, inchi, smiles \
-         INTO gnnepcsaftparameters \
-         FROM CSV("/static/mydata.csv", {headers:true, separator: "|"});',
+        `ATTACH INDEXEDDB DATABASE ${dbname}; 
+        USE ${dbname}; 
+        SELECT ROUND(m, 4) as m, ROUND(sigma, 4) as sigma, ROUND(e, 4) as e, 
+        ROUND(k_ab, 4) as k_ab, ROUND(e_ab, 4) as e_ab, mu, na, nb, inchi, smiles 
+        INTO ${storename} 
+        FROM CSV("/static/mydata.csv", {headers:true, separator: "|"});`,
         [],
         function (res) {
           console.log("Number of records added: ", res[2]);

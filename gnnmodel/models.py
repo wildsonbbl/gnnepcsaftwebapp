@@ -50,6 +50,7 @@ class ChatSession(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     messages = models.JSONField(default=list)
     model_name = models.CharField(max_length=100, default="gemini-2.0-flash")
+    selected_tools = models.JSONField(default=list)
 
     def __str__(self):
         return f"{self.name} ({self.session_id})"
@@ -91,6 +92,6 @@ def database_compatibility():
         logger.warning("Broken database detected. Backup saved in %s", backup_path)
         # Substitui pelo novo
         shutil.copyfile(app_db, local_db)
-        logger.info("Database substituted by new copy from %s", app_db)
+        logger.warning("Database substituted by new copy from %s", app_db)
     else:
         logger.info("Database is compatible with django models schema.")

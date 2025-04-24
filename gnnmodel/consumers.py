@@ -3,7 +3,6 @@
 import asyncio
 import json
 import uuid
-from datetime import datetime
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -12,45 +11,25 @@ from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import Session
 from google.genai.types import Content, Part
 from markdown import markdown
-from markdown.extensions import Extension
-from markdown.treeprocessors import Treeprocessor
 
 from . import logger
 from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, all_tools
-from .chat_utils import APP_NAME, USER_ID, session_service, start_agent_session
+from .chat_utils import (
+    APP_NAME,
+    USER_ID,
+    BlankLinkExtension,
+    CustomJSONEncoder,
+    docstring_to_html,
+    session_service,
+    start_agent_session,
+)
 from .models import ChatSession
 
 tool_map = {t.__name__: t for t in all_tools}
 tool_descriptions = {
-    t.__name__: markdown(t.__doc__) or "No description available" for t in all_tools
+    t.__name__: docstring_to_html(t.__doc__) or "No description available"
+    for t in all_tools
 }
-
-
-class CustomJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles UUIDs and datetimes"""
-
-    def default(self, o):
-        if isinstance(o, uuid.UUID):
-            return str(o)
-        if isinstance(o, datetime):
-            return o.isoformat()
-        return super().default(o)
-
-
-class BlankLinkExtension(Extension):
-    "extension to set links to target=_blank"
-
-    def extendMarkdown(self, md):
-        md.treeprocessors.register(BlankLinkProcessor(md), "blank_link_processor", 15)
-
-
-class BlankLinkProcessor(Treeprocessor):  # pylint: disable=too-few-public-methods
-    "processor to set links to target=_blank"
-
-    def run(self, root):
-        for element in root.iter("a"):
-            element.set("target", "_blank")
-        return root
 
 
 class ChatConsumer(AsyncWebsocketConsumer):

@@ -4,6 +4,7 @@ import json
 import os
 import os.path as osp
 
+from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -253,6 +254,9 @@ def description(request):
 
 def chat(request):
     "handle request for chat"
+
+    if settings.PLATFORM == "webapp":
+        return render(request, "chat-webapp.html")
 
     show_form = True
     if request.method == "POST":

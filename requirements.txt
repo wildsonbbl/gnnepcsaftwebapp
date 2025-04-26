@@ -3,7 +3,7 @@ numpy
 psycopg2-binary
 python-decouple
 rdkit
-polars
+polars=1.27.1
 django-debug-toolbar
 django-bootstrap-v5
 whitenoise

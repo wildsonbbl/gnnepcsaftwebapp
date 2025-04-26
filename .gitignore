@@ -4,7 +4,7 @@
 webapp-secret*.yaml
 **media/images**
 gha-creds-*.json
-**.*env
+**.*env*
 **venv
 **node_modules
 **out

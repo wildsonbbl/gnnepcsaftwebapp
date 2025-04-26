@@ -24,6 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("GNNEPCSAFT_SECRET_KEY", default="ABCDEFG")
 
+PLATFORM = config("GNNEPCSAFT_PLATFORM", default="desktop")
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("GNNEPCSAFT_DEBUG", default=False, cast=bool)
 

@@ -3,8 +3,9 @@
 import os
 import textwrap
 from json import loads
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
-from urllib.request import HTTPError, urlopen
+from urllib.request import urlopen
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -88,6 +89,6 @@ def is_api_key_valid(api_key: str) -> bool:
         with urlopen(url) as ans:
             ans = ans.read().decode("utf8").rstrip()
             return True
-    except HTTPError as e:
+    except (HTTPError, URLError) as e:
         logger.error(e)
         return False

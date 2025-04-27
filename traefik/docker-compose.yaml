@@ -20,8 +20,8 @@ services:
         reservations:
           memory: 50MB
     memswap_limit: 1G
-    networks:
-      - ip6net1
+    # networks:
+    #   - ip6net1
     command:
       - --api.insecure
       - --accesslog
@@ -61,16 +61,16 @@ services:
           memory: 256M
     memswap_limit: 1G
     command: ["bash", "-c", "daphne -b 0.0.0.0 -p 8000 webapp.asgi:application"]
-    networks:
-      - ip6net1
+#     networks:
+#       - ip6net1
 
-networks:
-  ip6net1:
-    name: "ip6net1"
-    enable_ipv6: true
-    ipam:
-      driver: default
-      config:
-        - subnet: "fdf6:e94a:ba2d::/64"
-        #- gateway: "fdf6:e94a:ba2d::1"
+# networks:
+#   ip6net1:
+#     name: "ip6net1"
+#     enable_ipv6: true
+#     ipam:
+#       driver: default
+#       config:
+#         - subnet: "fdf6:e94a:ba2d::/64"
+#- gateway: "fdf6:e94a:ba2d::1"
 #  docker network create --ipv6 --subnet="fdf6:e94a:ba2d::/64" --gateway="fdf6:e94a:ba2d::1" ip6net1

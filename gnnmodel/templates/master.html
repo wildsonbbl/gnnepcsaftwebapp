@@ -38,80 +38,42 @@
     </title>
   </head>
   <body>
-    <!-- Navbar estilo app -->
-    <nav class="navbar app-navbar fixed-top navbar-expand-lg bg-dark">
-      <div class="container-fluid">
-        <a class="navbar-brand d-flex align-items-center"
-           href="{% url 'pure' %}">
-          <img src="{% static 'images/icons/ios/16.png' %}"
+    <!-- Sidebar estilo app -->
+    <aside class="sidebar-app">
+      <div>
+        <div class="logo">
+          <img src="{% static 'images/icons/ios/180.png' %}"
                alt="Logo"
-               width="28"
-               height="28"
-               class="me-2">
-          GNNePCSAFT
-        </a>
-        <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#appNavbar"
-                aria-controls="appNavbar"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-          <i class="fas fa-list text-light"></i>
-        </button>
-        <div class="collapse navbar-collapse" id="appNavbar">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'pure' %}">PURE</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'mixture' %}">MIXTURE</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'batch' %}">BATCH</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'chat' %}">AI CHAT</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'about' %}">ABOUT</a>
-            </li>
-            <li class="nav-item" id="installButton"></li>
-          </ul>
+               width="32"
+               height="32">
         </div>
+        <nav class="nav flex-column">
+          <a class="nav-link" href="{% url 'pure' %}" title="Pure"><i class="fas fa-flask"></i></a>
+          <a class="nav-link" href="{% url 'mixture' %}" title="Mixture"><i class="fas fa-vials"></i></a>
+          <a class="nav-link" href="{% url 'batch' %}" title="Batch"><i class="fas fa-layer-group"></i></a>
+          <a class="nav-link" href="{% url 'chat' %}" title="AI Chat"><i class="fas fa-robot"></i></a>
+          <a class="nav-link" href="{% url 'about' %}" title="About"><i class="fas fa-info-circle"></i></a>
+          <span id="installButton"></span>
+        </nav>
+      </div>
+      <div class="footer">
+        <a href="https://www.linkedin.com/in/wildsonbbl/"
+           target="_blank"
+           title="Linkedin"><i class="fab fa-linkedin"></i></a>
+        <a href="https://github.com/wildsonbbl" target="_blank" title="Github"><i class="fab fa-github"></i></a>
+        <a href="https://orcid.org/0000-0002-0189-6000"
+           target="_blank"
+           title="ORCID"><i class="fab fa-orcid"></i></a>
+        <div class="copyright">© {{ now|date:"Y" }}</div>
       </div>
       <script src={% static "js/install.js" %} async></script>
-    </nav>
+    </aside>
     <!-- Conteúdo principal -->
-    <main class="container-lg app-content">
+    <main class="app-content p-3">
       <div class="row justify-content-center">
         {% block content %}
         {% endblock content %}
       </div>
     </main>
-    <!-- Footer estilo app -->
-    <footer class="app-footer fixed-bottom text-center">
-      <section>
-        <a class="btn btn-sm btn-link btn-floating text-dark"
-           href="https://www.linkedin.com/in/wildsonbbl/"
-           role="button"
-           name="Linkedin"
-           aria-label="Author Linkedin Page"
-           target="_blank"><i class="fab fa-linkedin"></i></a>
-        <a class="btn btn-sm btn-link btn-floating text-dark"
-           href="https://github.com/wildsonbbl"
-           role="button"
-           name="Github"
-           aria-label="Author Github Page"
-           target="_blank"><i class="fab fa-github"></i></a>
-        <a class="btn btn-sm btn-link btn-floating text-dark"
-           href="https://orcid.org/0000-0002-0189-6000"
-           role="button"
-           name="ORCID"
-           aria-label="Author ORCID Page"
-           target="_blank"><i class="fab fa-orcid"></i></a>
-      </section>
-      <small class="d-block mt-1 text-secondary">© {{ now|date:"Y" }} Wildson B B Lima</small>
-    </footer>
   </body>
 </html>

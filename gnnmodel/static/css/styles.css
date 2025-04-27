@@ -21,48 +21,104 @@
 
 body {
   background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
-  min-height: 100vh;
+  height: 100vh;
 }
-.app-navbar {
-  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.08);
-  border-radius: 0 0 18px 18px;
-  max-height: 75px;
+
+.sidebar-app {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 80px;
+  height: 100vh;
+  background: #212529;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 2px 0 8px rgba(30, 41, 59, 0.08);
+  z-index: 1040;
 }
-.app-navbar .navbar-brand {
-  font-weight: bold;
+.sidebar-app .logo {
+  margin-top: 1.2rem;
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sidebar-app .logo img {
+  width: 36px;
+  height: 36px;
+}
+.sidebar-app .logo span {
   color: #fff;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-top: 0.3rem;
   letter-spacing: 1px;
-  font-size: 1.3rem;
 }
-.app-navbar .nav-link {
-  color: #cbd5e1 !important;
-  font-weight: 500;
-  margin-right: 0.5rem;
-  transition: color 0.2s;
+.sidebar-app .nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
 }
-.app-navbar .nav-link.active,
-.app-navbar .nav-link:hover {
+.sidebar-app .nav-link {
+  color: #cbd5e1;
+  font-size: 1.5rem;
+  padding: 0.7rem 0;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.sidebar-app .nav-link.active,
+.sidebar-app .nav-link:hover {
+  background: #343a40;
   color: #38bdf8 !important;
 }
-.app-content {
-  margin-top: 80px;
-  margin-bottom: 95px;
+.sidebar-app .footer {
+  margin-bottom: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
 }
-.app-footer {
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 18px 18px 0 0;
-  box-shadow: 0 -2px 8px rgba(30, 41, 59, 0.06);
-  padding: 0.7rem 0;
-}
-.app-footer .btn-link {
+.sidebar-app .footer a {
   color: #475569 !important;
-  font-size: 1.4rem;
-  margin: 0 0.3rem;
+  font-size: 1.3rem;
   transition: color 0.2s;
 }
-.app-footer .btn-link:hover {
+.sidebar-app .footer a:hover {
   color: #0ea5e9 !important;
 }
+.sidebar-app .copyright {
+  color: #cbd5e1;
+  font-size: 0.7rem;
+  margin-top: 0.5rem;
+  text-align: center;
+  writing-mode: vertical-lr;
+  transform: rotate(180deg);
+}
+.app-content {
+  margin-left: 90px;
+}
+@media (max-width: 600px) {
+  .sidebar-app {
+    width: 56px;
+  }
+  .app-content {
+    margin-left: 60px;
+  }
+  .sidebar-app .logo span,
+  .sidebar-app .copyright {
+    display: none;
+  }
+}
+
 ::-webkit-scrollbar {
   display: none;
 }

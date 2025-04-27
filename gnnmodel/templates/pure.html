@@ -82,7 +82,7 @@
       {% if output %}
         <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
         <script src={% static "js/plot.js" %}></script>
-        <div class="col-lg-4 mt-2 text-success">
+        <div class="col-lg-4 my-2 text-success">
           <h3 class="text-center">
             <i class="fas fa-chart-line"></i> Estimated ePC-SAFT parameters
           </h3>
@@ -113,28 +113,28 @@
           {% endif %}
         </div>
         {% if plotden %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2">
             <div id="den_plot" alt="Density plot"></div>
             <script>getplot("{{den_data|escapejs}}",0,"Liquid Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
         {% for data_json, xlegendpos, ytitle, id in custom_plots %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
             <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="t_rho_diagram" alt="T-rho diagram"></div>
           </div>
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="p_rho_diagram" alt="P-rho diagram"></div>
           </div>
           <script>

@@ -19,11 +19,6 @@
   align-items: center;
 }
 
-body {
-  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%);
-  height: 100vh;
-}
-
 .sidebar-app {
   position: fixed;
   top: 0;

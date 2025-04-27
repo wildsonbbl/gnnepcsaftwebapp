@@ -32,78 +32,86 @@
     <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
     <script src="https://cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
     <script src={% static "js/myidb.js" %} async></script>
-    <style>       ::-webkit-scrollbar {         display: none;       }   </style>
     <title>
       {% block title %}
       {% endblock title %}
     </title>
   </head>
-  <body class="bg-light">
-    <div class="container-fluid text-dark min-vh-100">
-      <div class="row mt-1 justify-content-center fixed-top">
-        <div class="col-lg-6">
-          <ul class="nav bg-dark justify-content-center">
+  <body>
+    <!-- Navbar estilo app -->
+    <nav class="navbar app-navbar fixed-top navbar-expand-lg bg-dark">
+      <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center"
+           href="{% url 'pure' %}">
+          <img src="{% static 'images/icons/ios/16.png' %}"
+               alt="Logo"
+               width="28"
+               height="28"
+               class="me-2">
+          GNNePCSAFT
+        </a>
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#appNavbar"
+                aria-controls="appNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <i class="fas fa-list text-light"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="appNavbar">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
             <li class="nav-item">
-              <a class="nav-link link-light" href={% url "pure" %}>PURE</a>
+              <a class="nav-link" href="{% url 'pure' %}">PURE</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link link-light" href={% url "mixture" %}>MIXTURE</a>
+              <a class="nav-link" href="{% url 'mixture' %}">MIXTURE</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link link-light" href={% url "batch" %}>BATCH</a>
+              <a class="nav-link" href="{% url 'batch' %}">BATCH</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link link-light" href={% url "chat" %}>AI CHAT</a>
+              <a class="nav-link" href="{% url 'chat' %}">AI CHAT</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link link-light" href={% url "about" %}>ABOUT</a>
+              <a class="nav-link" href="{% url 'about' %}">ABOUT</a>
             </li>
             <li class="nav-item" id="installButton"></li>
-            <script src={% static "js/install.js" %} async></script>
           </ul>
         </div>
       </div>
-      <div class="row">
+      <script src={% static "js/install.js" %} async></script>
+    </nav>
+    <!-- Conteúdo principal -->
+    <main class="container-lg app-content">
+      <div class="row justify-content-center">
         {% block content %}
         {% endblock content %}
       </div>
-      <div class="row fixed-bottom">
-        <!-- Remove the container if you want to extend the Footer to full width. -->
-        <div class="container">
-          <footer class="text-center">
-            <!-- Grid container -->
-            <div class="container">
-              <!-- Section: Social media -->
-              <section>
-                <!-- Linkedin -->
-                <a class="btn btn-link btn-floating btn-lg text-dark m-1"
-                   href="https://www.linkedin.com/in/wildsonbbl/"
-                   role="button"
-                   name="Linkedin"
-                   aria-label="Author Linkedin Page"
-                   target="_blank"><i class="fab fa-linkedin" alt="Author Linkedin Page"></i></a>
-                <!-- Github -->
-                <a class="btn btn-link btn-floating btn-lg text-dark m-1"
-                   href="https://github.com/wildsonbbl"
-                   role="button"
-                   name="Github"
-                   aria-label="Author Github Page"
-                   target="_blank"><i class="fab fa-github" alt="Author Github Page"></i></a>
-                <!-- ORCID -->
-                <a class="btn btn-link btn-floating btn-lg text-dark m-1"
-                   href="https://orcid.org/0000-0002-0189-6000"
-                   role="button"
-                   name="ORCID"
-                   aria-label="Author ORCID Page"
-                   target="_blank"><i class="fab fa-orcid" alt="Author ORCID Page"></i></a>
-              </section>
-              <!-- Section: Social media -->
-            </div>
-            <!-- Grid container -->
-          </footer>
-        </div>
-        <!-- End of .container -->
-      </div>
-    </div>
+    </main>
+    <!-- Footer estilo app -->
+    <footer class="app-footer fixed-bottom text-center">
+      <section>
+        <a class="btn btn-sm btn-link btn-floating text-dark"
+           href="https://www.linkedin.com/in/wildsonbbl/"
+           role="button"
+           name="Linkedin"
+           aria-label="Author Linkedin Page"
+           target="_blank"><i class="fab fa-linkedin"></i></a>
+        <a class="btn btn-sm btn-link btn-floating text-dark"
+           href="https://github.com/wildsonbbl"
+           role="button"
+           name="Github"
+           aria-label="Author Github Page"
+           target="_blank"><i class="fab fa-github"></i></a>
+        <a class="btn btn-sm btn-link btn-floating text-dark"
+           href="https://orcid.org/0000-0002-0189-6000"
+           role="button"
+           name="ORCID"
+           aria-label="Author ORCID Page"
+           target="_blank"><i class="fab fa-orcid"></i></a>
+      </section>
+      <small class="d-block mt-1 text-secondary">© {{ now|date:"Y" }} Wildson B B Lima</small>
+    </footer>
   </body>
 </html>

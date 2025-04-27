@@ -4,9 +4,9 @@
   GNNePCSAFT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg my-5">
+  <div class="col-lg">
     <div class="row justify-content-center" id="queryForm">
-      <div class="col-md-6">
+      <div class="col-md-12">
         <div class="alert alert-success text-center mb-4">
           <h4 class="mb-2">
             <i class="fas fa-flask text-primary"></i> Welcome to GNNePCSAFT!
@@ -153,38 +153,42 @@
     </div>
     <div class="row my-3 mx-1 justify-content-center" id="3dmol">
       {% if output %}
-        <div class="col-lg-6 d-grid border border-dark">
+        <div class="col-lg-6 d-flex border border-dark p-0">
           <div id="molplot" class="molplot-style"></div>
           <script src={% static "js/3Dmol-min.js" %}></script>
           <script src={% static "js/plotmol.js" %}></script>
           <script>loadmol(`{{mol_data}}`);</script>
-          <div class="btn-group btn-group-sm"
-               role="group"
-               aria-label="Buttons for 3Dmol">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Stick only"
-                   onclick="v.setStyle({}, { stick: {color: 'spectrum',}} );v.render();">
-            <input class=" btn btn-outline-secondary"
-                   type="button"
-                   value="Sphere only"
-                   onclick="v.setStyle({}, { sphere: {color: 'spectrum',}} );v.render();">
-            <input class=" btn btn-outline-secondary"
-                   type="button"
-                   value="Add Labels"
-                   onclick="addlabel();">
-          </div>
-          <div class="btn-group btn-group-sm"
-               role="group"
-               aria-label="Buttons for 3Dmol">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Reset"
-                   onclick="reset();">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Recenter"
-                   onclick="v.zoomTo(1.2, 1000);">
+          <div class="d-grid m-3 h-25">
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Stick only"
+                    onclick="v.setStyle({}, { stick: {color: 'spectrum',}} );v.render();">
+              <i class="fas fa-grip-lines-vertical"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Sphere only"
+                    onclick="v.setStyle({}, { sphere: {color: 'spectrum',}} );v.render();">
+              <i class="fas fa-circle"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Add Labels"
+                    onclick="addlabel();">
+              <i class="fas fa-font"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Reset"
+                    onclick="reset();">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Recenter"
+                    onclick="v.zoomTo(1.2, 1000);">
+              <i class="fas fa-crosshairs"></i>
+            </button>
           </div>
         </div>
       {% endif %}

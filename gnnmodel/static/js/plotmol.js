@@ -1,5 +1,5 @@
 let element = document.querySelector("#molplot");
-let config = { backgroundColor: "#f8f9fa" };
+let config = { backgroundColor: "#343a40", id: "molplot-canvas" };
 let v = $3Dmol.createViewer(element, config);
 
 function loadmol(data) {

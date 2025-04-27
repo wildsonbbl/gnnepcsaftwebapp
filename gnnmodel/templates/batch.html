@@ -4,9 +4,9 @@
   Batch Mode
 {% endblock title %}
 {% block content %}
-  <div class="col-lg my-5">
+  <div class="col-lg">
     <div class="row justify-content-center" id="formRow">
-      <div class="col-md-8">
+      <div class="col-md-10">
         <div class="alert alert-success text-center mb-4">
           <h4 class="mb-2">
             <i class="fas fa-layer-group text-primary"></i> Batch Parameter Estimation
@@ -14,13 +14,13 @@
           <p class="mb-0">
             Instantly estimate ePC-SAFT parameters for multiple molecules at once.
             <br>
-            Paste a list of <span class="fw-semibold">InChI</span> or <span class="fw-semibold">SMILES</span> identifiers below — one per line — and let GNNePCSAFT handle the rest!
+            Paste a list of <span class="fw-bold">InChI</span> or <span class="fw-bold">SMILES</span> identifiers below — one per line — and let GNNePCSAFT handle the rest!
           </p>
         </div>
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
           <div class="row justify-content-center">
-            <div class="col">
+            <div class="col-10">
               {{ form.text_area }}
               <input type="submit"
                      value="Analyse SMILES/InChI Batch"
@@ -36,7 +36,7 @@
         <script src={% static "js/loading.js" %}></script>
         <div class="alert alert-info mt-4">
           <i class="fas fa-lightbulb text-warning"></i>
-          <strong>Tip:</strong> Enter one <span class="fw-semibold">InChI</span> or <span class="fw-semibold">SMILES</span> per line.
+          <strong>Tip:</strong> Enter one <span class="fw-bold">InChI</span> or <span class="fw-bold">SMILES</span> per line.
           <br>
           <span class="text-muted">Example:</span>
           <pre class="bg-light border rounded p-2 mt-2 text-start small mb-0">
@@ -51,7 +51,7 @@ CC(O)C
           <i class="fas fa-robot text-primary"></i>
           <strong>Try the new AI Chat!</strong>
           <p class="mb-1">
-            Chat with the GNNePCSAFT agent to get thermodynamic properties for your molecules, such as <span class="fw-semibold">density</span>, <span class="fw-semibold">vapor pressure</span>, <span class="fw-semibold">enthalpy of vaporization</span>, and more — all in natural language!
+            Chat with the GNNePCSAFT agent to get thermodynamic properties for your molecules, such as <span class="fw-bold">density</span>, <span class="fw-bold">vapor pressure</span>, <span class="fw-bold">enthalpy of vaporization</span>, and more — all in natural language!
           </p>
           <span class="text-muted">Available in the desktop app for Windows, Mac, and Linux.</span>
         </div>
@@ -60,7 +60,9 @@ CC(O)C
     <div class="row justify-content-center" id="output">
       {% if output %}
         <div class="col-lg mt-2 text-success">
-          <h3 class="text-center">Estimated ePC-SAFT parameters</h3>
+          <h3 class="text-center">
+            <i class="fas fa-chart-line"></i> Estimated ePC-SAFT parameters
+          </h3>
           <div class="table-responsive text-dark">
             <table class="table table-hover">
               <thead>

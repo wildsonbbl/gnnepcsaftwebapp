@@ -5,7 +5,7 @@
 }
 
 .chat-card-style {
-  height: 85vh;
+  height: 95vh;
 }
 
 #chat-log {
@@ -53,6 +53,10 @@
 
 #sessions-list .dropdown-item {
   padding-right: 40px; /* Make room for delete button */
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Toast container */

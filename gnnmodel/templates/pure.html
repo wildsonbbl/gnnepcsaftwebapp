@@ -4,9 +4,9 @@
   GNNePCSAFT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg my-5">
+  <div class="col-lg">
     <div class="row justify-content-center" id="queryForm">
-      <div class="col-md-6">
+      <div class="col-md-12">
         <div class="alert alert-success text-center mb-4">
           <h4 class="mb-2">
             <i class="fas fa-flask text-primary"></i> Welcome to GNNePCSAFT!
@@ -21,7 +21,7 @@
           {% csrf_token %}
           <div class="row justify-content-center">
             <div class="col-lg-6 my-1">{{ form.query }}</div>
-            <div class="col-lg-6 my-1">
+            <div class="col-lg-4 my-1">
               <input type="submit"
                      value="Analyse SMILES/InChI"
                      class="form-control btn-outline-primary" />
@@ -52,7 +52,7 @@
           <i class="fas fa-robot text-primary"></i>
           <strong>Try the new AI Chat!</strong>
           <p class="mb-1">
-            Talk to the GNNePCSAFT agent and get thermodynamic properties like <span class="fw-semibold">density</span>, <span class="fw-semibold">vapor pressure</span>, <span class="fw-semibold">enthalpy of vaporization</span>, and more — just by chatting!
+            Talk to the GNNePCSAFT agent and get thermodynamic properties like <span class="fw-bold">density</span>, <span class="fw-bold">vapor pressure</span>, <span class="fw-bold">enthalpy of vaporization</span>, and more — just by chatting!
           </p>
           <span class="text-muted">Available in the desktop app for Windows, Mac, and Linux.</span>
         </div>
@@ -82,7 +82,7 @@
       {% if output %}
         <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
         <script src={% static "js/plot.js" %}></script>
-        <div class="col-lg-4 mt-2 text-success">
+        <div class="col-lg-4 my-2 text-success">
           <h3 class="text-center">
             <i class="fas fa-chart-line"></i> Estimated ePC-SAFT parameters
           </h3>
@@ -113,28 +113,28 @@
           {% endif %}
         </div>
         {% if plotden %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2">
             <div id="den_plot" alt="Density plot"></div>
             <script>getplot("{{den_data|escapejs}}",0,"Liquid Density (mol / m³)","den_plot");</script>
           </div>
         {% endif %}
         {% if plotvp %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
             <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
           </div>
         {% endif %}
         {% for data_json, xlegendpos, ytitle, id in custom_plots %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
             <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="t_rho_diagram" alt="T-rho diagram"></div>
           </div>
-          <div class="col-lg-4 mt-2 ">
+          <div class="col-lg-4 my-2 ">
             <div id="p_rho_diagram" alt="P-rho diagram"></div>
           </div>
           <script>
@@ -153,38 +153,42 @@
     </div>
     <div class="row my-3 mx-1 justify-content-center" id="3dmol">
       {% if output %}
-        <div class="col-lg-6 d-grid border border-dark">
+        <div class="col-lg-6 d-flex border border-dark p-0">
           <div id="molplot" class="molplot-style"></div>
           <script src={% static "js/3Dmol-min.js" %}></script>
           <script src={% static "js/plotmol.js" %}></script>
           <script>loadmol(`{{mol_data}}`);</script>
-          <div class="btn-group btn-group-sm"
-               role="group"
-               aria-label="Buttons for 3Dmol">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Stick only"
-                   onclick="v.setStyle({}, { stick: {color: 'spectrum',}} );v.render();">
-            <input class=" btn btn-outline-secondary"
-                   type="button"
-                   value="Sphere only"
-                   onclick="v.setStyle({}, { sphere: {color: 'spectrum',}} );v.render();">
-            <input class=" btn btn-outline-secondary"
-                   type="button"
-                   value="Add Labels"
-                   onclick="addlabel();">
-          </div>
-          <div class="btn-group btn-group-sm"
-               role="group"
-               aria-label="Buttons for 3Dmol">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Reset"
-                   onclick="reset();">
-            <input class="btn btn-outline-secondary"
-                   type="button"
-                   value="Recenter"
-                   onclick="v.zoomTo(1.2, 1000);">
+          <div class="d-grid m-3 h-25">
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Stick only"
+                    onclick="v.setStyle({}, { stick: {color: 'spectrum',}} );v.render();">
+              <i class="fas fa-grip-lines-vertical"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Sphere only"
+                    onclick="v.setStyle({}, { sphere: {color: 'spectrum',}} );v.render();">
+              <i class="fas fa-circle"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Add Labels"
+                    onclick="addlabel();">
+              <i class="fas fa-font"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Reset"
+                    onclick="reset();">
+              <i class="fas fa-undo"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm rounded-circle"
+                    type="button"
+                    title="Recenter"
+                    onclick="v.zoomTo(1.2, 1000);">
+              <i class="fas fa-crosshairs"></i>
+            </button>
           </div>
         </div>
       {% endif %}

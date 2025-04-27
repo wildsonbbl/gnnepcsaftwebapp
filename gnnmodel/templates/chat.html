@@ -4,7 +4,7 @@
   AI CHAT
 {% endblock title %}
 {% block content %}
-  <div class="col-lg my-5">
+  <div class="col-lg">
     {% if show_form %}
       <form action="" method="post" id="submitGoogleApiKey">
         {% csrf_token %}
@@ -32,7 +32,7 @@
     {% else %}
       <div class="row justify-content-center" id="chatrow">
         <div class="col-12">
-          <div class="card rounded chat-card-style bg-light">
+          <div class="card chat-card-style bg-light">
             <div id="chat-log" class="card-body overflow-auto">
               <!-- Chat messages will be populated here -->
             </div>

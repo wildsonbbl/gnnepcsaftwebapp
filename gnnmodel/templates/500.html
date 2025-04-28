@@ -1,0 +1,21 @@
+{% extends "master.html" %}
+{% block title %}
+  500 Internal Error
+{% endblock title %}
+{% block content %}
+  <div class="col-lg-3 text-center mt-5">
+    <i class="fas fa-bug fa-5x text-danger mb-4"></i>
+    <h1 class="display-4 mb-3">500</h1>
+    <h3 class="mb-3">Internal Server Error</h3>
+    <div class="alert alert-danger mx-auto mb-4">
+      <p class="mb-0">
+        Oops! Something went wrong on our side.
+        <br>
+        Please try again later or contact support if the problem persists.
+      </p>
+    </div>
+    <a href="{% url 'pure' %}" class="btn btn-primary mt-2">
+      <i class="fas fa-home"></i> Go to Home
+    </a>
+  </div>
+{% endblock content %}

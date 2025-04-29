@@ -38,7 +38,7 @@ services:
       - --log.level=error
 
   webapp:
-    scale: 3
+    scale: 1
     image: wildsonbbl/gnnepcsaft:latest
     labels:
       - "traefik.enable=true"
@@ -56,9 +56,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 500M
+          memory: 700m
+          cpus: "1.0"
         reservations:
-          memory: 256M
+          memory: 350m
     memswap_limit: 1G
     command: ["bash", "-c", "daphne -b 0.0.0.0 -p 8000 webapp.asgi:application"]
 #     networks:

@@ -1,11 +1,17 @@
 {% extends "master.html" %}
 {% block title %}
-  404 Error
+  404 Not Found
 {% endblock title %}
 {% block content %}
-  <div class="row">
-    <h2>Page not found (404)</h2>
-    <p>There is nothing here.</p>
-    <a href={% url "estimator" %}>Back to estimator</a>
+  <div class="col-lg-3 text-center mt-5">
+    <i class="fas fa-search fa-5x text-info mb-4"></i>
+    <h1 class="display-4 mb-3">404</h1>
+    <h3 class="mb-3">Page Not Found</h3>
+    <div class="alert alert-info mx-auto mb-4 ">
+      <p class="mb-0">Sorry, the page you are looking for does not exist or was moved.</p>
+    </div>
+    <a href="{% url 'pure' %}" class="btn btn-primary mt-2">
+      <i class="fas fa-home"></i> Go to Home
+    </a>
   </div>
 {% endblock content %}

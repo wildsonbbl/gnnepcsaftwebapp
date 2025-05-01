@@ -4,7 +4,7 @@ import csv
 import json
 import os.path as osp
 from json import loads
-from typing import List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
 
@@ -33,6 +33,7 @@ from .forms import (
     CustomPlotConfigForm,
     GoogleAPIKeyForm,
     HlvCheckForm,
+    InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
     PhaseDiagramCheckForm,
     RhoCheckForm,
@@ -46,6 +47,19 @@ from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 # import polars as pl
 
 ort.set_default_logger_severity(3)
+
+available_params = [
+    "Segment number",
+    "Segment diameter (Å)",
+    "Dispersion energy (K)",
+    "Association volume",
+    "Association energy (K)",
+    "Dipole moment (D)*",
+    "Number of association site A",
+    "Number of association site B",
+    "Critical temperature (K)",
+    "Critical pressure (Bar)",
+]
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
@@ -485,7 +499,7 @@ def mixture_plots(
     all_plots = []
     vp_plots = []
 
-    plot_data = {"T": [], "GNN": [], "TML": []}
+    plot_data_den = {"T": [], "GNN": [], "TML": []}
     plot_data_bubble = {"T": [], "GNN": [], "TML": []}
     plot_data_dew = {"T": [], "GNN": [], "TML": []}
     for state in states:
@@ -493,8 +507,8 @@ def mixture_plots(
 
             prop_for_state = mix_den_feos(para_pred_list.copy(), state)
             bubble_for_state, dew_for_state = mix_vp_feos(para_pred_list.copy(), state)
-            plot_data["T"].append(state[0])
-            plot_data["GNN"].append(prop_for_state)
+            plot_data_den["T"].append(state[0])
+            plot_data_den["GNN"].append(prop_for_state)
             plot_data_bubble["T"].append(state[0])
             plot_data_bubble["GNN"].append(bubble_for_state)
             plot_data_dew["T"].append(state[0])
@@ -502,7 +516,7 @@ def mixture_plots(
         except (AssertionError, RuntimeError) as e:
             logger.debug(e)
     all_plots.append(
-        (json.dumps(plot_data), 0, "Liquid Density (mol / m³)", "den_plot")
+        (json.dumps(plot_data_den), 0, "Liquid Density (mol / m³)", "den_plot")
     )
     vp_plots.append(json.dumps(plot_data_bubble))
     vp_plots.append(json.dumps(plot_data_dew))
@@ -575,3 +589,224 @@ def pubchem_description(inchi: str) -> str:
     except (TypeError, HTTPError, ValueError):
         ans = "no data available on this molecule in PubChem."
     return ans
+
+
+def init_pure_forms(post_data=None):
+    "init pure forms"
+    if post_data:
+        return (
+            InChIorSMILESinput(post_data),
+            CustomPlotConfigForm(post_data),
+            CustomPlotCheckForm(post_data),
+            RhoCheckForm(post_data),
+            VPCheckForm(post_data),
+            HlvCheckForm(post_data),
+            SlvCheckForm(post_data),
+            PhaseDiagramCheckForm(post_data),
+            STCheckForm(post_data),
+        )
+    return (
+        InChIorSMILESinput(),
+        CustomPlotConfigForm(),
+        CustomPlotCheckForm(),
+        RhoCheckForm(),
+        VPCheckForm(),
+        HlvCheckForm(),
+        SlvCheckForm(),
+        PhaseDiagramCheckForm(),
+        STCheckForm(),
+    )
+
+
+def process_pure_post(
+    forms: Tuple[
+        InChIorSMILESinput,
+        CustomPlotConfigForm,
+        CustomPlotCheckForm,
+        RhoCheckForm,
+        VPCheckForm,
+        HlvCheckForm,
+        SlvCheckForm,
+        PhaseDiagramCheckForm,
+        STCheckForm,
+    ],
+) -> Optional[Dict[str, Any]]:
+    "process the post data from the pure page"
+    (
+        form,
+        plot_config,
+        plot_checkbox,
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+        st_checkbox,
+    ) = forms
+
+    if not form.is_valid():
+        return None
+
+    smiles, inchi = form.cleaned_data["query"]
+    pred = get_pred(smiles, inchi)
+    plotden, plotvp, molimg = get_main_plots_data(inchi)
+    output = True
+
+    plot_checkbox.full_clean()
+    phase_diagrams, custom_plots = [], []
+    if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
+        phase_diagrams, custom_plots = get_custom_plots_data(
+            pred[:-2],
+            plot_config,
+            (
+                rho_checkbox,
+                vp_checkbox,
+                h_lv_checkbox,
+                s_lv_checkbox,
+                phase_diagram_checkbox,
+                st_checkbox,
+            ),
+        )
+    return {
+        "smiles": smiles,
+        "inchi": inchi,
+        "pred": pred,
+        "plotden": plotden,
+        "plotvp": plotvp,
+        "molimg": molimg,
+        "output": output,
+        "custom_plots": custom_plots,
+        "phase_diagrams": phase_diagrams,
+    }
+
+
+def build_pure_context(forms, post_data=None):
+    "build context for pure component page"
+    (
+        form,
+        plot_config,
+        plot_checkbox,
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+        st_checkbox,
+    ) = forms
+
+    data = {
+        "form": form,
+        "plot_config": plot_config,
+        "plot_checkboxes": [
+            plot_checkbox,
+            rho_checkbox,
+            vp_checkbox,
+            h_lv_checkbox,
+            s_lv_checkbox,
+            st_checkbox if settings.PLATFORM == "desktop" else None,
+            phase_diagram_checkbox,
+        ],
+        "predicted_para": [(None, None)],
+        "mol_identifiers": [(None, None)],
+        "output": False,
+        "plotden": False,
+        "plotvp": False,
+        "den_data": "",
+        "vp_data": "",
+        "mol_data": "",
+        "custom_plots": [],
+        "phase_diagrams": [],
+    }
+
+    if post_data:
+        data.update(
+            {
+                "predicted_para": [
+                    (paraname, round(para, 4))
+                    for para, paraname in zip(post_data["pred"], available_params)
+                ],
+                "mol_identifiers": [
+                    ("InChI", post_data["inchi"]),
+                    ("SMILES", post_data["smiles"]),
+                ],
+                "output": post_data["output"],
+                "plotden": post_data["plotden"] != "",
+                "plotvp": post_data["plotvp"] != "",
+                "den_data": post_data["plotden"],
+                "vp_data": post_data["plotvp"],
+                "mol_data": post_data["molimg"],
+                "custom_plots": post_data["custom_plots"],
+                "phase_diagrams": post_data["phase_diagrams"],
+            }
+        )
+    return data
+
+
+def init_mixture_forms(post_data=None):
+    "init mixture forms"
+    if post_data:
+        return (
+            InChIorSMILESareaInputforMixture(post_data),
+            CustomPlotConfigForm(post_data),
+        )
+    return (
+        InChIorSMILESareaInputforMixture(),
+        CustomPlotConfigForm(),
+    )
+
+
+def process_mixture_post(
+    forms: Tuple[InChIorSMILESareaInputforMixture, CustomPlotConfigForm],
+):
+    "process the post data from the mixture page"
+    form, plot_config = forms
+    para_pred_list = []
+    para_pred_for_plot = []
+    mole_fractions_list = []
+    mixture_plots_ = ([], [])
+    output = False
+
+    if form.is_valid():
+        inchi_list, smiles_list, mole_fractions_list = form.cleaned_data["text_area"]
+        for smiles, inchi in zip(smiles_list, inchi_list):
+            para_pred = [round(para, 5) for para in get_pred(smiles, inchi)]
+            para_pred_list.append(para_pred)
+            para_pred_for_plot.append(para_pred + [mw(inchi)])
+        mixture_plots_ = get_mixture_plots_data(
+            para_pred_for_plot, mole_fractions_list, plot_config
+        )
+        output = True
+
+    return {
+        "form": form,
+        "plot_config": plot_config,
+        "para_pred_list": para_pred_list,
+        "mole_fractions_list": mole_fractions_list,
+        "mixture_plots": mixture_plots_,
+        "output": output,
+    }
+
+
+def build_mixture_context(post_data=None):
+    "build context for mixture page"
+    if post_data:
+        return {
+            "form": post_data["form"],
+            "plot_config": post_data["plot_config"],
+            "available_params": available_params,
+            "parameters_molefractions_list": list(
+                zip(post_data["para_pred_list"], post_data["mole_fractions_list"])
+            ),
+            "mixture_plots": post_data["mixture_plots"][0],
+            "vp_plots": post_data["mixture_plots"][1],
+            "output": post_data["output"],
+        }
+    return {
+        "form": InChIorSMILESareaInputforMixture(),
+        "plot_config": CustomPlotConfigForm(),
+        "available_params": available_params,
+        "parameters_molefractions_list": [],
+        "mixture_plots": [],
+        "vp_plots": [],
+        "output": False,
+    }

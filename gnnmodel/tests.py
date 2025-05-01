@@ -5,6 +5,7 @@ import os
 import uuid
 from unittest.mock import patch
 
+from django.http import QueryDict
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -48,49 +49,127 @@ class ViewsTestCase(TestCase):
         elif "GOOGLE_API_KEY" in os.environ:
             del os.environ["GOOGLE_API_KEY"]
 
-    @patch("gnnmodel.views.get_pred")
-    @patch("gnnmodel.views.get_main_plots_data")
-    def test_pure_get(self, mock_get_main_plots_data, mock_get_pred):
+    @patch("gnnmodel.views.build_pure_context")
+    @patch("gnnmodel.views.process_pure_post")
+    @patch("gnnmodel.views.init_pure_forms")
+    def test_pure_get(
+        self, mock_init_pure_forms, mock_process_pure_post, mock_build_pure_context
+    ):
         """Test GET request to pure view."""
+        mock_init_pure_forms.return_value = "forms"
+        mock_build_pure_context.return_value = {
+            "output": False,
+            "form": InChIorSMILESinput(),
+            "plot_config": CustomPlotConfigForm(),
+        }
         response = self.client.get(reverse("pure"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "pure.html")
         self.assertFalse(response.context["output"])
         self.assertIsInstance(response.context["form"], InChIorSMILESinput)
         self.assertIsInstance(response.context["plot_config"], CustomPlotConfigForm)
-        self.assertEqual(mock_get_pred.call_count, 0)
-        self.assertEqual(mock_get_main_plots_data.call_count, 0)
+        mock_init_pure_forms.assert_called_once()
+        mock_process_pure_post.assert_not_called()
+        mock_build_pure_context.assert_called_once_with("forms")
 
-    @patch("gnnmodel.views.get_pred")
-    @patch("gnnmodel.views.get_main_plots_data")
-    def test_pure_post_valid(self, mock_get_main_plots_data, mock_get_pred):
+    @patch("gnnmodel.views.build_pure_context")
+    @patch("gnnmodel.views.process_pure_post")
+    @patch("gnnmodel.views.init_pure_forms")
+    def test_pure_post_valid(
+        self, mock_init_pure_forms, mock_process_pure_post, mock_build_pure_context
+    ):
         """Test POST request to pure view with valid data."""
-        # Mock return values
-        mock_get_pred.return_value = self.valid_parameters
-        mock_get_main_plots_data.return_value = ("plot_data", "vp_data", "mol_img")
+        mock_init_pure_forms.return_value = "forms"
+        mock_process_pure_post.return_value = {"output": True}
+        mock_build_pure_context.return_value = {
+            "output": True,
+            "form": InChIorSMILESinput(),
+            "plot_config": CustomPlotConfigForm(),
+        }
 
-        # Create form data
         form_data = {
             "query": self.valid_inchi,
-            "custom_plot_checkbox": False,
-            "rho_checkbox": True,
-            "vp_checkbox": True,
-            "h_lv_checkbox": False,
-            "s_lv_checkbox": False,
-            "phase_diagram_checkbox": False,
-            "st_checkbox": False,
+            "custom_plot_checkbox": "False",
+            "rho_checkbox": "True",
+            "vp_checkbox": "True",
+            "h_lv_checkbox": "False",
+            "s_lv_checkbox": "False",
+            "phase_diagram_checkbox": "False",
+            "st_checkbox": "False",
             "temp_min": "300.0",
             "temp_max": "400.0",
             "pressure": "101325.0",
-            "google_api_key": "",
         }
+        form_querydict = QueryDict("", mutable=True)
+        form_querydict.update(form_data)
 
         response = self.client.post(reverse("pure"), form_data)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "pure.html")
         self.assertTrue(response.context["output"])
-        mock_get_pred.assert_called_once()
-        mock_get_main_plots_data.assert_called_once()
+        mock_init_pure_forms.assert_called_once_with(form_querydict)
+        mock_process_pure_post.assert_called_once_with("forms")
+        mock_build_pure_context.assert_called_once_with("forms", {"output": True})
+
+    @patch("gnnmodel.views.build_mixture_context")
+    @patch("gnnmodel.views.process_mixture_post")
+    @patch("gnnmodel.views.init_mixture_forms")
+    def test_mixture_get(
+        self,
+        mock_init_mixture_forms,
+        mock_process_mixture_post,
+        mock_build_mixture_context,
+    ):
+        """Test GET request to mixture view."""
+        mock_init_mixture_forms.return_value = "forms"
+        mock_build_mixture_context.return_value = {
+            "output": False,
+            "form": InChIorSMILESareaInputforMixture(),
+        }
+        response = self.client.get(reverse("mixture"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "mixture.html")
+        self.assertFalse(response.context["output"])
+        self.assertIsInstance(
+            response.context["form"], InChIorSMILESareaInputforMixture
+        )
+        mock_init_mixture_forms.assert_not_called()
+        mock_process_mixture_post.assert_not_called()
+        mock_build_mixture_context.assert_called_once_with()
+
+    @patch("gnnmodel.views.build_mixture_context")
+    @patch("gnnmodel.views.process_mixture_post")
+    @patch("gnnmodel.views.init_mixture_forms")
+    def test_mixture_post_valid(
+        self,
+        mock_init_mixture_forms,
+        mock_process_mixture_post,
+        mock_build_mixture_context,
+    ):
+        """Test POST request to mixture view with valid data."""
+        mock_init_mixture_forms.return_value = "forms"
+        mock_process_mixture_post.return_value = {"output": True}
+        mock_build_mixture_context.return_value = {
+            "output": True,
+            "form": InChIorSMILESareaInputforMixture(),
+        }
+
+        form_data = {
+            "text_area": f"{self.valid_inchi} 0.5\n{self.valid_inchi} 0.5",
+            "temp_min": "298.15",
+            "temp_max": "350.0",
+            "pressure": "101325.0",
+        }
+        form_querydict = QueryDict("", mutable=True)
+        form_querydict.update(form_data)
+
+        response = self.client.post(reverse("mixture"), form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "mixture.html")
+        self.assertTrue(response.context["output"])
+        mock_init_mixture_forms.assert_called_once_with(form_querydict)
+        mock_process_mixture_post.assert_called_once_with("forms")
+        mock_build_mixture_context.assert_called_once_with({"output": True})
 
     @patch("gnnmodel.views.get_pred")
     def test_batch_get(self, mock_get_pred):
@@ -117,42 +196,7 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "batch.html")
         self.assertEqual(mock_get_pred.call_count, 2)  # Called twice for two compounds
-
-    @patch("gnnmodel.views.get_pred")
-    @patch("gnnmodel.views.get_mixture_plots_data")
-    def test_mixture_get(self, mock_get_mixture_plots_data, mock_get_pred):
-        """Test GET request to mixture view."""
-        response = self.client.get(reverse("mixture"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "mixture.html")
-        self.assertFalse(response.context["output"])
-        self.assertIsInstance(
-            response.context["form"], InChIorSMILESareaInputforMixture
-        )
-        self.assertEqual(mock_get_pred.call_count, 0)
-        self.assertEqual(mock_get_mixture_plots_data.call_count, 0)
-
-    @patch("gnnmodel.views.get_pred")
-    @patch("gnnmodel.views.get_mixture_plots_data")
-    def test_mixture_post_valid(self, mock_get_mixture_plots_data, mock_get_pred):
-        """Test POST request to mixture view with valid data."""
-        # Mock return values
-        mock_get_pred.return_value = self.valid_parameters
-        mock_get_mixture_plots_data.return_value = ([], [])
-
-        # Create form data with multiple compounds and mole fractions
-        form_data = {
-            "text_area": f"{self.valid_inchi} 0.5\n{self.valid_inchi} 0.5",
-            "temp_min": "298.15",
-            "temp_max": "350.0",
-            "pressure": "101325.0",
-        }
-
-        response = self.client.post(reverse("mixture"), form_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "mixture.html")
-        mock_get_pred.assert_called()
-        mock_get_mixture_plots_data.assert_called_once()
+        mock_get_pred.assert_called_with(self.valid_smiles, self.valid_inchi)
 
     def test_about(self):
         """Test about page view."""

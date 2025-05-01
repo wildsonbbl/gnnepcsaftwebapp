@@ -8,21 +8,16 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
-from gnnepcsaft.data.rdkit_util import mw
 
-from .forms import (
-    CustomPlotConfigForm,
-    GoogleAPIKeyForm,
-    InChIorSMILESareaInput,
-    InChIorSMILESareaInputforMixture,
-    InChIorSMILESinput,
-)
+from .forms import GoogleAPIKeyForm, InChIorSMILESareaInput, InChIorSMILESinput
 from .models import ChatSession
 from .utils import (
+    build_mixture_context,
     build_pure_context,
-    get_mixture_plots_data,
     get_pred,
+    init_mixture_forms,
     init_pure_forms,
+    process_mixture_post,
     process_pure_post,
 )
 from .utils_llm import is_api_key_valid, resume_mol
@@ -88,41 +83,12 @@ def mixture(request):
     "handle request for mixture"
     if settings.PLATFORM == "webapp":
         return render(request, "mixture-webapp.html")
-    para_pred_list = []
-    output = False
-    mixture_plots = ([], [])
-    mole_fractions_list = []
-    para_pred_for_plot = []
     if request.method == "POST":
-        form = InChIorSMILESareaInputforMixture(request.POST)
-        plot_config = CustomPlotConfigForm(request.POST)
-        if form.is_valid():
-            inchi_list, smiles_list, mole_fractions_list = form.cleaned_data[
-                "text_area"
-            ]
-            for smiles, inchi in zip(smiles_list, inchi_list):
-                para_pred_list.append(
-                    [round(para, 5) for para in get_pred(smiles, inchi)]
-                )
-                para_pred_for_plot.append(para_pred_list[-1] + [mw(inchi)])
-            mixture_plots = get_mixture_plots_data(
-                para_pred_for_plot, mole_fractions_list, plot_config
-            )
-            output = True
+        forms = init_mixture_forms(request.POST)
+        post_data = process_mixture_post(forms)
+        context = build_mixture_context(post_data)
     else:
-        form = InChIorSMILESareaInputforMixture()
-        plot_config = CustomPlotConfigForm()
-
-    context = {
-        "form": form,
-        "plot_config": plot_config,
-        "available_params": available_params,
-        "parameters_molefractions_list": list(zip(para_pred_list, mole_fractions_list)),
-        "mixture_plots": mixture_plots[0],
-        "vp_plots": mixture_plots[1],
-        "output": output,
-    }
-
+        context = build_mixture_context()
     return render(request, "mixture.html", context)
 
 

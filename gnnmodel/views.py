@@ -12,6 +12,7 @@ from django.views.decorators.http import require_http_methods
 from .forms import GoogleAPIKeyForm, InChIorSMILESareaInput, InChIorSMILESinput
 from .models import ChatSession
 from .utils import (
+    available_params,
     build_mixture_context,
     build_pure_context,
     get_pred,
@@ -23,19 +24,6 @@ from .utils import (
 from .utils_llm import is_api_key_valid, resume_mol
 
 file_dir = osp.dirname(__file__)
-
-available_params = [
-    "Segment number",
-    "Segment diameter (Å)",
-    "Dispersion energy (K)",
-    "Association volume",
-    "Association energy (K)",
-    "Dipole moment (D)*",
-    "Number of association site A",
-    "Number of association site B",
-    "Critical temperature (K)",
-    "Critical pressure (Bar)",
-]
 
 
 # Create your views here.

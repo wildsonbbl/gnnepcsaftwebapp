@@ -7,8 +7,6 @@ services:
       # The HTTP port
       - "80:80"
       - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -23,10 +21,7 @@ services:
     # networks:
     #   - ip6net1
     command:
-      - --api.insecure
-      - --accesslog
       - --providers.docker
-      - --providers.docker.exposedbydefault=true
       - --entryPoints.web.address=:80
       - --entryPoints.websecure.address=:443
       # - --entryPoints.web.http.redirections.entrypoint.to=websecure

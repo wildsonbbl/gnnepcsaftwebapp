@@ -4,7 +4,7 @@ psycopg2-binary
 python-decouple
 rdkit
 polars==1.27.1
-django-debug-toolbar
+django-debug-toolbar==5.1.0
 django-bootstrap-v5
 whitenoise
 gunicorn

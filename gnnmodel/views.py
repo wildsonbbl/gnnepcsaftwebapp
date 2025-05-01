@@ -11,26 +11,19 @@ from django.views.decorators.http import require_http_methods
 from gnnepcsaft.data.rdkit_util import mw
 
 from .forms import (
-    CustomPlotCheckForm,
     CustomPlotConfigForm,
     GoogleAPIKeyForm,
-    HlvCheckForm,
     InChIorSMILESareaInput,
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
-    PhaseDiagramCheckForm,
-    RhoCheckForm,
-    SlvCheckForm,
-    STCheckForm,
-    VPCheckForm,
 )
 from .models import ChatSession
 from .utils import (
-    get_custom_plots_data,
-    get_forms,
-    get_main_plots_data,
+    build_pure_context,
     get_mixture_plots_data,
     get_pred,
+    init_pure_forms,
+    process_pure_post,
 )
 from .utils_llm import is_api_key_valid, resume_mol
 
@@ -51,97 +44,16 @@ available_params = [
 
 
 # Create your views here.
-def pure(request):  # pylint: disable=R0914
+def pure(request):
     "handle request for pure substance"
 
-    pred = []
-    output = False
-    plotden, plotvp, molimg = ("", "", "")
-    custom_plots, phase_diagrams = [], []
-    inchi = ""
-    smiles = ""
     if request.method == "POST":
-        (
-            form,
-            plot_config,
-            plot_checkbox,
-            rho_checkbox,
-            vp_checkbox,
-            h_lv_checkbox,
-            s_lv_checkbox,
-            phase_diagram_checkbox,
-            st_checkbox,
-            google_api_key_form,
-        ) = get_forms(request)
-
-        if form.is_valid():
-            smiles, inchi = form.cleaned_data["query"]
-
-            pred = get_pred(smiles, inchi)
-            plotden, plotvp, molimg = get_main_plots_data(inchi)
-            output = True
-
-            plot_checkbox.full_clean()
-            if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
-                phase_diagrams, custom_plots = get_custom_plots_data(
-                    pred[:-2],
-                    plot_config,
-                    (
-                        rho_checkbox,
-                        vp_checkbox,
-                        h_lv_checkbox,
-                        s_lv_checkbox,
-                        phase_diagram_checkbox,
-                        st_checkbox,
-                    ),
-                )
-
+        forms = init_pure_forms(request.POST)
+        post_data = process_pure_post(forms)
+        context = build_pure_context(forms, post_data)
     else:
-        form = InChIorSMILESinput()
-        plot_config = CustomPlotConfigForm()
-        plot_checkbox = CustomPlotCheckForm()
-        rho_checkbox = RhoCheckForm()
-        vp_checkbox = VPCheckForm()
-        h_lv_checkbox = HlvCheckForm()
-        s_lv_checkbox = SlvCheckForm()
-        phase_diagram_checkbox = PhaseDiagramCheckForm()
-        st_checkbox = STCheckForm()
-        google_api_key_form = GoogleAPIKeyForm()
-
-    context = {
-        "form": form,
-        "plot_config": plot_config,
-        "plot_checkboxes": [
-            plot_checkbox,
-            rho_checkbox,
-            vp_checkbox,
-            h_lv_checkbox,
-            s_lv_checkbox,
-            st_checkbox,
-            phase_diagram_checkbox,
-        ],
-        "predicted_para": (
-            [
-                (paraname, round(para, 4))
-                for para, paraname in zip(pred, available_params)
-            ]
-            if output
-            else [(None, None)]
-        ),
-        "mol_identifiers": (
-            [("InChI", inchi), ("SMILES", smiles)] if output else [(None, None)]
-        ),
-        "output": output,
-        "plotden": plotden != "",
-        "plotvp": plotvp != "",
-        "den_data": plotden,
-        "vp_data": plotvp,
-        "mol_data": molimg,
-        "custom_plots": custom_plots,
-        "phase_diagrams": phase_diagrams,
-        "google_api_key_form": google_api_key_form,
-    }
-
+        forms = init_pure_forms()
+        context = build_pure_context(forms)
     return render(request, "pure.html", context)
 
 

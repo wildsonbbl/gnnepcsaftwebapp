@@ -32,7 +32,9 @@
                       aria-expanded="false"
                       aria-controls="AdvancedOptions">Advanced Options</button>
               <div class="collapse" id="AdvancedOptions">
-                {% for checkbox in plot_checkboxes %}<div class="form-check form-switch">{{ checkbox }}</div>{% endfor %}
+                {% for checkbox in plot_checkboxes %}
+                  {% if checkbox %}<div class="form-check form-switch">{{ checkbox }}</div>{% endif %}
+                {% endfor %}
                 <div class="form-control my-1">{{ plot_config }}</div>
               </div>
             </div>

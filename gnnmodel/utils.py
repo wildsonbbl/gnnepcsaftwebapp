@@ -4,7 +4,7 @@ import csv
 import json
 import os.path as osp
 from json import loads
-from typing import List, Literal, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from urllib.parse import quote
 from urllib.request import HTTPError, urlopen
 
@@ -46,6 +46,19 @@ from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
 # import polars as pl
 
 ort.set_default_logger_severity(3)
+
+available_params = [
+    "Segment number",
+    "Segment diameter (Å)",
+    "Dispersion energy (K)",
+    "Association volume",
+    "Association energy (K)",
+    "Dipole moment (D)*",
+    "Number of association site A",
+    "Number of association site B",
+    "Critical temperature (K)",
+    "Critical pressure (Bar)",
+]
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
@@ -575,3 +588,154 @@ def pubchem_description(inchi: str) -> str:
     except (TypeError, HTTPError, ValueError):
         ans = "no data available on this molecule in PubChem."
     return ans
+
+
+def init_pure_forms(post_data=None):
+    "init pure forms"
+    if post_data:
+        return (
+            InChIorSMILESinput(post_data),
+            CustomPlotConfigForm(post_data),
+            CustomPlotCheckForm(post_data),
+            RhoCheckForm(post_data),
+            VPCheckForm(post_data),
+            HlvCheckForm(post_data),
+            SlvCheckForm(post_data),
+            PhaseDiagramCheckForm(post_data),
+            STCheckForm(post_data),
+        )
+    return (
+        InChIorSMILESinput(),
+        CustomPlotConfigForm(),
+        CustomPlotCheckForm(),
+        RhoCheckForm(),
+        VPCheckForm(),
+        HlvCheckForm(),
+        SlvCheckForm(),
+        PhaseDiagramCheckForm(),
+        STCheckForm(),
+    )
+
+
+def process_pure_post(
+    forms: Tuple[
+        InChIorSMILESinput,
+        CustomPlotConfigForm,
+        CustomPlotCheckForm,
+        RhoCheckForm,
+        VPCheckForm,
+        HlvCheckForm,
+        SlvCheckForm,
+        PhaseDiagramCheckForm,
+        STCheckForm,
+    ],
+) -> Optional[Dict[str, Any]]:
+    "process the post data from the pure page"
+    (
+        form,
+        plot_config,
+        plot_checkbox,
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+        st_checkbox,
+    ) = forms
+
+    if not form.is_valid():
+        return None
+
+    smiles, inchi = form.cleaned_data["query"]
+    pred = get_pred(smiles, inchi)
+    plotden, plotvp, molimg = get_main_plots_data(inchi)
+    output = True
+
+    plot_checkbox.full_clean()
+    phase_diagrams, custom_plots = [], []
+    if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
+        phase_diagrams, custom_plots = get_custom_plots_data(
+            pred[:-2],
+            plot_config,
+            (
+                rho_checkbox,
+                vp_checkbox,
+                h_lv_checkbox,
+                s_lv_checkbox,
+                phase_diagram_checkbox,
+                st_checkbox,
+            ),
+        )
+    return {
+        "smiles": smiles,
+        "inchi": inchi,
+        "pred": pred,
+        "plotden": plotden,
+        "plotvp": plotvp,
+        "molimg": molimg,
+        "output": output,
+        "custom_plots": custom_plots,
+        "phase_diagrams": phase_diagrams,
+    }
+
+
+def build_pure_context(forms, post_data=None):
+    "build context for pure component page"
+    (
+        form,
+        plot_config,
+        plot_checkbox,
+        rho_checkbox,
+        vp_checkbox,
+        h_lv_checkbox,
+        s_lv_checkbox,
+        phase_diagram_checkbox,
+        st_checkbox,
+    ) = forms
+
+    data = {
+        "form": form,
+        "plot_config": plot_config,
+        "plot_checkboxes": [
+            plot_checkbox,
+            rho_checkbox,
+            vp_checkbox,
+            h_lv_checkbox,
+            s_lv_checkbox,
+            st_checkbox if settings.PLATFORM == "desktop" else None,
+            phase_diagram_checkbox,
+        ],
+        "predicted_para": [(None, None)],
+        "mol_identifiers": [(None, None)],
+        "output": False,
+        "plotden": False,
+        "plotvp": False,
+        "den_data": "",
+        "vp_data": "",
+        "mol_data": "",
+        "custom_plots": [],
+        "phase_diagrams": [],
+    }
+
+    if post_data:
+        data.update(
+            {
+                "predicted_para": [
+                    (paraname, round(para, 4))
+                    for para, paraname in zip(post_data["pred"], available_params)
+                ],
+                "mol_identifiers": [
+                    ("InChI", post_data["inchi"]),
+                    ("SMILES", post_data["smiles"]),
+                ],
+                "output": post_data["output"],
+                "plotden": post_data["plotden"] != "",
+                "plotvp": post_data["plotvp"] != "",
+                "den_data": post_data["plotden"],
+                "vp_data": post_data["plotvp"],
+                "mol_data": post_data["molimg"],
+                "custom_plots": post_data["custom_plots"],
+                "phase_diagrams": post_data["phase_diagrams"],
+            }
+        )
+    return data

@@ -9,6 +9,7 @@ var deleteSessionId = null;
 var deleteSessionName = null;
 var availableTools = [];
 var selectedTools = [];
+var selectedFile = null;
 const toolDescriptions = {
   ToolA: "Descrição da ToolA.",
   ToolB: "Descrição da ToolB.",
@@ -337,7 +338,20 @@ function updateChatLog() {
     // Create message text
     const messageText = document.createElement("p");
     messageText.className = "small mb-0";
-    messageText.innerHTML = msg.msg;
+    // Check if there's file info to display
+    if (msg.file_info) {
+      if (msg.file_info.type.startsWith("image/")) {
+        // Display image preview
+        messageText.innerHTML = `<img src="${msg.file_info.data}" alt="${msg.file_info.name}" style="max-width: 200px; max-height: 200px; display: block; margin-bottom: 5px;">`;
+      } else if (msg.file_info.type === "application/pdf") {
+        // Display PDF icon/placeholder
+        messageText.innerHTML = `<i class="fas fa-file-pdf me-2"></i><span>${msg.file_info.name}</span><br>`;
+      } else {
+        // Display generic file info
+        messageText.innerHTML = `<i class="fas fa-file me-2"></i><span>${msg.file_info.name}</span><br>`;
+      }
+    }
+    messageText.innerHTML += msg.msg; // Append the text message
 
     // Assemble the elements
     messageBubble.appendChild(messageText);
@@ -670,6 +684,13 @@ document.addEventListener("DOMContentLoaded", function () {
   // Set up input and send button
 
   const textarea = document.getElementById("chat-message-input");
+  const fileInput = document.getElementById("file-input"); // Get file input
+  const attachButton = document.getElementById("attach-file-button"); // Get attach button
+  const filePreviewContainer = document.getElementById(
+    "file-preview-container"
+  );
+  filePreviewContainer.style.display = "none"; // Hide initially
+
   textarea.focus();
   textarea.onkeyup = function (e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -684,18 +705,58 @@ document.addEventListener("DOMContentLoaded", function () {
     this.style.height = Math.min(this.scrollHeight, 300) + "px"; // 300px é o limite máximo
   });
 
+  // Trigger file input click when attach button is clicked
+  attachButton.onclick = function () {
+    fileInput.click();
+  };
+
+  // Handle file selection
+  fileInput.onchange = function (e) {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (event) {
+        selectedFile = {
+          name: file.name,
+          type: file.type,
+          data: event.target.result, // Base64 data URL
+        };
+        // Show preview
+        filePreviewContainer.innerHTML = `
+                <span class="me-2">${file.name} (${(file.size / 1024).toFixed(
+          1
+        )} KB)</span>
+                <button type="button" class="btn-close btn-sm" aria-label="Remove file" onclick="removeSelectedFile()"></button>
+            `;
+        filePreviewContainer.style.display = "block";
+      };
+      reader.readAsDataURL(file); // Read as Base64 Data URL
+    } else {
+      removeSelectedFile();
+    }
+  };
+
   document.querySelector("#chat-message-submit").onclick = function (e) {
     var messageInputDom = document.querySelector("#chat-message-input");
     var message = messageInputDom.value;
-    if (!message.trim()) return;
 
-    chatSocket.send(
-      JSON.stringify({
-        text: message,
-      })
-    );
+    // Check if there's either text or a file selected
+    if (!message.trim() && !selectedFile) return;
+
+    const messagePayload = {
+      text: message,
+    };
+
+    if (selectedFile) {
+      messagePayload.file = selectedFile;
+    }
+
+    chatSocket.send(JSON.stringify(messagePayload));
 
     messageInputDom.value = "";
+    removeSelectedFile(); // Clear file after sending
+    messageInputDom.style.height = "auto"; // Reset textarea height
   };
 
   // Export chat log
@@ -740,3 +801,11 @@ document.addEventListener("DOMContentLoaded", function () {
     .getElementById("confirm-delete-btn")
     .addEventListener("click", deleteSession);
 });
+
+function removeSelectedFile() {
+  selectedFile = null;
+  document.getElementById("file-input").value = ""; // Clear the file input
+  const previewContainer = document.getElementById("file-preview-container");
+  previewContainer.style.display = "none";
+  previewContainer.innerHTML = "";
+}

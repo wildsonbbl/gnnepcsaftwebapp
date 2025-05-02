@@ -714,6 +714,17 @@ document.addEventListener("DOMContentLoaded", function () {
   fileInput.onchange = function (e) {
     if (e.target.files.length > 0) {
       const file = e.target.files[0];
+      const maxSize = 50 * 1024 * 1024; // Example: 50MB limit
+
+      if (file.size > maxSize) {
+        showToast(
+          `File is too large. Maximum size is ${maxSize / 1024 / 1024} MB.`,
+          "error"
+        );
+        removeSelectedFile();
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = function (event) {
@@ -730,6 +741,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 <button type="button" class="btn-close btn-sm" aria-label="Remove file" onclick="removeSelectedFile()"></button>
             `;
         filePreviewContainer.style.display = "block";
+      };
+      reader.onerror = function (event) {
+        console.error("File could not be read! Error: ", event.target.error);
+        showToast("Error reading file.", "error");
+        removeSelectedFile();
       };
       reader.readAsDataURL(file); // Read as Base64 Data URL
     } else {

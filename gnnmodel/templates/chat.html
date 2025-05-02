@@ -38,6 +38,7 @@
             </div>
             <div class="row d-flex justify-content-center" id="chat-form-row">
               <form>
+                <div id="file-preview-container" class="m-1 p-1 border rounded bg-white"></div>
                 <div class="col-12 position-relative">
                   <div class="pt-5 w-100 rounded bg-light position-absolute bottom-0">
                     <!-- Chat textarea bottom buttons will be added on top of here -->
@@ -63,6 +64,17 @@
                         <!-- Tools will be populated here -->
                       </ul>
                     </div>
+                    <input type="file"
+                           id="file-input"
+                           class="d-none"
+                           title="Upload file input"
+                           accept=".pdf,image/*">
+                    <button id="attach-file-button"
+                            type="button"
+                            class="btn btn-sm btn-outline-secondary rounded-circle me-1"
+                            title="Attach File">
+                      <i class="fas fa-paperclip"></i>
+                    </button>
                     <button id="chat-message-submit"
                             type="button"
                             class="btn btn-sm btn-outline-primary rounded-circle"

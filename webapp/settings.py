@@ -197,30 +197,39 @@ LOG_LEVEL = config("GNNEPCSAFT_LOG_LEVEL", default="WARNING")
 assert isinstance(LOG_PATH, Path), "LOG_PATH must be a Path object"
 
 LOGGING = {
-    "version": 1,  # the dictConfig format version
-    "disable_existing_loggers": False,  # retain the default loggers
-    "handlers": {
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": LOG_PATH / "gnnepcsaft.log",
-            "level": LOG_LEVEL,
-            "formatter": "verbose",
-        },
-    },
-    "loggers": {
-        "": {
-            "level": LOG_LEVEL,
-            "handlers": ["file"],
-        },
-    },
+    "version": 1,
+    "disable_existing_loggers": False,
     "formatters": {
         "verbose": {
             "format": "{name} {levelname} {asctime} {module} {process:d} {thread:d} {message}",
             "style": "{",
         },
         "simple": {
-            "format": "{levelname} {message}",
+            "format": "{levelname} {asctime} {module} {message}",
             "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": LOG_PATH / "gnnepcsaft.log",
+            "level": LOG_LEVEL,
+            "formatter": "verbose",
+            "encoding": "utf-8",
+        },
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "level": LOG_LEVEL,
+        },
+    },
+    "loggers": {
+        # Root logger - currently logs only to file
+        "": {
+            "level": LOG_LEVEL,
+            # You could add 'console' here if you want logs in both places:
+            # "handlers": ["file", "console"],
+            "handlers": ["file"],
         },
     },
 }

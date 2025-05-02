@@ -6,7 +6,7 @@ import io
 import json
 import uuid
 
-import magic
+import filetype
 import PyPDF2
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -151,16 +151,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
             mime_type = header.split(":")[1].split(";")[0]
             file_bytes = base64.b64decode(encoded_data)
             file_name = file_info.get("name", "uploaded_file")
-            actual_mime_type = magic.from_buffer(file_bytes, mime=True)
-            if actual_mime_type != mime_type:
+            kind = filetype.guess(file_bytes)
+            if kind is None:
                 logger.warning(
-                    "Client provided MIME type '%s' but magic detected '%s' for file '%s'. "
-                    "Using detected type.",
-                    mime_type,
-                    actual_mime_type,
+                    "Could not determine file type for '%s' using filetype.",
                     file_name,
                 )
-                mime_type = actual_mime_type  # Optionally trust the detected type
+                raise ValueError(
+                    f"Unsupported or unrecognized file type for '{file_name}'."
+                )
+
+            if kind.mime != mime_type:
+                logger.warning(
+                    "Client provided MIME type '%s' but filetype detected '%s' for file '%s'. "
+                    "Using detected type.",
+                    mime_type,
+                    kind.mime,
+                    file_name,
+                )
+                mime_type = kind.mime
 
             processed_file_info_for_db = {
                 "name": file_name,

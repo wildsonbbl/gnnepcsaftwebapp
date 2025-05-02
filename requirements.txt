@@ -19,3 +19,5 @@ si-units
 onnxruntime
 channels
 daphne
+PyPDF2 
+filetype

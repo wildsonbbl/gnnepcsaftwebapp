@@ -1,9 +1,13 @@
 "consume module"
 
 import asyncio
+import base64
+import io
 import json
 import uuid
 
+import filetype
+import PyPDF2
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 from google.adk.agents.run_config import RunConfig
@@ -89,21 +93,127 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None
         text_data_json = json.loads(text_data)
+        assert isinstance(text_data_json, dict)
 
         # Handle different types of messages
         if "action" in text_data_json:
             await self.handle_actions(text_data_json)
 
         elif "text" in text_data_json:
-            if text_data_json["text"] == "":
-                return
 
-            await self.client_to_agent_messaging(text_data_json["text"])
+            text = text_data_json["text"]
+            file_info = text_data_json.get("file")  # Get potential file info
+
+            # Basic validation
+            if not text.strip() and not file_info:
+                return  # Ignore empty messages without files
+
+            # Process file if present
+            file_part = None
+            processed_file_info_for_db = None  # Store info for DB/frontend display
+            if file_info:
+                try:
+                    file_part, processed_file_info_for_db = (
+                        await self.process_uploaded_file(file_info)
+                    )
+                except Exception as e:  # pylint: disable=broad-exception-caught
+                    logger.error("Error processing file: %s", e)
+                    # Send error message back to client? (Optional)
+                    await self.send_error_message(
+                        f"Failed to process file: {file_info.get('name', 'Unknown')}. Error: {e}"
+                    )
+                    return  # Stop processing this message
+
+            await self.client_to_agent_messaging(text, processed_file_info_for_db)
             if self.agent_task and not self.agent_task.done():
                 self.agent_task.cancel()
             self.agent_task = asyncio.create_task(
-                self.agent_to_client_messaging(text_data_json["text"])
+                self.agent_to_client_messaging(text, file_part)
             )
+
+    async def send_error_message(self, error_text):
+        """Sends an error message formatted as a system message."""
+        error_message = {
+            "msg": markdown(
+                f"**Error:** {error_text}", extensions=[BlankLinkExtension()]
+            ),
+            "source": "assistant",  # Or a dedicated 'system' source
+        }
+        await self.send(text_data=json.dumps({"text": error_message}))
+
+    async def process_uploaded_file(self, file_info: dict):
+        """Processes base64 encoded file data into a Gemini Part."""
+        try:
+            # Decode base64 data URL
+            # Format is "data:[<mediatype>][;base64],<data>"
+            header, encoded_data = file_info["data"].split(",", 1)
+            # data:image/png;base64 -> image/png
+            mime_type = header.split(":")[1].split(";")[0]
+            file_bytes = base64.b64decode(encoded_data)
+            file_name = file_info.get("name", "uploaded_file")
+            kind = filetype.guess(file_bytes)
+            if kind is None:
+                logger.warning(
+                    "Could not determine file type for '%s' using filetype.",
+                    file_name,
+                )
+                raise ValueError(
+                    f"Unsupported or unrecognized file type for '{file_name}'."
+                )
+
+            if kind.mime != mime_type:
+                logger.warning(
+                    "Client provided MIME type '%s' but filetype detected '%s' for file '%s'. "
+                    "Using detected type.",
+                    mime_type,
+                    kind.mime,
+                    file_name,
+                )
+                mime_type = kind.mime
+
+            processed_file_info_for_db = {
+                "name": file_name,
+                "type": mime_type,
+                # Store original data URL for potential image display
+                "data": file_info["data"] if mime_type.startswith("image/") else None,
+            }
+
+            if mime_type == "application/pdf":
+                # Extract text from PDF
+                pdf_reader = PyPDF2.PdfReader(io.BytesIO(file_bytes))
+                pdf_text = f"Content from PDF '{file_name}':\n"
+                for page in pdf_reader.pages:
+                    pdf_text += page.extract_text() + "\n"
+                # Create a text Part for PDF content
+                return Part.from_text(text=pdf_text), processed_file_info_for_db
+            if mime_type.startswith("image/"):
+                # Create an image Part
+                return (
+                    Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                    processed_file_info_for_db,
+                )
+
+            # Handle other file types (e.g., treat as plain text or reject)
+            # For simplicity, let's try decoding as text, warning it might fail
+            try:
+                text_content = file_bytes.decode("utf-8")
+                logger.warning("Treating file '%s' (%s) as text.", file_name, mime_type)
+                return (
+                    Part.from_text(
+                        text=f"Content from file '{file_name}':\n{text_content}"
+                    ),
+                    processed_file_info_for_db,
+                )
+            except UnicodeDecodeError as exc:
+                raise ValueError(
+                    f"Unsupported file type: {mime_type}. Could not decode as text."
+                ) from exc
+
+        except Exception as e:
+            logger.error(
+                "Error decoding/processing file %s: %s", file_info.get("name"), e
+            )
+            raise  # Re-raise the exception to be caught in receive()
 
     @database_sync_to_async
     def get_last_session(self):
@@ -141,7 +251,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         """Save message to database"""
         session = ChatSession.objects.get(session_id=self.session_id)
         session.add_message(message)
-        return session
+        # No need to return session here unless used immediately after
 
     def serialize_session(self, session):
         """Convert session data to JSON-serializable format"""
@@ -414,11 +524,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except ChatSession.DoesNotExist:
             return False
 
-    async def agent_to_client_messaging(self, text):
+    async def agent_to_client_messaging(self, text, file_part=None):
         """Agent to client communication"""
         try:
+            parts = [Part.from_text(text=text)]
+            if file_part:
+                parts.append(file_part)
+
             async for event in self.runner.run_async(
-                new_message=Content(role="user", parts=[Part.from_text(text=text)]),
+                new_message=Content(role="user", parts=parts),
                 user_id=USER_ID,
                 session_id=self.session_id,
                 run_config=self.run_config,
@@ -438,16 +552,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 all_texts = ""
                 for part in all_parts:
                     if part.text:
-                        text = part.text
-                        all_texts += text + "\n\n"
+                        resp_text = part.text  # Renamed to avoid conflict
+                        all_texts += resp_text + "\n\n"
                     elif part.function_call and part.function_call.name:
-                        text = "**Calling:** `" + part.function_call.name + "`"
-                        all_texts += text + "\n\n"
+                        resp_text = "**Calling:** `" + part.function_call.name + "`"
+                        all_texts += resp_text + "\n\n"
                     else:
-                        text = None
-                    if text:
+                        resp_text = None
+                    if resp_text:
                         message = {
-                            "msg": markdown(text, extensions=[BlankLinkExtension()]),
+                            "msg": markdown(
+                                resp_text, extensions=[BlankLinkExtension()]
+                            ),
                             "source": "assistant",
                         }
                         await self.send(text_data=json.dumps({"text": message}))
@@ -459,6 +575,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     else:
                         all_texts += f"No text or function_call in part: {part}"
                 await asyncio.sleep(0.5)
+
         except asyncio.CancelledError:
             # Task foi cancelada (usuário clicou em Parar)
             pass
@@ -477,13 +594,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 text_data=json.dumps({"action": "end_turn", "type": "end_of_turn"})
             )
 
-    async def client_to_agent_messaging(self, text):
+    async def client_to_agent_messaging(self, text, file_info_for_db=None):
         """Client to agent communication"""
         # Store user message in database
         user_message = {
             "msg": markdown(text, extensions=[BlankLinkExtension()]),
             "source": "user",
         }
+        if file_info_for_db:
+            # Add file info for display in chat log
+            user_message["file_info"] = file_info_for_db
+
         await self.save_message_to_db(user_message)
         await self.send(
             text_data=json.dumps({"text": user_message}),

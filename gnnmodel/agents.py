@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from google.adk.agents import LlmAgent
 
+from gnnepcsaft_mcp_server.plot_utils import v3000_mol_block
 from gnnepcsaft_mcp_server.utils import (
     batch_convert_pure_density_to_kg_per_m3,
     batch_critical_points,
@@ -58,6 +59,7 @@ all_tools = [
     mixture_vapor_pressure,
     pubchem_description,
     pure_phase,
+    v3000_mol_block,
 ]
 
 

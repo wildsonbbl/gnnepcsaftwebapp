@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Callable, List, Optional
 
 from django.conf import settings
+from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from markdown import markdown
@@ -20,6 +21,7 @@ APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)
 session_service = DatabaseSessionService(DB_URL)
 USER_ID = "LOCAL_USER_01"
+artifact_service = InMemoryArtifactService()
 
 
 def get_sessions_ids():
@@ -65,6 +67,7 @@ def start_agent_session(
         app_name=APP_NAME,
         agent=root_agent,
         session_service=session_service,
+        artifact_service=artifact_service,
     )
 
     return runner, session

@@ -33,7 +33,7 @@ def get_sessions_ids():
     return sessions_ids
 
 
-def start_agent_session(
+async def start_agent_session(
     session_id: str,
     model_name: str = DEFAULT_MODEL,
     tools: Optional[List[Callable]] = None,
@@ -41,7 +41,7 @@ def start_agent_session(
     """Starts an agent session"""
     sessions_ids = get_sessions_ids()
 
-    root_agent = (
+    root_agent = await (
         create_root_agent(model_name, tools)
         if model_name in AVAILABLE_MODELS
         else create_root_agent()

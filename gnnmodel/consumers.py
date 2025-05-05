@@ -60,7 +60,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             session = await self.get_or_create_session(self.session_id)
         assert isinstance(session, ChatSession)
         # Initialize the agent with the session
-        self.runner, self.runner_session = start_agent_session(
+        self.runner, self.runner_session = await start_agent_session(
             self.session_id,
             session.model_name,
             tools=[tool_map[tool] for tool in session.selected_tools],
@@ -289,7 +289,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     for name in text_data_json["tools"]
                     if name in tool_map
                 ]
-                self.runner, self.runner_session = start_agent_session(
+                self.runner, self.runner_session = await start_agent_session(
                     self.session_id, model_name, selected_tools
                 )
 
@@ -329,7 +329,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     session = await self.get_or_create_session(self.session_id)
                 assert isinstance(session, ChatSession)
 
-                self.runner, self.runner_session = start_agent_session(
+                self.runner, self.runner_session = await start_agent_session(
                     self.session_id,
                     session.model_name,
                     tools=[tool_map[name] for name in session.selected_tools],
@@ -399,7 +399,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 selected_tools=selected_tools,
             )
             assert isinstance(session, ChatSession)
-            self.runner, self.runner_session = start_agent_session(
+            self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 model_name=session.model_name,
                 tools=[tool_map[t] for t in session.selected_tools],
@@ -436,7 +436,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             session = await self.get_or_create_session(self.session_id)
             assert isinstance(session, ChatSession)
-            self.runner, self.runner_session = start_agent_session(
+            self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 session.model_name,
                 tools=[tool_map[t] for t in session.selected_tools],
@@ -497,7 +497,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )(selected_tools=[t.__name__ for t in selected_tools])
 
             session = await self.get_or_create_session(self.session_id)
-            self.runner, self.runner_session = start_agent_session(
+            self.runner, self.runner_session = await start_agent_session(
                 self.session_id, session.model_name, tools=selected_tools
             )
             await self.send(

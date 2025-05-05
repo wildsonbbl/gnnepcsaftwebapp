@@ -10,7 +10,6 @@ import feos
 import webapp.asgi
 import webapp.wsgi
 import whitenoise
-from daphne.cli import CommandLineInterface
 from decouple import config
 from uvicorn import run
 
@@ -43,6 +42,8 @@ if __name__ == "__main__":
             port=int(sys.argv[2]) if len(sys.argv) > 2 else 19770,
         )
     elif "daphne" in sys.argv:
+        from daphne.cli import CommandLineInterface
+
         CommandLineInterface().run(
             [
                 "webapp.asgi:application",

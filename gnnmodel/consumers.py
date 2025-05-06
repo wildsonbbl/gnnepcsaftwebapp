@@ -16,7 +16,11 @@ from django.conf import settings
 from google.adk.agents.run_config import RunConfig
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import Session
-from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+from google.adk.tools.mcp_tool.mcp_toolset import (
+    MCPTool,
+    MCPToolset,
+    StdioServerParameters,
+)
 from google.genai.types import Content, Part
 from markdown import markdown
 
@@ -51,7 +55,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
     runner: Runner
     run_config = RunConfig(response_modalities=["TEXT"])
     agent_task = None
-    mcp_tools: List = []
+    mcp_tools: List[MCPTool] = []
+    original_tools: List[Any] = all_tools
 
     async def connect(self):
         """Connect to the websocket"""
@@ -67,11 +72,21 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = str(uuid.uuid4())
             session = await self.get_or_create_session(self.session_id)
         assert isinstance(session, ChatSession)
+
+        # Combine original tools and any already activated MCP tools
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+
+        # Filter selected tools based on currently available tools
+        valid_selected_tools = await self.validate_and_update_tools(
+            session, current_tool_map
+        )
+
         # Initialize the agent with the session
         self.runner, self.runner_session = await start_agent_session(
             self.session_id,
             session.model_name,
-            tools=[tool_map[tool] for tool in session.selected_tools] + self.mcp_tools,
+            tools=[current_tool_map[tool] for tool in valid_selected_tools],
         )
 
         # Send the current session info to the client
@@ -83,9 +98,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "name": session.name,
                     "model_name": session.model_name,
                     "available_models": AVAILABLE_MODELS,
-                    "available_tools": [t.__name__ for t in all_tools],
-                    "selected_tools": session.selected_tools,
+                    "available_tools": list(current_tool_map),
+                    "selected_tools": valid_selected_tools,
                     "tool_descriptions": tool_descriptions,
+                    "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
                 },
                 cls=CustomJSONEncoder,
             )
@@ -97,6 +113,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 cls=CustomJSONEncoder,
             )
         )
+
+    async def validate_and_update_tools(
+        self, session: ChatSession, current_tool_map: Dict[str, Any]
+    ) -> List[str]:
+        "validate and update tools"
+        valid_selected_tools = [
+            tool for tool in session.selected_tools if tool in current_tool_map
+        ]
+        if len(valid_selected_tools) != len(session.selected_tools):
+            # Update the session if some selected tools are no
+            # longer valid (e.g., after MCP activation)
+            await database_sync_to_async(
+                ChatSession.objects.filter(session_id=self.session_id).update
+            )(selected_tools=valid_selected_tools)
+        return valid_selected_tools
+
+    def get_current_tool_map(self, current_tools: List[Any]) -> Dict[str, Any]:
+        """get current tool map"""
+        current_tool_map = {}
+        for t in current_tools:
+            if hasattr(t, "__name__"):  # Check for regular tools
+                current_tool_map[t.__name__] = t
+            elif hasattr(t, "name"):  # Check for MCP tools
+                current_tool_map[t.name] = t
+        return current_tool_map
 
     async def disconnect(self, code):
         """
@@ -171,8 +212,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     async def activate_mcp_server(self):
         "activate the servers on the config"
-
-        # Load configuration from the file path specified in settings
+        # Clear existing MCP tools before activation
+        self.mcp_tools = []
+        activated_tool_names = []
+        error_message = None
 
         try:
             with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as config_file:
@@ -180,28 +223,69 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     config_file
                 )
         except FileNotFoundError:
-            logger.error(
-                "MCP configuration file not found at: %s", settings.MCP_SERVER_CONFIG
+            error_message = (
+                f"MCP configuration file not found at: {settings.MCP_SERVER_CONFIG}"
             )
+            logger.error(error_message)
             mcp_server_config = {}
-        except json.JSONDecodeError:
-            logger.error(
-                "Error decoding JSON from MCP configuration file: %s",
-                settings.MCP_SERVER_CONFIG,
+        except json.JSONDecodeError as e:
+            error_message = (
+                f"Error decoding JSON from MCP configuration"
+                f" file: {settings.MCP_SERVER_CONFIG}. Error: {e}"
             )
+            logger.error(error_message)
+            mcp_server_config = {}
+        except (  # pylint: disable=broad-exception-caught
+            Exception
+        ) as e:  # Catch other potential errors during file opening/reading
+            error_message = (
+                f"Error reading MCP configuration"
+                f" file: {settings.MCP_SERVER_CONFIG}. Error: {e}"
+            )
+            logger.error(error_message)
             mcp_server_config = {}
 
-        logger.debug(mcp_server_config)
-
-        if "mcpServers" in mcp_server_config:
+        if not error_message and "mcpServers" in mcp_server_config:
+            logger.debug(mcp_server_config)
             for mcpserver_name in mcp_server_config["mcpServers"]:
                 mcpserver = mcp_server_config["mcpServers"][mcpserver_name]
                 command = mcpserver.get("command")
                 args = mcpserver.get("args")
-                assert isinstance(command, str)
-                assert isinstance(args, List)
                 env = mcpserver.get("env")
-                self.mcp_tools += await self.get_mcp(command, args, env)
+
+                # Basic validation for command and args
+                if not isinstance(command, str) or not command:
+                    logger.error(
+                        "Invalid or missing 'command' for MCP server: %s",
+                        mcpserver_name,
+                    )
+                    continue  # Skip this server
+                if not isinstance(args, list):
+                    logger.error(
+                        "Invalid or missing 'args' for MCP server: %s. Must be a list.",
+                        mcpserver_name,
+                    )
+                    continue  # Skip this server
+
+                try:
+                    new_tools = await self.get_mcp(command, args, env)
+                    self.mcp_tools.extend(new_tools)
+                    activated_tool_names.extend([t.name for t in new_tools])
+                    logger.info(
+                        "Activated MCP tools from server '%s': %s",
+                        mcpserver_name,
+                        [t.name for t in new_tools],
+                    )
+                except Exception as e:  # pylint: disable=broad-exception-caught
+                    error_message = (
+                        f"Failed to activate MCP server '{mcpserver_name}': {e}"
+                    )
+                    logger.error(error_message)
+                    # Decide if we should stop all activation on first error, or continue
+                    # For now, let's record the error and continue
+                    # break # Uncomment to stop on first error
+
+        return activated_tool_names, error_message
 
     async def process_uploaded_file(self, file_info: dict):
         """Processes base64 encoded file data into a Gemini Part."""
@@ -278,7 +362,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             raise  # Re-raise the exception to be caught in receive()
 
     @database_sync_to_async
-    def get_last_session(self):
+    def get_last_session(self) -> Optional[ChatSession]:
         """Get the most recently updated session"""
         try:
             return ChatSession.objects.order_by("-updated_at").first()
@@ -292,7 +376,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         name="New Session",
         model_name=DEFAULT_MODEL,
         selected_tools=None,
-    ):
+    ) -> ChatSession:
         """Get or create a session"""
         try:
             # Try to get existing session
@@ -335,7 +419,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
 
-    async def handle_actions(self, text_data_json: dict):  # pylint: disable=R0915,R0912
+    async def handle_actions(  # pylint: enable=R0915,R0912,R0914
+        self, text_data_json: dict
+    ):
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
         if action == "change_model":
@@ -346,13 +432,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     ChatSession.objects.filter(session_id=self.session_id).update
                 )(model_name=model_name)
 
-                selected_tools = [
-                    tool_map[name]
-                    for name in text_data_json["tools"]
-                    if name in tool_map
+                current_tools = self.original_tools + self.mcp_tools
+                current_tool_map = self.get_current_tool_map(current_tools)
+                valid_selected_tools = [
+                    name for name in text_data_json["tools"] if name in current_tool_map
                 ]
+
                 self.runner, self.runner_session = await start_agent_session(
-                    self.session_id, model_name, selected_tools + self.mcp_tools
+                    self.session_id,
+                    model_name,
+                    [current_tool_map[name] for name in valid_selected_tools],
                 )
 
                 await self.send(
@@ -389,13 +478,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     # Create a new session
                     self.session_id = str(uuid.uuid4())
                     session = await self.get_or_create_session(self.session_id)
-                assert isinstance(session, ChatSession)
 
+                current_tools = self.original_tools + self.mcp_tools
+                current_tool_map = self.get_current_tool_map(current_tools)
+                valid_selected_tools = await self.validate_and_update_tools(
+                    session, current_tool_map
+                )
                 self.runner, self.runner_session = await start_agent_session(
                     self.session_id,
                     session.model_name,
-                    tools=[tool_map[name] for name in session.selected_tools]
-                    + self.mcp_tools,
+                    tools=[current_tool_map[name] for name in valid_selected_tools],
                 )
 
                 await self.send(
@@ -406,8 +498,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                             "name": session.name,
                             "model_name": session.model_name,
                             "available_models": AVAILABLE_MODELS,
-                            "available_tools": [t.__name__ for t in all_tools],
-                            "selected_tools": session.selected_tools,
+                            "available_tools": list(current_tool_map),
+                            "selected_tools": valid_selected_tools,
                         },
                         cls=CustomJSONEncoder,
                     )
@@ -419,7 +511,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     )
                 )
 
-                # Send confirmation and refresh sessions list
+            # Send confirmation and refresh sessions list
             await self.send(
                 text_data=json.dumps(
                     {
@@ -452,20 +544,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = str(uuid.uuid4())
             name = text_data_json.get("name", "New Session")
             model_name = text_data_json.get("model_name", DEFAULT_MODEL)
-            selected_tools = text_data_json.get(
-                "tools", [t.__name__ for t in all_tools]
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+            selected_tools_names = text_data_json.get(
+                "tools",
+                list(current_tool_map),  # Default to all current tools
             )
+            valid_selected_tools = [
+                name for name in selected_tools_names if name in current_tool_map
+            ]
+
             session = await self.get_or_create_session(
                 self.session_id,
                 name=name,
                 model_name=model_name,
-                selected_tools=selected_tools,
+                selected_tools=valid_selected_tools,
             )
-            assert isinstance(session, ChatSession)
+
             self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 model_name=session.model_name,
-                tools=[tool_map[t] for t in session.selected_tools] + self.mcp_tools,
+                tools=[current_tool_map[t] for t in session.selected_tools],
             )
 
             await self.send(
@@ -486,8 +585,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "name": session.name,
                         "model_name": session.model_name,
                         "available_models": AVAILABLE_MODELS,
-                        "available_tools": [t.__name__ for t in all_tools],
-                        "selected_tools": session.selected_tools,
+                        "available_tools": list(current_tool_map),
+                        "selected_tools": valid_selected_tools,
+                        "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
                     },
                     cls=CustomJSONEncoder,
                 )
@@ -498,11 +598,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.session_id = text_data_json["session_id"]
 
             session = await self.get_or_create_session(self.session_id)
-            assert isinstance(session, ChatSession)
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+            valid_selected_tools = await self.validate_and_update_tools(
+                session, current_tool_map
+            )
+
             self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 session.model_name,
-                tools=[tool_map[t] for t in session.selected_tools] + self.mcp_tools,
+                tools=[current_tool_map[t] for t in valid_selected_tools],
             )
 
             await self.send(
@@ -513,8 +618,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                         "name": session.name,
                         "model_name": session.model_name,
                         "available_models": AVAILABLE_MODELS,
-                        "available_tools": [t.__name__ for t in all_tools],
-                        "selected_tools": session.selected_tools,
+                        "available_tools": list(current_tool_map),
+                        "selected_tools": valid_selected_tools,
+                        "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
                     },
                     cls=CustomJSONEncoder,
                 )
@@ -552,27 +658,35 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
 
         elif action == "change_tools":
-            selected_tools = [
-                tool_map[t] for t in text_data_json["tools"] if t in tool_map
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+            valid_selected_tools = [
+                t for t in text_data_json["tools"] if t in current_tool_map
             ]
+
+            # update db
             await database_sync_to_async(
                 ChatSession.objects.filter(session_id=self.session_id).update
-            )(selected_tools=[t.__name__ for t in selected_tools])
+            )(selected_tools=valid_selected_tools)
 
-            session = await self.get_or_create_session(self.session_id)
+            session: ChatSession = await self.get_or_create_session(self.session_id)
             self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 session.model_name,
-                tools=selected_tools + self.mcp_tools,
+                tools=[current_tool_map[t] for t in session.selected_tools],
             )
             await self.send(
                 text_data=json.dumps(
                     {
                         "action": "tools_changed",
-                        "selected_tools": [t.__name__ for t in selected_tools],
+                        "selected_tools": session.selected_tools,
+                        "available_tools": list(current_tool_map),
                     }
                 )
             )
+
+        elif action == "activate_mcp":
+            await self.handle_activate_mcp()
 
     @database_sync_to_async
     def delete_session(self, session_id):
@@ -706,3 +820,43 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             ),
         )
+
+    async def handle_activate_mcp(self):
+        "handle activate mcp action"
+        activated_tool_names, error_message = await self.activate_mcp_server()
+
+        if error_message:
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "mcp_activation_failed",
+                        "error": error_message,
+                    }
+                )
+            )
+        else:
+            # Successfully activated (or no servers defined), re-initialize agent with new tools
+            session: ChatSession = await self.get_or_create_session(self.session_id)
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+
+            valid_selected_tools = await self.validate_and_update_tools(
+                session, current_tool_map
+            )
+
+            self.runner, self.runner_session = await start_agent_session(
+                self.session_id,
+                session.model_name,
+                tools=[current_tool_map[t] for t in valid_selected_tools],
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "mcp_activated",
+                        "activated_tools": activated_tool_names,
+                        "available_tools": list(current_tool_map),
+                        "selected_tools": valid_selected_tools,
+                    }
+                )
+            )

@@ -16,12 +16,14 @@ const dbPath = path.join(dbDir, "gnnepcsaft.db");
 const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
 const migrateFlag = path.join(dbDir, `.db_migrated_v${appVersion}`);
 const logPath = path.join(userDataPath, "logs");
+const mcpConfigPath = path.join(userDataPath, "mcp_server.json");
 
 const env = {
   ...process.env,
   GNNEPCSAFT_DB_PATH: dbPath,
   GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
   GNNEPCSAFT_LOG_PATH: logPath,
+  GNNEPCSAFT_MCP_SERVER_CONFIG: mcpConfigPath,
 };
 
 let appPath;
@@ -110,11 +112,7 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  const djangoBackend = spawn(
-    appPath,
-    ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
-    { signal, env }
-  );
+  const djangoBackend = spawn(appPath, ["uvicorn"], { signal, env });
 
   djangoBackend.on("error", (error) => {
     log.error(error.message);

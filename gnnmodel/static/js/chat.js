@@ -166,13 +166,6 @@ function handleActionMessage(data) {
       }
       break;
     case "session_created":
-      currentSessionId = data.session_id;
-      currentSessionName = data.name;
-      document.getElementById("current-session-name").textContent =
-        currentSessionName;
-      // Clear messages for new session
-      messages = [];
-      updateChatLog();
       // Close the modal
       var modal = bootstrap.Modal.getInstance(
         document.getElementById("newSessionModal")

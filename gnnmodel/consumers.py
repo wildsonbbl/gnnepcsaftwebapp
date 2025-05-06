@@ -161,9 +161,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     config_file
                 )
         except FileNotFoundError:
-            error_message = (
-                f"MCP configuration file not found at: {settings.MCP_SERVER_CONFIG}"
-            )
+            error_message = "MCP configuration file not found, config file first."
             logger.error(error_message)
             mcp_server_config = {}
         except json.JSONDecodeError as e:
@@ -819,7 +817,10 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 text_data=json.dumps(
                     {
                         "action": "mcp_config_content",
-                        "error": "MCP configuration file not found.",
+                        "error": (
+                            "MCP configuration file not found."
+                            " The file will be created on save."
+                        ),
                     }
                 )
             )

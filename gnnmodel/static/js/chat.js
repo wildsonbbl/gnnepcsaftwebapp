@@ -633,7 +633,7 @@ function showToast(message, type = "success") {
   if (!toastContainer) {
     toastContainer = document.createElement("div");
     toastContainer.id = "toast-container";
-    toastContainer.className = "position-fixed bottom-0 end-0 p-3";
+    toastContainer.className = "position-fixed top-0 end-0 p-3";
     document.body.appendChild(toastContainer);
   }
 

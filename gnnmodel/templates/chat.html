@@ -64,6 +64,14 @@
                         <!-- Tools will be populated here -->
                       </ul>
                     </div>
+                    <button id="config-mcp-btn"
+                            type="button"
+                            class="btn btn-sm btn-outline-warning rounded me-1"
+                            title="Configure MCP Servers"
+                            data-bs-toggle="modal"
+                            data-bs-target="#mcpConfigModal">
+                      <i class="fas fa-cogs"></i>
+                    </button>
                     <button id="activate-mcp-btn"
                             type="button"
                             class="btn btn-sm btn-outline-info rounded-circle me-1"
@@ -257,6 +265,41 @@
             <div class="modal-body" id="tool-info-body"></div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- MCP Config Modal -->
+      <div class="modal fade"
+           id="mcpConfigModal"
+           tabindex="-1"
+           aria-labelledby="mcpConfigModalLabel"
+           aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="mcpConfigModalLabel">MCP Server Configuration</h5>
+              <button type="button"
+                      class="btn-close"
+                      data-bs-dismiss="modal"
+                      aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>
+                Editing file: <code id="mcp-config-file-path"></code>
+              </p>
+              <div class="mb-3">
+                <label for="mcp-config-content-input" class="form-label">Configuration (JSON format):</label>
+                <textarea class="form-control"
+                          id="mcp-config-content-input"
+                          rows="15"
+                          placeholder="MCP server configuration in JSON format..."></textarea>
+              </div>
+              <div id="mcp-config-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-primary" id="save-mcp-config-btn">Save Configuration</button>
             </div>
           </div>
         </div>

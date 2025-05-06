@@ -96,14 +96,11 @@ function handleActionMessage(data) {
       // Update MCP Config Path and Button Title
       if (data.mcp_config_path) {
         mcpConfigPath = data.mcp_config_path;
-        const mcpButton = document.getElementById("activate-mcp-btn");
-        if (mcpButton) {
-          mcpButton.title = `Activate MCP Servers (Config: ${mcpConfigPath})`;
-        }
-      } else {
-        const mcpButton = document.getElementById("activate-mcp-btn");
-        if (mcpButton) {
-          mcpButton.title = `Activate MCP Servers (Config path not set)`;
+        const mcpConfigFilePathDisplay = document.getElementById(
+          "mcp-config-file-path"
+        );
+        if (mcpConfigFilePathDisplay) {
+          mcpConfigFilePathDisplay.textContent = mcpConfigPath;
         }
       }
 
@@ -232,6 +229,37 @@ function handleActionMessage(data) {
         showToast("Session deleted successfully");
       } else {
         showToast("Failed to delete session", "error");
+      }
+      break;
+    case "mcp_config_content":
+      const mcpConfigContentInput = document.getElementById(
+        "mcp-config-content-input"
+      );
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none");
+      mcpConfigError.textContent = "";
+      if (data.error) {
+        mcpConfigContentInput.value = "";
+        mcpConfigError.textContent = `Error loading MCP config: ${data.error}`;
+        mcpConfigError.classList.remove("d-none");
+      } else {
+        mcpConfigContentInput.value = data.content;
+      }
+      break;
+    case "mcp_config_saved":
+      if (data.success) {
+        showToast("MCP configuration saved successfully.");
+        var modal = bootstrap.Modal.getInstance(
+          document.getElementById("mcpConfigModal")
+        );
+        if (modal) modal.hide();
+        // Optionally, you might want to re-fetch session data if config changes affect available tools immediately
+        // For now, activating MCP will re-fetch.
+      } else {
+        const mcpConfigError = document.getElementById("mcp-config-error");
+        mcpConfigError.textContent = `Error saving MCP config: ${data.error}`;
+        mcpConfigError.classList.remove("d-none");
+        showToast(`Failed to save MCP configuration: ${data.error}`, "error");
       }
       break;
   }
@@ -797,6 +825,51 @@ document.addEventListener("DOMContentLoaded", function () {
     };
   } else {
     console.error("MCP Activation button not found.");
+  }
+
+  // Add listener for the MCP Config button
+  const mcpConfigBtn = document.getElementById("config-mcp-btn");
+  if (mcpConfigBtn) {
+    mcpConfigBtn.addEventListener("click", function () {
+      // Request current MCP config content when modal is about to be shown
+      chatSocket.send(JSON.stringify({ action: "get_mcp_config_content" }));
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none"); // Clear previous errors
+      mcpConfigError.textContent = "";
+    });
+  } else {
+    console.error("MCP Config button not found.");
+  }
+
+  // Add listener for the Save MCP Config button in the modal
+  const saveMcpConfigBtn = document.getElementById("save-mcp-config-btn");
+  if (saveMcpConfigBtn) {
+    saveMcpConfigBtn.onclick = function () {
+      const newConfigContent = document.getElementById(
+        "mcp-config-content-input"
+      ).value;
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none");
+      mcpConfigError.textContent = "";
+
+      try {
+        JSON.parse(newConfigContent); // Basic validation for JSON
+      } catch (e) {
+        mcpConfigError.textContent = "Invalid JSON format: " + e.message;
+        mcpConfigError.classList.remove("d-none");
+        showToast("MCP Configuration is not valid JSON.", "error");
+        return;
+      }
+
+      chatSocket.send(
+        JSON.stringify({
+          action: "save_mcp_config_content",
+          content: newConfigContent,
+        })
+      );
+    };
+  } else {
+    console.error("Save MCP Config button not found.");
   }
 
   document.querySelector("#chat-message-submit").onclick = function (e) {

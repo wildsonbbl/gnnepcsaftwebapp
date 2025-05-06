@@ -527,13 +527,19 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             "stop_generating": self.handle_stop_generating,
             "change_tools": self.handle_change_tools,
             "activate_mcp": self.handle_activate_mcp,
+            "get_mcp_config_content": self.handle_get_mcp_config_content,
+            "save_mcp_config_content": self.handle_save_mcp_config_content,
         }
 
         handler = action_handlers.get(action)
         if handler:
             # For handlers that don't take text_data_json
-            # (like get_sessions, stop_generating, activate_mcp)
-            if action in ["get_sessions", "stop_generating", "activate_mcp"]:
+            if action in [
+                "get_sessions",
+                "stop_generating",
+                "activate_mcp",
+                "get_mcp_config_content",
+            ]:
                 await handler()
             else:
                 await handler(text_data_json)
@@ -794,6 +800,83 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         self.agent_task = asyncio.create_task(
             self.agent_to_client_messaging(text, file_part)
         )
+
+    async def handle_get_mcp_config_content(self):
+        """Handles request to get MCP server configuration content."""
+        try:
+            with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
+                content = f.read()
+            await self.send(
+                text_data=json.dumps(
+                    {"action": "mcp_config_content", "content": content}
+                )
+            )
+        except FileNotFoundError:
+            logger.error(
+                "MCP configuration file not found at: %s", settings.MCP_SERVER_CONFIG
+            )
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "mcp_config_content",
+                        "error": "MCP configuration file not found.",
+                    }
+                )
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error("Error reading MCP configuration file: %s", e)
+            await self.send(
+                text_data=json.dumps({"action": "mcp_config_content", "error": str(e)})
+            )
+
+    async def handle_save_mcp_config_content(self, text_data_json: Dict[str, str]):
+        """Handles request to save MCP server configuration content."""
+        new_content = text_data_json.get("content")
+        if new_content is None:
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "mcp_config_saved",
+                        "success": False,
+                        "error": "No content provided.",
+                    }
+                )
+            )
+            return
+
+        try:
+            # Validate if the content is valid JSON before writing
+            json.loads(new_content)
+            with open(settings.MCP_SERVER_CONFIG, "w", encoding="utf-8") as f:
+                f.write(new_content)
+            logger.info(
+                "MCP configuration file updated: %s", settings.MCP_SERVER_CONFIG
+            )
+            await self.send(
+                text_data=json.dumps({"action": "mcp_config_saved", "success": True})
+            )
+        except json.JSONDecodeError as e:
+            logger.error("Error decoding new MCP config content as JSON: %s", e)
+            await self.send(
+                json.dumps(
+                    {
+                        "action": "mcp_config_saved",
+                        "success": False,
+                        "error": f"Invalid JSON format: {e}",
+                    }
+                )
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error("Error writing MCP configuration file: %s", e)
+            await self.send(
+                json.dumps(
+                    {
+                        "action": "mcp_config_saved",
+                        "success": False,
+                        "error": str(e),
+                    }
+                )
+            )
 
 
 class ChatConsumer(ChatConsumerHandleActions):

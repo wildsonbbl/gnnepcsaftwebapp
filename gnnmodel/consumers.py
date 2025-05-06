@@ -5,14 +5,18 @@ import base64
 import io
 import json
 import uuid
+from contextlib import AsyncExitStack
+from typing import Any, Dict, List, Optional
 
 import filetype
 import PyPDF2
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
 from google.adk.agents.run_config import RunConfig
 from google.adk.runners import Runner
 from google.adk.sessions.in_memory_session_service import Session
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
 from google.genai.types import Content, Part
 from markdown import markdown
 
@@ -35,6 +39,9 @@ tool_descriptions = {
     for t in all_tools
 }
 
+# MCPToolset exit stack
+mcp_exit_stack = AsyncExitStack()
+
 
 class ChatConsumer(AsyncWebsocketConsumer):
     "Chat consumer"
@@ -44,6 +51,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     runner: Runner
     run_config = RunConfig(response_modalities=["TEXT"])
     agent_task = None
+    mcp_tools: List = []
 
     async def connect(self):
         """Connect to the websocket"""
@@ -63,7 +71,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.runner, self.runner_session = await start_agent_session(
             self.session_id,
             session.model_name,
-            tools=[tool_map[tool] for tool in session.selected_tools],
+            tools=[tool_map[tool] for tool in session.selected_tools] + self.mcp_tools,
         )
 
         # Send the current session info to the client
@@ -89,6 +97,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 cls=CustomJSONEncoder,
             )
         )
+
+    async def disconnect(self, code):
+        """
+        Called when a WebSocket connection is closed.
+        """
+        await mcp_exit_stack.aclose()
 
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None
@@ -140,6 +154,54 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "source": "assistant",  # Or a dedicated 'system' source
         }
         await self.send(text_data=json.dumps({"text": error_message}))
+
+    async def get_mcp(
+        self, command: str, args: List[str], env: Optional[Dict[str, str]] = None
+    ):
+        "get mcp toolset"
+
+        tools, _ = await MCPToolset.from_server(
+            connection_params=StdioServerParameters(
+                command=command, args=args, env=env
+            ),
+            async_exit_stack=mcp_exit_stack,
+        )
+
+        return tools
+
+    async def activate_mcp_server(self):
+        "activate the servers on the config"
+
+        # Load configuration from the file path specified in settings
+
+        try:
+            with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as config_file:
+                mcp_server_config: Dict[str, Dict[str, Dict[str, Any]]] = json.load(
+                    config_file
+                )
+        except FileNotFoundError:
+            logger.error(
+                "MCP configuration file not found at: %s", settings.MCP_SERVER_CONFIG
+            )
+            mcp_server_config = {}
+        except json.JSONDecodeError:
+            logger.error(
+                "Error decoding JSON from MCP configuration file: %s",
+                settings.MCP_SERVER_CONFIG,
+            )
+            mcp_server_config = {}
+
+        logger.debug(mcp_server_config)
+
+        if "mcpServers" in mcp_server_config:
+            for mcpserver_name in mcp_server_config["mcpServers"]:
+                mcpserver = mcp_server_config["mcpServers"][mcpserver_name]
+                command = mcpserver.get("command")
+                args = mcpserver.get("args")
+                assert isinstance(command, str)
+                assert isinstance(args, List)
+                env = mcpserver.get("env")
+                self.mcp_tools += await self.get_mcp(command, args, env)
 
     async def process_uploaded_file(self, file_info: dict):
         """Processes base64 encoded file data into a Gemini Part."""
@@ -290,7 +352,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     if name in tool_map
                 ]
                 self.runner, self.runner_session = await start_agent_session(
-                    self.session_id, model_name, selected_tools
+                    self.session_id, model_name, selected_tools + self.mcp_tools
                 )
 
                 await self.send(
@@ -332,7 +394,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 self.runner, self.runner_session = await start_agent_session(
                     self.session_id,
                     session.model_name,
-                    tools=[tool_map[name] for name in session.selected_tools],
+                    tools=[tool_map[name] for name in session.selected_tools]
+                    + self.mcp_tools,
                 )
 
                 await self.send(
@@ -402,7 +465,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 model_name=session.model_name,
-                tools=[tool_map[t] for t in session.selected_tools],
+                tools=[tool_map[t] for t in session.selected_tools] + self.mcp_tools,
             )
 
             await self.send(
@@ -439,7 +502,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.runner, self.runner_session = await start_agent_session(
                 self.session_id,
                 session.model_name,
-                tools=[tool_map[t] for t in session.selected_tools],
+                tools=[tool_map[t] for t in session.selected_tools] + self.mcp_tools,
             )
 
             await self.send(
@@ -498,7 +561,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             session = await self.get_or_create_session(self.session_id)
             self.runner, self.runner_session = await start_agent_session(
-                self.session_id, session.model_name, tools=selected_tools
+                self.session_id,
+                session.model_name,
+                tools=selected_tools + self.mcp_tools,
             )
             await self.send(
                 text_data=json.dumps(

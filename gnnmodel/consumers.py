@@ -419,274 +419,33 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
 
-    async def handle_actions(  # pylint: enable=R0915,R0912,R0914
-        self, text_data_json: dict
-    ):
+    async def handle_actions(self, text_data_json: Dict[str, str]):
         """Handle actions such as creating a new session or deleting a session"""
         action = text_data_json["action"]
-        if action == "change_model":
-            model_name = text_data_json["model_name"]
-            if model_name in AVAILABLE_MODELS:
-                # Update the session with the new model
-                await database_sync_to_async(
-                    ChatSession.objects.filter(session_id=self.session_id).update
-                )(model_name=model_name)
+        action_handlers = {
+            "change_model": self.handle_change_model,
+            "delete_session": self.handle_delete_session,
+            "get_sessions": self.handle_get_sessions,
+            "create_session": self.handle_create_session,
+            "load_session": self.handle_load_session,
+            "rename_session": self.handle_rename_session,
+            "stop_generating": self.handle_stop_generating,
+            "change_tools": self.handle_change_tools,
+            "activate_mcp": self.handle_activate_mcp,
+        }
 
-                current_tools = self.original_tools + self.mcp_tools
-                current_tool_map = self.get_current_tool_map(current_tools)
-                valid_selected_tools = [
-                    name for name in text_data_json["tools"] if name in current_tool_map
-                ]
-
-                self.runner, self.runner_session = await start_agent_session(
-                    self.session_id,
-                    model_name,
-                    [current_tool_map[name] for name in valid_selected_tools],
-                )
-
-                await self.send(
-                    text_data=json.dumps(
-                        {
-                            "action": "model_changed",
-                            "model_name": model_name,
-                        }
-                    )
-                )
-
-                # Add a system message to indicate model change
-                system_message = {
-                    "msg": markdown(
-                        f"Model changed to `{model_name}`",
-                        extensions=[BlankLinkExtension()],
-                    ),
-                    "source": "user",
-                }
-                await self.save_message_to_db(system_message)
-                await self.send(text_data=json.dumps({"text": system_message}))
-
-        elif action == "delete_session":
-            session_id = text_data_json["session_id"]
-            success = await self.delete_session(session_id)
-
-            # If the deleted session was the current one, load the most recent session
-            if success and session_id == self.session_id:
-                last_session = await self.get_last_session()
-                if last_session:
-                    self.session_id = str(last_session.session_id)
-                    session = last_session
-                else:
-                    # Create a new session
-                    self.session_id = str(uuid.uuid4())
-                    session = await self.get_or_create_session(self.session_id)
-
-                current_tools = self.original_tools + self.mcp_tools
-                current_tool_map = self.get_current_tool_map(current_tools)
-                valid_selected_tools = await self.validate_and_update_tools(
-                    session, current_tool_map
-                )
-                self.runner, self.runner_session = await start_agent_session(
-                    self.session_id,
-                    session.model_name,
-                    tools=[current_tool_map[name] for name in valid_selected_tools],
-                )
-
-                await self.send(
-                    text_data=json.dumps(
-                        {
-                            "action": "session_loaded",
-                            "session_id": self.session_id,
-                            "name": session.name,
-                            "model_name": session.model_name,
-                            "available_models": AVAILABLE_MODELS,
-                            "available_tools": list(current_tool_map),
-                            "selected_tools": valid_selected_tools,
-                        },
-                        cls=CustomJSONEncoder,
-                    )
-                )
-
-                await self.send(
-                    text_data=json.dumps(
-                        {"action": "load_messages", "messages": session.messages}
-                    )
-                )
-
-            # Send confirmation and refresh sessions list
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_deleted",
-                        "success": success,
-                        "session_id": session_id,
-                    }
-                )
-            )
-
-            # Send updated sessions list
-            sessions = await self.get_all_sessions()
-            await self.send(
-                text_data=json.dumps(
-                    {"action": "sessions_list", "sessions": sessions},
-                    cls=CustomJSONEncoder,
-                )
-            )
-
-        elif action == "get_sessions":
-            # Return list of available sessions
-            sessions = await self.get_all_sessions()
-
-            await self.send(
-                text_data=json.dumps({"action": "sessions_list", "sessions": sessions})
-            )
-
-        elif action == "create_session":
-            # Create a new session
-            self.session_id = str(uuid.uuid4())
-            name = text_data_json.get("name", "New Session")
-            model_name = text_data_json.get("model_name", DEFAULT_MODEL)
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            selected_tools_names = text_data_json.get(
-                "tools",
-                list(current_tool_map),  # Default to all current tools
-            )
-            valid_selected_tools = [
-                name for name in selected_tools_names if name in current_tool_map
-            ]
-
-            session = await self.get_or_create_session(
-                self.session_id,
-                name=name,
-                model_name=model_name,
-                selected_tools=valid_selected_tools,
-            )
-
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                model_name=session.model_name,
-                tools=[current_tool_map[t] for t in session.selected_tools],
-            )
-
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_created",
-                        "session_id": self.session_id,
-                        "name": session.name,
-                    }
-                )
-            )
-
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_loaded",
-                        "session_id": self.session_id,
-                        "name": session.name,
-                        "model_name": session.model_name,
-                        "available_models": AVAILABLE_MODELS,
-                        "available_tools": list(current_tool_map),
-                        "selected_tools": valid_selected_tools,
-                        "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
-                    },
-                    cls=CustomJSONEncoder,
-                )
-            )
-
-        elif action == "load_session":
-            # Load an existing session
-            self.session_id = text_data_json["session_id"]
-
-            session = await self.get_or_create_session(self.session_id)
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            valid_selected_tools = await self.validate_and_update_tools(
-                session, current_tool_map
-            )
-
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                session.model_name,
-                tools=[current_tool_map[t] for t in valid_selected_tools],
-            )
-
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_loaded",
-                        "session_id": self.session_id,
-                        "name": session.name,
-                        "model_name": session.model_name,
-                        "available_models": AVAILABLE_MODELS,
-                        "available_tools": list(current_tool_map),
-                        "selected_tools": valid_selected_tools,
-                        "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
-                    },
-                    cls=CustomJSONEncoder,
-                )
-            )
-
-            await self.send(
-                text_data=json.dumps(
-                    {"action": "load_messages", "messages": session.messages}
-                )
-            )
-
-        elif action == "rename_session":
-            # Rename a session
-            session_id = text_data_json["session_id"]
-            name = text_data_json["name"]
-            await database_sync_to_async(
-                ChatSession.objects.filter(session_id=session_id).update
-            )(name=name)
-
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_renamed",
-                        "session_id": session_id,
-                        "name": name,
-                    }
-                )
-            )
-
-        elif action == "stop_generating":
-            if self.agent_task and not self.agent_task.done():
-                self.agent_task.cancel()
-            await self.send(
-                text_data=json.dumps({"action": "end_turn", "type": "stop_action"})
-            )
-
-        elif action == "change_tools":
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            valid_selected_tools = [
-                t for t in text_data_json["tools"] if t in current_tool_map
-            ]
-
-            # update db
-            await database_sync_to_async(
-                ChatSession.objects.filter(session_id=self.session_id).update
-            )(selected_tools=valid_selected_tools)
-
-            session: ChatSession = await self.get_or_create_session(self.session_id)
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                session.model_name,
-                tools=[current_tool_map[t] for t in session.selected_tools],
-            )
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "tools_changed",
-                        "selected_tools": session.selected_tools,
-                        "available_tools": list(current_tool_map),
-                    }
-                )
-            )
-
-        elif action == "activate_mcp":
-            await self.handle_activate_mcp()
+        handler = action_handlers.get(action)
+        if handler:
+            # For handlers that don't take text_data_json
+            # (like get_sessions, stop_generating, activate_mcp)
+            if action in ["get_sessions", "stop_generating", "activate_mcp"]:
+                await handler()
+            else:
+                await handler(text_data_json)
+        else:
+            logger.warning("Unknown action received: %s", action)
+            # Optionally, send an error message back to the client
+            # await self.send_error_message(f"Unknown action: {action}")
 
     @database_sync_to_async
     def delete_session(self, session_id):
@@ -860,3 +619,268 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     }
                 )
             )
+
+    async def handle_change_tools(self, text_data_json):
+        "handle change tools"
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+        valid_selected_tools = [
+            t for t in text_data_json["tools"] if t in current_tool_map
+        ]
+
+        # update db
+        await database_sync_to_async(
+            ChatSession.objects.filter(session_id=self.session_id).update
+        )(selected_tools=valid_selected_tools)
+
+        session: ChatSession = await self.get_or_create_session(self.session_id)
+        self.runner, self.runner_session = await start_agent_session(
+            self.session_id,
+            session.model_name,
+            tools=[current_tool_map[t] for t in session.selected_tools],
+        )
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "tools_changed",
+                    "selected_tools": session.selected_tools,
+                    "available_tools": list(current_tool_map),
+                }
+            )
+        )
+
+    async def handle_stop_generating(self):
+        "handle stop generating"
+        if self.agent_task and not self.agent_task.done():
+            self.agent_task.cancel()
+        await self.send(
+            text_data=json.dumps({"action": "end_turn", "type": "stop_action"})
+        )
+
+    async def handle_rename_session(self, text_data_json):
+        "handle rename session"
+        session_id = text_data_json["session_id"]
+        name = text_data_json["name"]
+        await database_sync_to_async(
+            ChatSession.objects.filter(session_id=session_id).update
+        )(name=name)
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "session_renamed",
+                    "session_id": session_id,
+                    "name": name,
+                }
+            )
+        )
+
+    async def handle_load_session(self, text_data_json):
+        "handle load session"
+        self.session_id = text_data_json["session_id"]
+
+        session = await self.get_or_create_session(self.session_id)
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+        valid_selected_tools = await self.validate_and_update_tools(
+            session, current_tool_map
+        )
+
+        self.runner, self.runner_session = await start_agent_session(
+            self.session_id,
+            session.model_name,
+            tools=[current_tool_map[t] for t in valid_selected_tools],
+        )
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "session_loaded",
+                    "session_id": self.session_id,
+                    "name": session.name,
+                    "model_name": session.model_name,
+                    "available_models": AVAILABLE_MODELS,
+                    "available_tools": list(current_tool_map),
+                    "selected_tools": valid_selected_tools,
+                    "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
+                },
+                cls=CustomJSONEncoder,
+            )
+        )
+
+        await self.send(
+            text_data=json.dumps(
+                {"action": "load_messages", "messages": session.messages}
+            )
+        )
+
+    async def handle_create_session(self, text_data_json):
+        "handle create session"
+        self.session_id = str(uuid.uuid4())
+        name = text_data_json.get("name", "New Session")
+        model_name = text_data_json.get("model_name", DEFAULT_MODEL)
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+        selected_tools_names = text_data_json.get(
+            "tools",
+            list(current_tool_map),  # Default to all current tools
+        )
+        valid_selected_tools = [
+            name for name in selected_tools_names if name in current_tool_map
+        ]
+
+        session = await self.get_or_create_session(
+            self.session_id,
+            name=name,
+            model_name=model_name,
+            selected_tools=valid_selected_tools,
+        )
+
+        self.runner, self.runner_session = await start_agent_session(
+            self.session_id,
+            model_name=session.model_name,
+            tools=[current_tool_map[t] for t in session.selected_tools],
+        )
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "session_created",
+                    "session_id": self.session_id,
+                    "name": session.name,
+                }
+            )
+        )
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "session_loaded",
+                    "session_id": self.session_id,
+                    "name": session.name,
+                    "model_name": session.model_name,
+                    "available_models": AVAILABLE_MODELS,
+                    "available_tools": list(current_tool_map),
+                    "selected_tools": valid_selected_tools,
+                    "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
+                },
+                cls=CustomJSONEncoder,
+            )
+        )
+
+    async def handle_get_sessions(self):
+        "handle get sessions"
+        sessions = await self.get_all_sessions()
+
+        await self.send(
+            text_data=json.dumps({"action": "sessions_list", "sessions": sessions})
+        )
+
+    async def handle_delete_session(self, text_data_json):
+        "handle delete session"
+        session_id = text_data_json["session_id"]
+        success = await self.delete_session(session_id)
+
+        # If the deleted session was the current one, load the most recent session
+        if success and session_id == self.session_id:
+            last_session = await self.get_last_session()
+            if last_session:
+                self.session_id = str(last_session.session_id)
+                session = last_session
+            else:
+                # Create a new session
+                self.session_id = str(uuid.uuid4())
+                session = await self.get_or_create_session(self.session_id)
+
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+            valid_selected_tools = await self.validate_and_update_tools(
+                session, current_tool_map
+            )
+            self.runner, self.runner_session = await start_agent_session(
+                self.session_id,
+                session.model_name,
+                tools=[current_tool_map[name] for name in valid_selected_tools],
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "session_loaded",
+                        "session_id": self.session_id,
+                        "name": session.name,
+                        "model_name": session.model_name,
+                        "available_models": AVAILABLE_MODELS,
+                        "available_tools": list(current_tool_map),
+                        "selected_tools": valid_selected_tools,
+                    },
+                    cls=CustomJSONEncoder,
+                )
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {"action": "load_messages", "messages": session.messages}
+                )
+            )
+
+            # Send confirmation and refresh sessions list
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "session_deleted",
+                    "success": success,
+                    "session_id": session_id,
+                }
+            )
+        )
+
+        # Send updated sessions list
+        sessions = await self.get_all_sessions()
+        await self.send(
+            text_data=json.dumps(
+                {"action": "sessions_list", "sessions": sessions},
+                cls=CustomJSONEncoder,
+            )
+        )
+
+    async def handle_change_model(self, text_data_json):
+        "handle change model"
+        model_name = text_data_json["model_name"]
+        if model_name in AVAILABLE_MODELS:
+            # Update the session with the new model
+            await database_sync_to_async(
+                ChatSession.objects.filter(session_id=self.session_id).update
+            )(model_name=model_name)
+
+            current_tools = self.original_tools + self.mcp_tools
+            current_tool_map = self.get_current_tool_map(current_tools)
+            valid_selected_tools = [
+                name for name in text_data_json["tools"] if name in current_tool_map
+            ]
+
+            self.runner, self.runner_session = await start_agent_session(
+                self.session_id,
+                model_name,
+                [current_tool_map[name] for name in valid_selected_tools],
+            )
+
+            await self.send(
+                text_data=json.dumps(
+                    {
+                        "action": "model_changed",
+                        "model_name": model_name,
+                    }
+                )
+            )
+
+            # Add a system message to indicate model change
+            system_message = {
+                "msg": markdown(
+                    f"Model changed to `{model_name}`",
+                    extensions=[BlankLinkExtension()],
+                ),
+                "source": "user",
+            }
+            await self.save_message_to_db(system_message)
+            await self.send(text_data=json.dumps({"text": system_message}))

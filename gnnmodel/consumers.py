@@ -37,18 +37,12 @@ from .chat_utils import (
 )
 from .models import ChatSession
 
-tool_map = {t.__name__: t for t in all_tools}
-tool_descriptions = {
-    t.__name__: docstring_to_html(t.__doc__) or "No description available"
-    for t in all_tools
-}
-
 # MCPToolset exit stack
 mcp_exit_stack = AsyncExitStack()
 
 
-class ChatConsumer(AsyncWebsocketConsumer):
-    "Chat consumer"
+class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
+    "Current Chat Session Consumer"
 
     session_id: str
     runner_session: Session
@@ -57,31 +51,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
     agent_task = None
     mcp_tools: List[MCPTool] = []
     original_tools: List[Any] = all_tools
+    tool_descriptions: Dict[str, str] = {
+        t.__name__: docstring_to_html(t.__doc__) or "No description available"
+        for t in all_tools
+    }
 
-    async def connect(self):
-        """Connect to the websocket"""
-        await self.accept()
 
-        # Get the last session or create a new one if none exists
-        last_session = await self.get_last_session()
-        if last_session:
-            self.session_id = str(last_session.session_id)
-            session = last_session
-        else:
-            # Create a new session
-            self.session_id = str(uuid.uuid4())
-            session = await self.get_or_create_session(self.session_id)
-        assert isinstance(session, ChatSession)
+class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
+    "Chat Consumer Utils"
 
-        # Combine original tools and any already activated MCP tools
-        current_tools = self.original_tools + self.mcp_tools
-        current_tool_map = self.get_current_tool_map(current_tools)
-
-        # Filter selected tools based on currently available tools
-        valid_selected_tools = await self.validate_and_update_tools(
-            session, current_tool_map
-        )
-
+    async def load_session_data(
+        self,
+        session: ChatSession,
+        current_tool_map: Dict[str, Any],
+        valid_selected_tools: List[str],
+    ):
+        "load session data"
         # Initialize the agent with the session
         self.runner, self.runner_session = await start_agent_session(
             self.session_id,
@@ -100,7 +85,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "available_models": AVAILABLE_MODELS,
                     "available_tools": list(current_tool_map),
                     "selected_tools": valid_selected_tools,
-                    "tool_descriptions": tool_descriptions,
+                    "tool_descriptions": self.tool_descriptions,
                     "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
                 },
                 cls=CustomJSONEncoder,
@@ -138,53 +123,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             elif hasattr(t, "name"):  # Check for MCP tools
                 current_tool_map[t.name] = t
         return current_tool_map
-
-    async def disconnect(self, code):
-        """
-        Called when a WebSocket connection is closed.
-        """
-        await mcp_exit_stack.aclose()
-
-    async def receive(self, text_data=None, bytes_data=None):
-        assert text_data is not None
-        text_data_json = json.loads(text_data)
-        assert isinstance(text_data_json, dict)
-
-        # Handle different types of messages
-        if "action" in text_data_json:
-            await self.handle_actions(text_data_json)
-
-        elif "text" in text_data_json:
-
-            text = text_data_json["text"]
-            file_info = text_data_json.get("file")  # Get potential file info
-
-            # Basic validation
-            if not text.strip() and not file_info:
-                return  # Ignore empty messages without files
-
-            # Process file if present
-            file_part = None
-            processed_file_info_for_db = None  # Store info for DB/frontend display
-            if file_info:
-                try:
-                    file_part, processed_file_info_for_db = (
-                        await self.process_uploaded_file(file_info)
-                    )
-                except Exception as e:  # pylint: disable=broad-exception-caught
-                    logger.error("Error processing file: %s", e)
-                    # Send error message back to client? (Optional)
-                    await self.send_error_message(
-                        f"Failed to process file: {file_info.get('name', 'Unknown')}. Error: {e}"
-                    )
-                    return  # Stop processing this message
-
-            await self.client_to_agent_messaging(text, processed_file_info_for_db)
-            if self.agent_task and not self.agent_task.done():
-                self.agent_task.cancel()
-            self.agent_task = asyncio.create_task(
-                self.agent_to_client_messaging(text, file_part)
-            )
 
     async def send_error_message(self, error_text):
         """Sends an error message formatted as a system message."""
@@ -361,6 +299,22 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             raise  # Re-raise the exception to be caught in receive()
 
+
+class ChatSessionsDBOperations(CurrentChatSessionConsumerUtils):
+    "Session DB handling"
+
+    async def get_or_create_last_session(self) -> ChatSession:
+        "get or create the last session"
+        last_session = await self.get_last_session()
+        if last_session:
+            self.session_id = str(last_session.session_id)
+            session = last_session
+        else:
+            # Create a new session
+            self.session_id = str(uuid.uuid4())
+            session = await self.get_or_create_session(self.session_id)
+        return session
+
     @database_sync_to_async
     def get_last_session(self) -> Optional[ChatSession]:
         """Get the most recently updated session"""
@@ -419,34 +373,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Convert each session to a JSON-serializable format
         return [self.serialize_session(session) for session in sessions]
 
-    async def handle_actions(self, text_data_json: Dict[str, str]):
-        """Handle actions such as creating a new session or deleting a session"""
-        action = text_data_json["action"]
-        action_handlers = {
-            "change_model": self.handle_change_model,
-            "delete_session": self.handle_delete_session,
-            "get_sessions": self.handle_get_sessions,
-            "create_session": self.handle_create_session,
-            "load_session": self.handle_load_session,
-            "rename_session": self.handle_rename_session,
-            "stop_generating": self.handle_stop_generating,
-            "change_tools": self.handle_change_tools,
-            "activate_mcp": self.handle_activate_mcp,
-        }
-
-        handler = action_handlers.get(action)
-        if handler:
-            # For handlers that don't take text_data_json
-            # (like get_sessions, stop_generating, activate_mcp)
-            if action in ["get_sessions", "stop_generating", "activate_mcp"]:
-                await handler()
-            else:
-                await handler(text_data_json)
-        else:
-            logger.warning("Unknown action received: %s", action)
-            # Optionally, send an error message back to the client
-            # await self.send_error_message(f"Unknown action: {action}")
-
     @database_sync_to_async
     def delete_session(self, session_id):
         """Delete a session"""
@@ -461,6 +387,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return True
         except ChatSession.DoesNotExist:
             return False
+
+
+class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
+    "messaging functions"
 
     async def agent_to_client_messaging(self, text, file_part=None):
         """Agent to client communication"""
@@ -580,6 +510,38 @@ class ChatConsumer(AsyncWebsocketConsumer):
             ),
         )
 
+
+class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
+    "handle actions class"
+
+    async def handle_actions(self, text_data_json: Dict[str, str]):
+        """Handle actions such as creating a new session or deleting a session"""
+        action = text_data_json["action"]
+        action_handlers = {
+            "change_model": self.handle_change_model,
+            "delete_session": self.handle_delete_session,
+            "get_sessions": self.handle_get_sessions,
+            "create_session": self.handle_create_session,
+            "load_session": self.handle_load_session,
+            "rename_session": self.handle_rename_session,
+            "stop_generating": self.handle_stop_generating,
+            "change_tools": self.handle_change_tools,
+            "activate_mcp": self.handle_activate_mcp,
+        }
+
+        handler = action_handlers.get(action)
+        if handler:
+            # For handlers that don't take text_data_json
+            # (like get_sessions, stop_generating, activate_mcp)
+            if action in ["get_sessions", "stop_generating", "activate_mcp"]:
+                await handler()
+            else:
+                await handler(text_data_json)
+        else:
+            logger.warning("Unknown action received: %s", action)
+            # Optionally, send an error message back to the client
+            # await self.send_error_message(f"Unknown action: {action}")
+
     async def handle_activate_mcp(self):
         "handle activate mcp action"
         activated_tool_names, error_message = await self.activate_mcp_server()
@@ -686,35 +648,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             session, current_tool_map
         )
 
-        self.runner, self.runner_session = await start_agent_session(
-            self.session_id,
-            session.model_name,
-            tools=[current_tool_map[t] for t in valid_selected_tools],
-        )
+        await self.load_session_data(session, current_tool_map, valid_selected_tools)
 
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "action": "session_loaded",
-                    "session_id": self.session_id,
-                    "name": session.name,
-                    "model_name": session.model_name,
-                    "available_models": AVAILABLE_MODELS,
-                    "available_tools": list(current_tool_map),
-                    "selected_tools": valid_selected_tools,
-                    "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
-                },
-                cls=CustomJSONEncoder,
-            )
-        )
-
-        await self.send(
-            text_data=json.dumps(
-                {"action": "load_messages", "messages": session.messages}
-            )
-        )
-
-    async def handle_create_session(self, text_data_json):
+    async def handle_create_session(self, text_data_json: Dict[str, str]):
         "handle create session"
         self.session_id = str(uuid.uuid4())
         name = text_data_json.get("name", "New Session")
@@ -736,12 +672,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             selected_tools=valid_selected_tools,
         )
 
-        self.runner, self.runner_session = await start_agent_session(
-            self.session_id,
-            model_name=session.model_name,
-            tools=[current_tool_map[t] for t in session.selected_tools],
-        )
-
         await self.send(
             text_data=json.dumps(
                 {
@@ -752,21 +682,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
         )
 
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "action": "session_loaded",
-                    "session_id": self.session_id,
-                    "name": session.name,
-                    "model_name": session.model_name,
-                    "available_models": AVAILABLE_MODELS,
-                    "available_tools": list(current_tool_map),
-                    "selected_tools": valid_selected_tools,
-                    "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
-                },
-                cls=CustomJSONEncoder,
-            )
-        )
+        await self.load_session_data(session, current_tool_map, valid_selected_tools)
 
     async def handle_get_sessions(self):
         "handle get sessions"
@@ -783,48 +699,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         # If the deleted session was the current one, load the most recent session
         if success and session_id == self.session_id:
-            last_session = await self.get_last_session()
-            if last_session:
-                self.session_id = str(last_session.session_id)
-                session = last_session
-            else:
-                # Create a new session
-                self.session_id = str(uuid.uuid4())
-                session = await self.get_or_create_session(self.session_id)
+            session = await self.get_or_create_last_session()
 
             current_tools = self.original_tools + self.mcp_tools
             current_tool_map = self.get_current_tool_map(current_tools)
             valid_selected_tools = await self.validate_and_update_tools(
                 session, current_tool_map
             )
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                session.model_name,
-                tools=[current_tool_map[name] for name in valid_selected_tools],
+            await self.load_session_data(
+                session, current_tool_map, valid_selected_tools
             )
 
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "session_loaded",
-                        "session_id": self.session_id,
-                        "name": session.name,
-                        "model_name": session.model_name,
-                        "available_models": AVAILABLE_MODELS,
-                        "available_tools": list(current_tool_map),
-                        "selected_tools": valid_selected_tools,
-                    },
-                    cls=CustomJSONEncoder,
-                )
-            )
-
-            await self.send(
-                text_data=json.dumps(
-                    {"action": "load_messages", "messages": session.messages}
-                )
-            )
-
-            # Send confirmation and refresh sessions list
+        # Send confirmation and refresh sessions list
         await self.send(
             text_data=json.dumps(
                 {
@@ -884,3 +770,71 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
             await self.save_message_to_db(system_message)
             await self.send(text_data=json.dumps({"text": system_message}))
+
+    async def handle_text(self, text, file_info):
+        "Handle received text"
+        file_part = None
+        processed_file_info_for_db = None  # Store info for DB/frontend display
+        if file_info:
+            try:
+                file_part, processed_file_info_for_db = (
+                    await self.process_uploaded_file(file_info)
+                )
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.error("Error processing file: %s", e)
+                # Send error message back to client? (Optional)
+                await self.send_error_message(
+                    f"Failed to process file: {file_info.get('name', 'Unknown')}. Error: {e}"
+                )
+                return  # Stop processing this message
+
+        await self.client_to_agent_messaging(text, processed_file_info_for_db)
+        if self.agent_task and not self.agent_task.done():
+            self.agent_task.cancel()
+        self.agent_task = asyncio.create_task(
+            self.agent_to_client_messaging(text, file_part)
+        )
+
+
+class ChatConsumer(ChatConsumerHandleActions):
+    "Chat consumer"
+
+    async def connect(self):
+        """Connect to the websocket"""
+        await self.accept()
+
+        # Get the last session or create a new one if none exists
+        session = await self.get_or_create_last_session()
+
+        # Combine original tools and any already activated MCP tools
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+
+        # Filter selected tools based on currently available tools
+        valid_selected_tools = await self.validate_and_update_tools(
+            session, current_tool_map
+        )
+
+        await self.load_session_data(session, current_tool_map, valid_selected_tools)
+
+    async def disconnect(self, code):
+        await mcp_exit_stack.aclose()
+
+    async def receive(self, text_data=None, bytes_data=None):
+        assert text_data is not None
+        text_data_json: Dict[str, str] = json.loads(text_data)
+
+        # Handle different types of messages
+        if "action" in text_data_json:
+            await self.handle_actions(text_data_json)
+
+        elif "text" in text_data_json:
+            text = text_data_json["text"]
+            file_info = text_data_json.get("file")  # Get potential file info
+
+            # Basic validation
+            if not text.strip() and not file_info:
+                return  # Ignore empty messages without files
+
+            # Process file if present
+            await self.handle_text(text, file_info)

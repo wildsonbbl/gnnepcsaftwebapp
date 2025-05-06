@@ -10,6 +10,7 @@ var deleteSessionName = null;
 var availableTools = [];
 var selectedTools = [];
 var selectedFile = null;
+var mcpConfigPath = "";
 const toolDescriptions = {
   ToolA: "Descrição da ToolA.",
   ToolB: "Descrição da ToolB.",
@@ -92,16 +93,34 @@ function handleActionMessage(data) {
         availableModels = data.available_models;
         populateModelsList(availableModels, currentModelName);
       }
-      if (data.selected_tools && Array.isArray(data.selected_tools)) {
-        selectedTools = [...data.selected_tools];
-      } else if (data.available_tools && Array.isArray(data.available_tools)) {
-        selectedTools = [...data.available_tools];
+      // Update MCP Config Path and Button Title
+      if (data.mcp_config_path) {
+        mcpConfigPath = data.mcp_config_path;
+        const mcpButton = document.getElementById("activate-mcp-btn");
+        if (mcpButton) {
+          mcpButton.title = `Activate MCP Servers (Config: ${mcpConfigPath})`;
+        }
+      } else {
+        const mcpButton = document.getElementById("activate-mcp-btn");
+        if (mcpButton) {
+          mcpButton.title = `Activate MCP Servers (Config path not set)`;
+        }
       }
+
       // Populate available tools if provided
       if (data.available_tools && Array.isArray(data.available_tools)) {
-        availableTools = data.available_tools;
-        populateToolsList(availableTools);
+        availableTools = [...data.available_tools]; // Use spread syntax for a new array
       }
+
+      // Update selected tools based on the potentially filtered list from the server
+      if (data.selected_tools && Array.isArray(data.selected_tools)) {
+        selectedTools = [...data.selected_tools];
+      } else {
+        // Fallback if selected_tools isn't provided, select all available
+        selectedTools = [...availableTools];
+      }
+      populateToolsList(availableTools); // Populate/Repopulate tools list
+
       if (data.tool_descriptions) {
         Object.assign(toolDescriptions, data.tool_descriptions);
       }
@@ -109,9 +128,32 @@ function handleActionMessage(data) {
     case "tools_changed":
       if (data.selected_tools) {
         selectedTools = [...data.selected_tools];
-        populateToolsList(availableTools);
-        showToast("Tools changed successfully");
       }
+      // Update available tools if server sends an updated list
+      if (data.available_tools && Array.isArray(data.available_tools)) {
+        availableTools = [...data.available_tools];
+      }
+      populateToolsList(availableTools); // Repopulate with potentially new available tools
+      showToast("Tools selection changed successfully");
+      break;
+    case "mcp_activated":
+      availableTools = [...data.available_tools];
+      selectedTools = [...data.selected_tools]; // Update selected tools based on server response
+      populateToolsList(availableTools);
+      if (data.activated_tools && data.activated_tools.length > 0) {
+        showToast(
+          `MCP Servers activated. New tools available: ${data.activated_tools.join(
+            ", "
+          )}`
+        );
+      } else {
+        showToast(
+          "MCP Servers processed. No new tools were activated (check config or server logs)."
+        );
+      }
+      break;
+    case "mcp_activation_failed":
+      showToast(`MCP Server activation failed: ${data.error}`, "error");
       break;
     case "model_changed":
       // Update the current model when changed
@@ -752,6 +794,17 @@ document.addEventListener("DOMContentLoaded", function () {
       removeSelectedFile();
     }
   };
+
+  // Add listener for the new MCP button
+  const mcpButton = document.getElementById("activate-mcp-btn");
+  if (mcpButton) {
+    mcpButton.onclick = function () {
+      showToast("Activating MCP Servers..."); // Give immediate feedback
+      chatSocket.send(JSON.stringify({ action: "activate_mcp" }));
+    };
+  } else {
+    console.error("MCP Activation button not found.");
+  }
 
   document.querySelector("#chat-message-submit").onclick = function (e) {
     var messageInputDom = document.querySelector("#chat-message-input");

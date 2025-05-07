@@ -5,7 +5,7 @@ import os
 import os.path as osp
 
 from django.conf import settings
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
@@ -175,3 +175,19 @@ def delete_session(request, session_id):  # pylint: disable=unused-argument
         return JsonResponse(
             {"success": False, "error": "Session not found"}, status=404
         )
+
+
+def service_worker(request):  # pylint: disable=unused-argument
+    "serve root service worker"
+    with open(
+        settings.STATIC_ROOT / "js/serviceworker.js", encoding="utf-8"
+    ) as serviceworker_file:
+        return HttpResponse(
+            serviceworker_file.read(),
+            content_type="application/javascript",
+        )
+
+
+def offline(request):
+    "offline mode"
+    return render(request, "offline.html")

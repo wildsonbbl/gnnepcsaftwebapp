@@ -1,13 +1,18 @@
-// Service Worker for Django PWA
-// This service worker is used to cache files for offline access in a Django PWA application.
+// Service Worker for PWA
+// This service worker is used to cache files for offline access in a PWA application.
 
 var staticCacheName = "pwa-v" + new Date().getTime();
 var filesToCache = [
   "/offline/",
   "/static/fontawesomefree/css/brands.css",
   "/static/fontawesomefree/css/fontawesome.css",
+  "/static/fontawesomefree/css/solid.css",
+  "/static/css/styles.css",
+  "/static/css/chat.css",
   "/static/fontawesomefree/webfonts/fa-brands-400.woff2",
   "/static/fontawesomefree/webfonts/fa-brands-400.ttf",
+  "/static/fontawesomefree/webfonts/fa-solid-900.woff2",
+  "/static/fontawesomefree/webfonts/fa-solid-900.ttf",
   "/static/js/myidb.js",
   "/static/js/queries.js",
   "/static/js/install.js",
@@ -22,6 +27,8 @@ var filesToCache = [
   "/static/images/icons/windows11/SplashScreen.scale-150.png",
   "/static/images/icons/windows11/SplashScreen.scale-200.png",
   "/static/images/icons/windows11/SplashScreen.scale-400.png",
+  "/static/images/icons/ios/180.png",
+  "/static/manifest.json",
 ];
 
 // Cache on install

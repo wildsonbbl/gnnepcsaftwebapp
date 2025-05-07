@@ -143,6 +143,7 @@ function handleActionMessage(data) {
             ", "
           )}`
         );
+        showToast("To terminate MCP server, click the AI Chat button");
       } else {
         showToast(
           "MCP Servers processed. No new tools were activated (check config or server logs)."
@@ -665,7 +666,7 @@ function showToast(message, type = "success") {
   // Show toast
   const bsToast = new bootstrap.Toast(toast, {
     autohide: true,
-    delay: 3000,
+    delay: 5000,
   });
   bsToast.show();
 

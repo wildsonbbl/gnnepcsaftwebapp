@@ -7,11 +7,11 @@ import sys
 import bootstrap5
 import debug_toolbar
 import feos
-import gunicorn
 import webapp.asgi
 import webapp.wsgi
 import whitenoise
 from decouple import config
+from uvicorn import run
 
 
 def main():
@@ -36,4 +36,20 @@ if __name__ == "__main__":
     from gnnmodel.models import database_compatibility
 
     database_compatibility()
-    main()
+    if "uvicorn" in sys.argv:
+        run(
+            "webapp.asgi:application",
+            port=int(sys.argv[2]) if len(sys.argv) > 2 else 19770,
+        )
+    elif "daphne" in sys.argv:
+        from daphne.cli import CommandLineInterface
+
+        CommandLineInterface().run(
+            [
+                "webapp.asgi:application",
+                "-p",
+                sys.argv[2] if len(sys.argv) > 2 else "19770",
+            ]
+        )
+    else:
+        main()

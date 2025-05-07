@@ -7,6 +7,7 @@ const fs = require("fs");
 
 const controller = new AbortController();
 const { signal } = controller;
+let djangoBackend;
 
 // Set up user data directory for database
 const appVersion = app.getVersion();
@@ -16,12 +17,14 @@ const dbPath = path.join(dbDir, "gnnepcsaft.db");
 const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
 const migrateFlag = path.join(dbDir, `.db_migrated_v${appVersion}`);
 const logPath = path.join(userDataPath, "logs");
+const mcpConfigPath = path.join(userDataPath, "mcp_server.json");
 
 const env = {
   ...process.env,
   GNNEPCSAFT_DB_PATH: dbPath,
   GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
   GNNEPCSAFT_LOG_PATH: logPath,
+  GNNEPCSAFT_MCP_SERVER_CONFIG: mcpConfigPath,
 };
 
 let appPath;
@@ -67,7 +70,7 @@ const createWindow = async () => {
   await ensureDbMigrated();
 
   // Start Django with the user database path
-  const djangoBackend = startDjangoServer();
+  startDjangoServer();
 
   await waitForDjangoServer();
 
@@ -110,11 +113,7 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  const djangoBackend = spawn(
-    appPath,
-    ["runserver", "--noreload", "--skip-checks", "localhost:19770"],
-    { signal, env }
-  );
+  djangoBackend = spawn(appPath, ["uvicorn"], { signal, env });
 
   djangoBackend.on("error", (error) => {
     log.error(error.message);
@@ -123,7 +122,6 @@ const startDjangoServer = () => {
     log.info(`child process exited with code ${code}`);
     app.quit();
   });
-  return djangoBackend;
 };
 
 const waitForDjangoServer = () => {

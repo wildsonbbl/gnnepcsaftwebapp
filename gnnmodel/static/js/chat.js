@@ -10,6 +10,7 @@ var deleteSessionName = null;
 var availableTools = [];
 var selectedTools = [];
 var selectedFile = null;
+var mcpConfigPath = "";
 const toolDescriptions = {
   ToolA: "Descrição da ToolA.",
   ToolB: "Descrição da ToolB.",
@@ -92,16 +93,31 @@ function handleActionMessage(data) {
         availableModels = data.available_models;
         populateModelsList(availableModels, currentModelName);
       }
-      if (data.selected_tools && Array.isArray(data.selected_tools)) {
-        selectedTools = [...data.selected_tools];
-      } else if (data.available_tools && Array.isArray(data.available_tools)) {
-        selectedTools = [...data.available_tools];
+      // Update MCP Config Path and Button Title
+      if (data.mcp_config_path) {
+        mcpConfigPath = data.mcp_config_path;
+        const mcpConfigFilePathDisplay = document.getElementById(
+          "mcp-config-file-path"
+        );
+        if (mcpConfigFilePathDisplay) {
+          mcpConfigFilePathDisplay.textContent = mcpConfigPath;
+        }
       }
+
       // Populate available tools if provided
       if (data.available_tools && Array.isArray(data.available_tools)) {
-        availableTools = data.available_tools;
-        populateToolsList(availableTools);
+        availableTools = [...data.available_tools]; // Use spread syntax for a new array
       }
+
+      // Update selected tools based on the potentially filtered list from the server
+      if (data.selected_tools && Array.isArray(data.selected_tools)) {
+        selectedTools = [...data.selected_tools];
+      } else {
+        // Fallback if selected_tools isn't provided, select all available
+        selectedTools = [...availableTools];
+      }
+      populateToolsList(availableTools); // Populate/Repopulate tools list
+
       if (data.tool_descriptions) {
         Object.assign(toolDescriptions, data.tool_descriptions);
       }
@@ -109,9 +125,36 @@ function handleActionMessage(data) {
     case "tools_changed":
       if (data.selected_tools) {
         selectedTools = [...data.selected_tools];
-        populateToolsList(availableTools);
-        showToast("Tools changed successfully");
       }
+      // Update available tools if server sends an updated list
+      if (data.available_tools && Array.isArray(data.available_tools)) {
+        availableTools = [...data.available_tools];
+      }
+      populateToolsList(availableTools); // Repopulate with potentially new available tools
+      showToast("Tools selection changed successfully");
+      break;
+    case "mcp_activated":
+      availableTools = [...data.available_tools];
+      selectedTools = [...data.selected_tools]; // Update selected tools based on server response
+      populateToolsList(availableTools);
+      if (data.activated_tools && data.activated_tools.length > 0) {
+        showToast(
+          `MCP Servers activated. New tools available: ${data.activated_tools.join(
+            ", "
+          )}`
+        );
+        showToast("To terminate MCP server, click the AI Chat button");
+      } else {
+        showToast(
+          "MCP Servers processed. No new tools were activated (check config or server logs)."
+        );
+      }
+      if (data.tool_descriptions) {
+        Object.assign(toolDescriptions, data.tool_descriptions);
+      }
+      break;
+    case "mcp_activation_failed":
+      showToast(`MCP Server activation failed: ${data.error}`, "error");
       break;
     case "model_changed":
       // Update the current model when changed
@@ -124,13 +167,6 @@ function handleActionMessage(data) {
       }
       break;
     case "session_created":
-      currentSessionId = data.session_id;
-      currentSessionName = data.name;
-      document.getElementById("current-session-name").textContent =
-        currentSessionName;
-      // Clear messages for new session
-      messages = [];
-      updateChatLog();
       // Close the modal
       var modal = bootstrap.Modal.getInstance(
         document.getElementById("newSessionModal")
@@ -197,6 +233,37 @@ function handleActionMessage(data) {
         showToast("Session deleted successfully");
       } else {
         showToast("Failed to delete session", "error");
+      }
+      break;
+    case "mcp_config_content":
+      const mcpConfigContentInput = document.getElementById(
+        "mcp-config-content-input"
+      );
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none");
+      mcpConfigError.textContent = "";
+      if (data.error) {
+        mcpConfigContentInput.value = "";
+        mcpConfigError.textContent = `Error loading MCP config: ${data.error}`;
+        mcpConfigError.classList.remove("d-none");
+      } else {
+        mcpConfigContentInput.value = data.content;
+      }
+      break;
+    case "mcp_config_saved":
+      if (data.success) {
+        showToast("MCP configuration saved successfully.");
+        var modal = bootstrap.Modal.getInstance(
+          document.getElementById("mcpConfigModal")
+        );
+        if (modal) modal.hide();
+        // Optionally, you might want to re-fetch session data if config changes affect available tools immediately
+        // For now, activating MCP will re-fetch.
+      } else {
+        const mcpConfigError = document.getElementById("mcp-config-error");
+        mcpConfigError.textContent = `Error saving MCP config: ${data.error}`;
+        mcpConfigError.classList.remove("d-none");
+        showToast(`Failed to save MCP configuration: ${data.error}`, "error");
       }
       break;
   }
@@ -570,7 +637,7 @@ function showToast(message, type = "success") {
   if (!toastContainer) {
     toastContainer = document.createElement("div");
     toastContainer.id = "toast-container";
-    toastContainer.className = "position-fixed bottom-0 end-0 p-3";
+    toastContainer.className = "position-fixed top-0 end-0 p-3";
     document.body.appendChild(toastContainer);
   }
 
@@ -599,7 +666,7 @@ function showToast(message, type = "success") {
   // Show toast
   const bsToast = new bootstrap.Toast(toast, {
     autohide: true,
-    delay: 3000,
+    delay: 5000,
   });
   bsToast.show();
 
@@ -752,6 +819,62 @@ document.addEventListener("DOMContentLoaded", function () {
       removeSelectedFile();
     }
   };
+
+  // Add listener for the new MCP button
+  const mcpButton = document.getElementById("activate-mcp-btn");
+  if (mcpButton) {
+    mcpButton.onclick = function () {
+      showToast("Activating MCP Servers..."); // Give immediate feedback
+      chatSocket.send(JSON.stringify({ action: "activate_mcp" }));
+    };
+  } else {
+    console.error("MCP Activation button not found.");
+  }
+
+  // Add listener for the MCP Config button
+  const mcpConfigBtn = document.getElementById("config-mcp-btn");
+  if (mcpConfigBtn) {
+    mcpConfigBtn.addEventListener("click", function () {
+      // Request current MCP config content when modal is about to be shown
+      chatSocket.send(JSON.stringify({ action: "get_mcp_config_content" }));
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none"); // Clear previous errors
+      mcpConfigError.textContent = "";
+    });
+  } else {
+    console.error("MCP Config button not found.");
+  }
+
+  // Add listener for the Save MCP Config button in the modal
+  const saveMcpConfigBtn = document.getElementById("save-mcp-config-btn");
+  if (saveMcpConfigBtn) {
+    saveMcpConfigBtn.onclick = function () {
+      const newConfigContent = document.getElementById(
+        "mcp-config-content-input"
+      ).value;
+      const mcpConfigError = document.getElementById("mcp-config-error");
+      mcpConfigError.classList.add("d-none");
+      mcpConfigError.textContent = "";
+
+      try {
+        JSON.parse(newConfigContent); // Basic validation for JSON
+      } catch (e) {
+        mcpConfigError.textContent = "Invalid JSON format: " + e.message;
+        mcpConfigError.classList.remove("d-none");
+        showToast("MCP Configuration is not valid JSON.", "error");
+        return;
+      }
+
+      chatSocket.send(
+        JSON.stringify({
+          action: "save_mcp_config_content",
+          content: newConfigContent,
+        })
+      );
+    };
+  } else {
+    console.error("Save MCP Config button not found.");
+  }
 
   document.querySelector("#chat-message-submit").onclick = function (e) {
     var messageInputDom = document.querySelector("#chat-message-input");

@@ -26,6 +26,10 @@ SECRET_KEY = config("GNNEPCSAFT_SECRET_KEY", default="ABCDEFG")
 
 PLATFORM = config("GNNEPCSAFT_PLATFORM", default="desktop")
 
+MCP_SERVER_CONFIG = config(
+    "GNNEPCSAFT_MCP_SERVER_CONFIG", default=BASE_DIR / "mcp_server.json", cast=Path
+)
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("GNNEPCSAFT_DEBUG", default=False, cast=bool)
 
@@ -39,7 +43,6 @@ ALLOWED_HOSTS = config(
 # Application definition
 
 INSTALLED_APPS = [
-    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

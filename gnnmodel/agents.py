@@ -99,7 +99,9 @@ def create_chemistry_agent(model_name=DEFAULT_MODEL):
     )
 
 
-def create_root_agent(model_name: str = DEFAULT_MODEL, tools: Optional[List] = None):
+async def create_root_agent(
+    model_name: str = DEFAULT_MODEL, tools: Optional[List] = None
+):
     """Create a root agent with the specified model"""
     chemistry_agent_ = create_chemistry_agent(model_name)
 
@@ -136,8 +138,3 @@ def create_root_agent(model_name: str = DEFAULT_MODEL, tools: Optional[List] = N
         tools=tools_,
         sub_agents=[chemistry_agent_],
     )
-
-
-# For backward compatibility
-chemistry_agent = create_chemistry_agent()
-root_agent = create_root_agent()

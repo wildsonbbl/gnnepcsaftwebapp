@@ -207,6 +207,8 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     new_tools = await self.get_mcp(command, args, env)
                     self.mcp_tools.extend(new_tools)
                     activated_tool_names.extend([t.name for t in new_tools])
+                    for t in new_tools:
+                        self.tool_descriptions[t.name] = t.description
                     logger.info(
                         "Activated MCP tools from server '%s': %s",
                         mcpserver_name,
@@ -582,6 +584,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                         "activated_tools": activated_tool_names,
                         "available_tools": list(current_tool_map),
                         "selected_tools": valid_selected_tools,
+                        "tool_descriptions": self.tool_descriptions,
                     }
                 )
             )

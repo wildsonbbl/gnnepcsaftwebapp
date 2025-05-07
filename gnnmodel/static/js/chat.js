@@ -148,6 +148,9 @@ function handleActionMessage(data) {
           "MCP Servers processed. No new tools were activated (check config or server logs)."
         );
       }
+      if (data.tool_descriptions) {
+        Object.assign(toolDescriptions, data.tool_descriptions);
+      }
       break;
     case "mcp_activation_failed":
       showToast(`MCP Server activation failed: ${data.error}`, "error");

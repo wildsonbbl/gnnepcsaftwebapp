@@ -5,6 +5,7 @@ import base64
 import io
 import json
 import uuid
+from atexit import register
 from contextlib import AsyncExitStack
 from typing import Any, Dict, List, Optional
 
@@ -39,6 +40,31 @@ from .models import ChatSession
 
 # MCPToolset exit stack
 mcp_exit_stack = AsyncExitStack()
+
+
+def _cleanup_mcp_resources_on_exit():
+    """Função síncrona para limpar recursos de mcp_exit_stack na saída do programa."""
+    try:
+        # Use asyncio.run() para executar o método assíncrono aclose().
+        # Isso criará um novo loop de eventos para esta tarefa específica.
+        asyncio.run(mcp_exit_stack.aclose())
+        logger.info("mcp_exit_stack fechado com sucesso via atexit.")
+    except RuntimeError as e:
+        # Isso pode ocorrer se aclose() for chamado em uma pilha já fechada,
+        # ou se houver um problema com o gerenciamento do loop de eventos na saída.
+        logger.warning(
+            "RuntimeError durante a limpeza atexit para mcp_exit_stack: %s. "
+            "Isso pode ser normal se já estiver fechado ou devido"
+            " ao estado do loop de eventos na saída.",
+            e,
+        )
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.error(
+            "Erro inesperado durante a limpeza atexit para mcp_exit_stack: %s", e
+        )
+
+
+register(_cleanup_mcp_resources_on_exit)
 
 
 class CurrentChatSessionConsumer(AsyncWebsocketConsumer):

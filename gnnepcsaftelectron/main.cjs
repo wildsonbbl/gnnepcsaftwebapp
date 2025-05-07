@@ -7,6 +7,7 @@ const fs = require("fs");
 
 const controller = new AbortController();
 const { signal } = controller;
+let djangoBackend;
 
 // Set up user data directory for database
 const appVersion = app.getVersion();
@@ -69,7 +70,7 @@ const createWindow = async () => {
   await ensureDbMigrated();
 
   // Start Django with the user database path
-  const djangoBackend = startDjangoServer();
+  startDjangoServer();
 
   await waitForDjangoServer();
 
@@ -112,7 +113,7 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  const djangoBackend = spawn(appPath, ["uvicorn"], { signal, env });
+  djangoBackend = spawn(appPath, ["uvicorn"], { signal, env });
 
   djangoBackend.on("error", (error) => {
     log.error(error.message);
@@ -121,7 +122,6 @@ const startDjangoServer = () => {
     log.info(`child process exited with code ${code}`);
     app.quit();
   });
-  return djangoBackend;
 };
 
 const waitForDjangoServer = () => {

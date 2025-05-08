@@ -266,6 +266,12 @@ function handleActionMessage(data) {
         showToast(`Failed to save MCP configuration: ${data.error}`, "error");
       }
       break;
+    case "api_key_required":
+      showToast(
+        `Google API Key is required for the current model (${data.model_name}). Please set the GOOGLE_API_KEY or GEMINI_API_KEY environment variable.`,
+        "error"
+      );
+      break;
   }
 }
 

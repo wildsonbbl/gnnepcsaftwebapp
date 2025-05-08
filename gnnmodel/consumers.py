@@ -4,6 +4,7 @@ import asyncio
 import base64
 import io
 import json
+import os
 import uuid
 from atexit import register
 from contextlib import AsyncExitStack
@@ -37,6 +38,7 @@ from .chat_utils import (
     start_agent_session,
 )
 from .models import ChatSession
+from .utils_llm import is_api_key_valid
 
 # MCPToolset exit stack
 mcp_exit_stack = AsyncExitStack()
@@ -421,6 +423,8 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
     async def agent_to_client_messaging(self, text, file_part=None):
         """Agent to client communication"""
         try:
+            if not await self.handle_api_key_validation():
+                return
             parts = [Part.from_text(text=text)]
             if file_part:
                 parts.append(file_part)
@@ -444,6 +448,52 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
             await self.send(
                 text_data=json.dumps({"action": "end_turn", "type": "end_of_turn"})
             )
+
+    async def handle_api_key_validation(self) -> bool:
+        "handle api key validation"
+        current_session: ChatSession = await self.get_or_create_session(self.session_id)
+        model_name = current_session.model_name
+        key_is_valid = True
+
+        # Check for API key if using a Gemini model
+        if model_name and model_name.lower().startswith("gemini"):
+            google_api_key = os.getenv("GOOGLE_API_KEY", os.getenv("GEMINI_API_KEY"))
+            key_is_valid = False
+            if google_api_key:
+                # is_api_key_valid can be slow as it makes a network request
+                # It's called here to ensure the key is actually functional
+                key_is_valid = is_api_key_valid(google_api_key)
+
+            if not key_is_valid:
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "action": "api_key_required",
+                            "model_name": model_name,
+                        }
+                    )
+                )
+                error_message_for_log = {
+                    "msg": markdown(
+                        f"**System Message:** Cannot process message. "
+                        f"Google API Key is missing or invalid for model `{model_name}`. "
+                        "Please ensure the `GOOGLE_API_KEY` or `GEMINI_API_KEY` "
+                        "environment variable is correctly set. "
+                        "You can find more about Gemini API Keys "
+                        "<a href='https://ai.google.dev/gemini-api/docs/api-key' "
+                        "target='_blank'>here</a>.",
+                        extensions=[BlankLinkExtension()],
+                    ),
+                    "source": "assistant",
+                }
+                await self.send(text_data=json.dumps({"text": error_message_for_log}))
+                await self.save_message_to_db(error_message_for_log)
+                await self.send(
+                    text_data=json.dumps(
+                        {"action": "end_turn", "type": "api_key_error"}
+                    )
+                )
+        return key_is_valid
 
     async def client_to_agent_messaging(self, text, file_info_for_db=None):
         """Client to agent communication"""

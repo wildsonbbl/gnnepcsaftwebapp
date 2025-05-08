@@ -1,7 +1,6 @@
 "request handler."
 
 import json
-import os
 import os.path as osp
 
 from django.conf import settings
@@ -21,7 +20,7 @@ from .utils import (
     process_mixture_post,
     process_pure_post,
 )
-from .utils_llm import is_api_key_valid, resume_mol
+from .utils_llm import resume_mol
 
 file_dir = osp.dirname(__file__)
 
@@ -128,21 +127,9 @@ def chat(request):
     if settings.PLATFORM == "webapp":
         return render(request, "chat-webapp.html")
 
-    show_form = True
-    if request.method == "POST":
-        google_api_key_form = GoogleAPIKeyForm(request.POST)
-        if google_api_key_form.is_valid():
-            show_form = False
-    else:
-        google_api_key_form = GoogleAPIKeyForm()
-        google_api_key = os.getenv("GOOGLE_API_KEY")
-        if google_api_key is not None and is_api_key_valid(google_api_key):
-            show_form = False
-
     return render(
         request,
         "chat.html",
-        {"show_form": show_form, "google_api_key_form": google_api_key_form},
     )
 
 

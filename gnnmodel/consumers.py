@@ -425,50 +425,7 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
             if file_part:
                 parts.append(file_part)
 
-            async for event in self.runner.run_async(
-                new_message=Content(role="user", parts=parts),
-                user_id=USER_ID,
-                session_id=self.session_id,
-                run_config=self.run_config,
-            ):
-
-                if event.interrupted:
-                    await self.send(
-                        text_data=json.dumps(
-                            {"action": "end_turn", "type": "interrupted"}
-                        )
-                    )
-                    break
-
-                all_parts = event.content and event.content.parts
-                if not all_parts or event.partial:
-                    continue
-                all_texts = ""
-                for part in all_parts:
-                    if part.text:
-                        resp_text = part.text  # Renamed to avoid conflict
-                        all_texts += resp_text + "\n\n"
-                    elif part.function_call and part.function_call.name:
-                        resp_text = "**Calling:** `" + part.function_call.name + "`"
-                        all_texts += resp_text + "\n\n"
-                    else:
-                        resp_text = None
-                    if resp_text:
-                        message = {
-                            "msg": markdown(
-                                resp_text, extensions=[BlankLinkExtension()]
-                            ),
-                            "source": "assistant",
-                        }
-                        await self.send(text_data=json.dumps({"text": message}))
-                        await self.send(
-                            text_data=json.dumps({"action": "ongoing_turn"})
-                        )
-                        await self.save_message_to_db(message)
-
-                    else:
-                        all_texts += f"No text or function_call in part: {part}"
-                await asyncio.sleep(0.5)
+            await self.process_user_message(parts)
 
         except asyncio.CancelledError:
             # Task foi cancelada (usuário clicou em Parar)
@@ -535,6 +492,46 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
                 }
             ),
         )
+
+    async def process_user_message(self, parts):
+        "process user message"
+        async for event in self.runner.run_async(
+            new_message=Content(role="user", parts=parts),
+            user_id=USER_ID,
+            session_id=self.session_id,
+            run_config=self.run_config,
+        ):
+            if event.interrupted:
+                await self.send(
+                    text_data=json.dumps({"action": "end_turn", "type": "interrupted"})
+                )
+                break
+
+            all_parts = event.content and event.content.parts
+            if not all_parts or event.partial:
+                continue
+            all_texts = ""
+            for part in all_parts:
+                if part.text:
+                    resp_text = part.text  # Renamed to avoid conflict
+                    all_texts += resp_text + "\n\n"
+                elif part.function_call and part.function_call.name:
+                    resp_text = "**Calling:** `" + part.function_call.name + "`"
+                    all_texts += resp_text + "\n\n"
+                else:
+                    resp_text = None
+                if resp_text:
+                    message = {
+                        "msg": markdown(resp_text, extensions=[BlankLinkExtension()]),
+                        "source": "assistant",
+                    }
+                    await self.send(text_data=json.dumps({"text": message}))
+                    await self.send(text_data=json.dumps({"action": "ongoing_turn"}))
+                    await self.save_message_to_db(message)
+
+                else:
+                    all_texts += f"No text or function_call in part: {part}"
+            await asyncio.sleep(0.5)
 
 
 class ChatConsumerHandleActions(ChatConsumerMessagingOperations):

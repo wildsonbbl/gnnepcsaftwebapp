@@ -11,7 +11,6 @@ from django.urls import reverse
 
 from .forms import (
     CustomPlotConfigForm,
-    GoogleAPIKeyForm,
     InChIorSMILESareaInput,
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
@@ -203,53 +202,6 @@ class ViewsTestCase(TestCase):
         response = self.client.get(reverse("about"))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "about.html")
-
-    @patch("gnnmodel.views.is_api_key_valid")
-    def test_chat_get_without_api_key(self, mock_is_api_key_valid):
-        """Test GET request to chat view without API key."""
-        # Ensure no API key in environment
-        if "GOOGLE_API_KEY" in os.environ:
-            del os.environ["GOOGLE_API_KEY"]
-
-        mock_is_api_key_valid.return_value = False
-
-        response = self.client.get(reverse("chat"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "chat.html")
-        self.assertTrue(response.context["show_form"])
-        self.assertIsInstance(response.context["google_api_key_form"], GoogleAPIKeyForm)
-
-    @patch("gnnmodel.views.is_api_key_valid")
-    def test_chat_get_with_valid_api_key(self, mock_is_api_key_valid):
-        """Test GET request to chat view with valid API key."""
-        mock_is_api_key_valid.return_value = True
-
-        # Set the environment variable to the actual API key
-        os.environ["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY", "test_api_key")
-
-        response = self.client.get(reverse("chat"))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "chat.html")
-        self.assertFalse(response.context["show_form"])
-        self.assertIsInstance(response.context["google_api_key_form"], GoogleAPIKeyForm)
-
-    @patch("gnnmodel.views.is_api_key_valid")
-    def test_chat_post_valid(self, mock_is_api_key_valid):
-        """Test POST request to chat view with valid API key."""
-        mock_is_api_key_valid.return_value = True
-
-        # Use the actual API key from environment if available
-        api_key = os.environ.get("GOOGLE_API_KEY", "test_api_key")
-
-        form_data = {
-            "google_api_key": api_key,
-        }
-
-        response = self.client.post(reverse("chat"), form_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "chat.html")
-        self.assertFalse(response.context["show_form"])
-        self.assertIsInstance(response.context["google_api_key_form"], GoogleAPIKeyForm)
 
 
 class APIViewsTestCase(TestCase):

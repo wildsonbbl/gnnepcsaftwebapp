@@ -98,7 +98,7 @@ function handleActionMessage(data) {
     case "ollama_offline": // New case
       showToast(
         "Ollama is offline. Please start Ollama on http://localhost:11434/ and try again.",
-        "warning"
+        "error"
       );
       break;
     case "tools_changed":

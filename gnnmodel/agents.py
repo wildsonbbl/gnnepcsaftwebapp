@@ -26,14 +26,16 @@ from gnnepcsaft_mcp_server.utils import (
     pure_phase,
 )
 
+from .agents_utils import get_gemini_models, get_ollama_models
+
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
-os.environ["OLLAMA_API_BASE"] = "http://localhost:11434"
 
 # Default model
 DEFAULT_MODEL = "gemini-2.0-flash"
 
 # Available models list - can be easily extended
+# Initialize with a default list in case fetching fails or returns empty
 AVAILABLE_MODELS = [
     "gemini-2.5-flash-preview-04-17",
     "gemini-2.5-pro-preview-05-06",
@@ -44,6 +46,31 @@ AVAILABLE_MODELS = [
     "gemini-1.5-pro",
     "gemini-1.5-flash-8b",
 ]
+
+gemini_models_data = get_gemini_models()
+if (
+    gemini_models_data
+    and "models" in gemini_models_data
+    and gemini_models_data["models"]
+):
+    AVAILABLE_MODELS = gemini_models_data["models"]
+
+ollama_models_data = get_ollama_models()
+if ollama_models_data and "models" in ollama_models_data:
+    ollama_model_names = [
+        f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
+    ]
+    AVAILABLE_MODELS.extend(ollama_model_names)
+
+# Ensure DEFAULT_MODEL is in the list, if not, set to the first available or a fallback
+if AVAILABLE_MODELS:
+    if DEFAULT_MODEL not in AVAILABLE_MODELS:
+        DEFAULT_MODEL = AVAILABLE_MODELS[0]
+elif (
+    not DEFAULT_MODEL
+):  # If AVAILABLE_MODELS is empty and DEFAULT_MODEL was also dynamic
+    DEFAULT_MODEL = "gemini-2.0-flash"  # Fallback if all fetching fails
+
 
 all_tools = [
     batch_convert_pure_density_to_kg_per_m3,

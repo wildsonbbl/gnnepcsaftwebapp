@@ -5,3 +5,4 @@ langchain-community
 markdown
 langgraph
 google-adk
+litellm>=1.68.1

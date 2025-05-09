@@ -20,7 +20,7 @@ def get_gemini_models() -> Dict[str, List[str]]:
             ans = ans.read().decode("utf8").rstrip()
             return json.loads(ans)
     except (HTTPError, URLError) as e:
-        logger.error(e)
+        logger.error("Error getting gemini models from github: %s", e)
         return {}
 
 
@@ -32,7 +32,7 @@ def get_ollama_models() -> Dict[str, List[Dict[str, str]]]:
             ans = ans.read().decode("utf8").rstrip()
             return json.loads(ans)
     except (HTTPError, URLError) as e:
-        logger.error(e)
+        logger.error("Error getting ollama models from local server: %s", e)
         return {}
 
 
@@ -44,7 +44,7 @@ def is_api_key_valid(api_key: str) -> bool:
             ans = ans.read().decode("utf8").rstrip()
             return True
     except (HTTPError, URLError) as e:
-        logger.error(e)
+        logger.error("Error checking Google API key: %s", e)
         return False
 
 
@@ -56,5 +56,5 @@ def is_ollama_online() -> bool:
             ans = ans.read().decode("utf8").rstrip()
             return True
     except (HTTPError, URLError) as e:
-        logger.error(e)
+        logger.info("Ollama is offline error: %s", e)
         return False

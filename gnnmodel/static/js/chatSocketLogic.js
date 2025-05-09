@@ -81,6 +81,26 @@ function handleActionMessage(data) {
         Object.assign(toolDescriptions, data.tool_descriptions);
       }
       break;
+    case "available_models_updated": // New case
+      if (data.available_models && Array.isArray(data.available_models)) {
+        availableModels = data.available_models;
+        populateModelsList(availableModels, currentModelName);
+        if (
+          !availableModels.includes(currentModelName) &&
+          availableModels.length > 0
+        ) {
+          // currentModelName is no longer valid, UI will show "Model"
+          // User needs to select a new one.
+        }
+        showToast("Models list updated.", "success");
+      }
+      break;
+    case "ollama_offline": // New case
+      showToast(
+        "Ollama is offline. Please start Ollama on http://localhost:11434/ and try again.",
+        "warning"
+      );
+      break;
     case "tools_changed":
       if (data.selected_tools) {
         selectedTools = [...data.selected_tools];

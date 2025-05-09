@@ -27,8 +27,8 @@ from google.genai.types import Content, Part
 from markdown import markdown
 
 from . import logger
-from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, all_tools
-from .agents_utils import is_api_key_valid
+from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, all_tools, gemini_models_data
+from .agents_utils import get_ollama_models, is_api_key_valid, is_ollama_online
 from .chat_utils import (
     APP_NAME,
     USER_ID,
@@ -602,6 +602,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             "activate_mcp": self.handle_activate_mcp,
             "get_mcp_config_content": self.handle_get_mcp_config_content,
             "save_mcp_config_content": self.handle_save_mcp_config_content,
+            "update_ollama_models": self.handle_update_ollama_models,
         }
 
         handler = action_handlers.get(action)
@@ -612,6 +613,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 "stop_generating",
                 "activate_mcp",
                 "get_mcp_config_content",
+                "update_ollama_models",
             ]:
                 await handler()
             else:
@@ -620,6 +622,45 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             logger.warning("Unknown action received: %s", action)
             # Optionally, send an error message back to the client
             # await self.send_error_message(f"Unknown action: {action}")
+
+    async def handle_update_ollama_models(self):
+        """Checks if Ollama is online and updates the list of available models."""
+        if not is_ollama_online():
+            await self.send(text_data=json.dumps({"action": "ollama_offline"}))
+            return
+
+        # Start with the initial static list of models (primarily Gemini)
+        # This is the static list defined in agents.py before dynamic loading
+
+        refreshed_available_models = AVAILABLE_MODELS
+        if (
+            gemini_models_data
+            and "models" in gemini_models_data
+            and gemini_models_data["models"]
+        ):
+            # Override with fetched Gemini models if available and not empty
+            refreshed_available_models = gemini_models_data["models"]
+
+        # Now, add Ollama models
+        ollama_models_data = get_ollama_models()
+        if (
+            ollama_models_data
+            and "models" in ollama_models_data
+            and ollama_models_data.get("models")
+        ):  # Check if models list is not empty
+            ollama_model_names = [
+                f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
+            ]
+            refreshed_available_models.extend(ollama_model_names)
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "available_models_updated",
+                    "available_models": refreshed_available_models,
+                }
+            )
+        )
 
     async def handle_activate_mcp(self):
         "handle activate mcp action"

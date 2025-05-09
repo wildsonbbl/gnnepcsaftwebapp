@@ -141,6 +141,17 @@ document.addEventListener("DOMContentLoaded", function () {
     console.error("MCP Config button not found.");
   }
 
+  // Add listener for the Update Ollama Models button
+  const updateOllamaModelsBtn = document.getElementById(
+    "update-ollama-models-btn"
+  );
+  if (updateOllamaModelsBtn) {
+    updateOllamaModelsBtn.onclick = function () {
+      showToast("Updating Ollama models...", "info");
+      chatSocket.send(JSON.stringify({ action: "update_ollama_models" }));
+    };
+  }
+
   // Add listener for the Save MCP Config button in the modal
   const saveMcpConfigBtn = document.getElementById("save-mcp-config-btn");
   if (saveMcpConfigBtn) {

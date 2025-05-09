@@ -109,6 +109,26 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     gemini_models = GEMINI_MODELS.copy()
 
 
+async def _get_mcp_server_names_from_config() -> List[str]:
+    """Reads MCP server names from the configuration file."""
+    mcp_server_names = []
+    try:
+        with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
+            content = f.read()
+        mcp_config: Dict[str, Dict[str, Any]] = json.loads(content)
+        if isinstance(mcp_config.get("mcpServers"), dict):
+            mcp_server_names = list(mcp_config["mcpServers"].keys())
+    except FileNotFoundError:
+        logger.warning(
+            "MCP configuration file not found when trying to read server names."
+        )
+    except json.JSONDecodeError:
+        logger.warning("MCP config file is not valid JSON. Cannot parse server names.")
+    except Exception as e:  # pylint: disable=broad-exception-caught
+        logger.error("Error reading MCP configuration file for server names: %s", e)
+    return mcp_server_names
+
+
 class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
     "Chat Consumer Utils"
 
@@ -117,6 +137,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         session: ChatSession,
         current_tool_map: Dict[str, Any],
         valid_selected_tools: List[str],
+        mcp_server_names: List[str],
     ):
         "load session data"
         self.runner, self.runner_session = await start_agent_session(
@@ -137,6 +158,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     "selected_tools": valid_selected_tools,
                     "tool_descriptions": self.tool_descriptions,
                     "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
+                    "mcp_server_names": mcp_server_names,
                 },
                 cls=CustomJSONEncoder,
             )

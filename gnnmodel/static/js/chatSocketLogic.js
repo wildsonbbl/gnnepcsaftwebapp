@@ -80,6 +80,12 @@ function handleActionMessage(data) {
       if (data.tool_descriptions) {
         Object.assign(toolDescriptions, data.tool_descriptions);
       }
+      // Populate MCP activation dropdown if server names are provided
+      if (data.mcp_server_names && Array.isArray(data.mcp_server_names)) {
+        populateMcpActivationDropdown(data.mcp_server_names);
+      } else {
+        populateMcpActivationDropdown([]); // Clear or set to default if no names
+      }
       break;
     case "available_models_updated": // New case
       if (data.available_models && Array.isArray(data.available_models)) {
@@ -246,8 +252,12 @@ function handleActionMessage(data) {
           document.getElementById("mcpConfigModal")
         );
         if (modal) modal.hide();
-        // Optionally, you might want to re-fetch session data if config changes affect available tools immediately
-        // For now, activating MCP will re-fetch.
+        // Populate MCP activation dropdown with new server names if provided
+        if (data.mcp_server_names && Array.isArray(data.mcp_server_names)) {
+          populateMcpActivationDropdown(data.mcp_server_names);
+        } else {
+          populateMcpActivationDropdown([]); // Clear or set to default
+        }
       } else {
         const mcpConfigError = document.getElementById("mcp-config-error");
         mcpConfigError.textContent = `Error saving MCP config: ${data.error}`;

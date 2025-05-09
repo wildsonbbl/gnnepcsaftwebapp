@@ -3,7 +3,7 @@
 import asyncio
 import json
 import uuid
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -13,6 +13,7 @@ from . import logger
 from .agents import DEFAULT_MODEL
 from .agents_utils import get_ollama_models, is_ollama_online
 from .chat_utils import BlankLinkExtension, CustomJSONEncoder, start_agent_session
+from .consumer_utils import _get_mcp_server_names_from_config
 from .message_operations import ChatConsumerMessagingOperations
 from .models import ChatSession
 
@@ -189,7 +190,13 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         valid_selected_tools = await self.validate_and_update_tools(
             session, current_tool_map
         )
-        await self.load_session_data(session, current_tool_map, valid_selected_tools)
+        mcp_server_names_from_config = await _get_mcp_server_names_from_config()
+        await self.load_session_data(
+            session,
+            current_tool_map,
+            valid_selected_tools,
+            mcp_server_names_from_config,
+        )
 
     async def handle_create_session(self, text_data_json: Dict[str, Any]):
         "handle create session"
@@ -217,7 +224,13 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 }
             )
         )
-        await self.load_session_data(session, current_tool_map, valid_selected_tools)
+        mcp_server_names_from_config = await _get_mcp_server_names_from_config()
+        await self.load_session_data(
+            session,
+            current_tool_map,
+            valid_selected_tools,
+            mcp_server_names_from_config,
+        )
 
     async def handle_get_sessions(self):
         "handle get sessions"
@@ -237,8 +250,12 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             valid_selected_tools = await self.validate_and_update_tools(
                 session, current_tool_map
             )
+            mcp_server_names_from_config = await _get_mcp_server_names_from_config()
             await self.load_session_data(
-                session, current_tool_map, valid_selected_tools
+                session,
+                current_tool_map,
+                valid_selected_tools,
+                mcp_server_names_from_config,
             )
         await self.send(
             text_data=json.dumps(
@@ -319,23 +336,21 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         """Handles request to get MCP server configuration content."""
         content = ""
         error_message = None
-        mcp_server_names = []
+        mcp_server_names = await _get_mcp_server_names_from_config()
         try:
             with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
                 content = f.read()
-
-            try:
-                mcp_config: Dict[str, Dict[str, List[str]]] = json.loads(content)
-                if isinstance(mcp_config.get("mcpServers"), dict):
-                    mcp_server_names = list(mcp_config["mcpServers"].keys())
-            except json.JSONDecodeError:
-                logger.warning(
-                    "MCP config file is not valid JSON. Cannot parse server names."
-                )
-                error_message = (
-                    "Configuration file is not valid JSON. "
-                    "Server names could not be parsed."
-                )
+            if content and not mcp_server_names:
+                try:
+                    json.loads(content)
+                except json.JSONDecodeError:
+                    logger.warning(
+                        "MCP config file is not valid JSON. Cannot parse server names."
+                    )
+                    error_message = (
+                        "Configuration file is not valid JSON. "
+                        "Server names could not be parsed."
+                    )
 
         except FileNotFoundError:
             error_message = "MCP configuration file not found."
@@ -378,13 +393,20 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             logger.info(
                 "MCP configuration file updated: %s", settings.MCP_SERVER_CONFIG
             )
+            mcp_server_names_after_save = await _get_mcp_server_names_from_config()
             await self.send(
-                text_data=json.dumps({"action": "mcp_config_saved", "success": True})
+                text_data=json.dumps(
+                    {
+                        "action": "mcp_config_saved",
+                        "success": True,
+                        "mcp_server_names": mcp_server_names_after_save,
+                    }
+                )
             )
         except json.JSONDecodeError as e:
             logger.error("Error decoding new MCP config content as JSON: %s", e)
             await self.send(
-                json.dumps(
+                text_data=json.dumps(
                     {
                         "action": "mcp_config_saved",
                         "success": False,
@@ -395,7 +417,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error("Error writing MCP configuration file: %s", e)
             await self.send(
-                json.dumps(
+                text_data=json.dumps(
                     {
                         "action": "mcp_config_saved",
                         "success": False,

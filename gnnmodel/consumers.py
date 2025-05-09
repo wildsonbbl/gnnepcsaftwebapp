@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict
 
 from .action_handlers import ChatConsumerHandleActions
-from .consumer_utils import mcp_exit_stack
+from .consumer_utils import _get_mcp_server_names_from_config, mcp_exit_stack
 
 
 class ChatConsumer(ChatConsumerHandleActions):
@@ -20,7 +20,13 @@ class ChatConsumer(ChatConsumerHandleActions):
         valid_selected_tools = await self.validate_and_update_tools(
             session, current_tool_map
         )
-        await self.load_session_data(session, current_tool_map, valid_selected_tools)
+        mcp_server_names_on_connect = await _get_mcp_server_names_from_config()
+        await self.load_session_data(
+            session,
+            current_tool_map,
+            valid_selected_tools,
+            mcp_server_names_on_connect,
+        )
 
     async def disconnect(self, code):
         await mcp_exit_stack.aclose()

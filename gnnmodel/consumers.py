@@ -28,6 +28,7 @@ from markdown import markdown
 
 from . import logger
 from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, all_tools
+from .agents_utils import is_api_key_valid
 from .chat_utils import (
     APP_NAME,
     USER_ID,
@@ -38,7 +39,6 @@ from .chat_utils import (
     start_agent_session,
 )
 from .models import ChatSession
-from .utils_llm import is_api_key_valid
 
 # MCPToolset exit stack
 mcp_exit_stack = AsyncExitStack()

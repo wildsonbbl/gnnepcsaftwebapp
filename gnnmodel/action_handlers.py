@@ -10,7 +10,7 @@ from django.conf import settings
 from markdown import markdown
 
 from . import logger
-from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, gemini_models_data
+from .agents import DEFAULT_MODEL
 from .agents_utils import get_ollama_models, is_ollama_online
 from .chat_utils import BlankLinkExtension, CustomJSONEncoder, start_agent_session
 from .message_operations import ChatConsumerMessagingOperations
@@ -55,34 +55,27 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
 
     async def handle_update_ollama_models(self):
         """Checks if Ollama is online and updates the list of available models."""
-        if not is_ollama_online():
+        self.availabel_models = self.gemini_models.copy()
+        if is_ollama_online():
+            ollama_models_data = get_ollama_models()
+            if (
+                ollama_models_data
+                and "models" in ollama_models_data
+                and ollama_models_data.get("models")
+            ):
+                ollama_model_names = [
+                    f"ollama_chat/{model['name']}"
+                    for model in ollama_models_data["models"]
+                ]
+                self.availabel_models.extend(ollama_model_names)
+        else:
             await self.send(text_data=json.dumps({"action": "ollama_offline"}))
-            return
-
-        refreshed_available_models = AVAILABLE_MODELS
-        if (
-            gemini_models_data
-            and "models" in gemini_models_data
-            and gemini_models_data["models"]
-        ):
-            refreshed_available_models = gemini_models_data["models"]
-
-        ollama_models_data = get_ollama_models()
-        if (
-            ollama_models_data
-            and "models" in ollama_models_data
-            and ollama_models_data.get("models")
-        ):
-            ollama_model_names = [
-                f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
-            ]
-            refreshed_available_models.extend(ollama_model_names)
 
         await self.send(
             text_data=json.dumps(
                 {
                     "action": "available_models_updated",
-                    "available_models": refreshed_available_models,
+                    "available_models": self.availabel_models,
                 }
             )
         )
@@ -255,7 +248,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
     async def handle_change_model(self, text_data_json):
         "handle change model"
         model_name = text_data_json["model_name"]
-        if model_name in AVAILABLE_MODELS:
+        if model_name in self.availabel_models:
             await database_sync_to_async(
                 ChatSession.objects.filter(session_id=self.session_id).update
             )(model_name=model_name)

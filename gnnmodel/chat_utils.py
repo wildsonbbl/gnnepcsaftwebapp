@@ -15,7 +15,7 @@ from markdown import markdown
 from markdown.extensions import Extension
 from markdown.treeprocessors import Treeprocessor
 
-from .agents import AVAILABLE_MODELS, DEFAULT_MODEL, create_root_agent
+from .agents import DEFAULT_MODEL, create_root_agent
 
 APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)
@@ -41,11 +41,7 @@ async def start_agent_session(
     """Starts an agent session"""
     sessions_ids = get_sessions_ids()
 
-    root_agent = await (
-        create_root_agent(model_name, tools)
-        if model_name in AVAILABLE_MODELS
-        else create_root_agent()
-    )
+    root_agent = await create_root_agent(model_name, tools)
 
     # Create a Session
     if session_id not in sessions_ids:

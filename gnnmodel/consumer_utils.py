@@ -25,7 +25,8 @@ from google.genai.types import Part
 from markdown import markdown
 
 from . import logger
-from .agents import AVAILABLE_MODELS, all_tools
+from .agents import all_tools
+from .agents_utils import get_gemini_models, get_ollama_models, is_ollama_online
 from .chat_utils import (
     BlankLinkExtension,
     CustomJSONEncoder,
@@ -58,6 +59,37 @@ def _cleanup_mcp_resources_on_exit():
 
 register(_cleanup_mcp_resources_on_exit)
 
+available_models = []
+
+GEMINI_MODELS = [
+    "gemini-2.5-flash-preview-04-17",
+    "gemini-2.5-pro-preview-05-06",
+    "gemini-2.5-pro-exp-03-25",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash-8b",
+]
+
+gemini_models_data = get_gemini_models()
+if (
+    gemini_models_data
+    and "models" in gemini_models_data
+    and gemini_models_data["models"]
+):
+    GEMINI_MODELS = gemini_models_data["models"][:]
+
+available_models.extend(GEMINI_MODELS)
+
+if is_ollama_online():
+    ollama_models_data = get_ollama_models()
+    if ollama_models_data and "models" in ollama_models_data:
+        ollama_model_names = [
+            f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
+        ]
+        available_models.extend(ollama_model_names)
+
 
 class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     "Current Chat Session Consumer"
@@ -73,6 +105,8 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
         t.__name__: docstring_to_html(t.__doc__) or "No description available"
         for t in all_tools
     }
+    availabel_models = available_models.copy()
+    gemini_models = GEMINI_MODELS.copy()
 
 
 class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
@@ -98,7 +132,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     "session_id": self.session_id,
                     "name": session.name,
                     "model_name": session.model_name,
-                    "available_models": AVAILABLE_MODELS,
+                    "available_models": self.availabel_models,
                     "available_tools": list(current_tool_map),
                     "selected_tools": valid_selected_tools,
                     "tool_descriptions": self.tool_descriptions,

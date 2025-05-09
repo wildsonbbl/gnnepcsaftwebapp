@@ -5,6 +5,7 @@ import textwrap
 from typing import List, Optional
 
 from google.adk.agents import LlmAgent
+from google.adk.models.lite_llm import LiteLlm
 
 from gnnepcsaft_mcp_server.plot_utils import v3000_mol_block
 from gnnepcsaft_mcp_server.utils import (
@@ -27,17 +28,18 @@ from gnnepcsaft_mcp_server.utils import (
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
+os.environ["OLLAMA_API_BASE"] = "http://localhost:11434"
+
 # Default model
 DEFAULT_MODEL = "gemini-2.0-flash"
 
 # Available models list - can be easily extended
 AVAILABLE_MODELS = [
     "gemini-2.5-flash-preview-04-17",
-    "gemini-2.5-pro-preview-03-25",
+    "gemini-2.5-pro-preview-05-06",
     "gemini-2.5-pro-exp-03-25",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
-    "gemini-2.0-flash-exp-image-generation",
     "gemini-1.5-flash",
     "gemini-1.5-pro",
     "gemini-1.5-flash-8b",
@@ -66,7 +68,9 @@ all_tools = [
 def create_chemistry_agent(model_name=DEFAULT_MODEL):
     """Create a chemistry agent with the specified model"""
     return LlmAgent(
-        model=model_name,
+        model=(
+            model_name if model_name.startswith("gemini") else LiteLlm(model=model_name)
+        ),
         name="chemistry_agent",
         instruction=textwrap.dedent(
             """
@@ -111,7 +115,9 @@ async def create_root_agent(
         tools_ = tools
 
     return LlmAgent(
-        model=model_name,
+        model=(
+            model_name if model_name.startswith("gemini") else LiteLlm(model=model_name)
+        ),
         name="gnnepcsaft_agent",
         description="The main agent in the system. It coordinates the team "
         "and delegates tasks to the other agents.",

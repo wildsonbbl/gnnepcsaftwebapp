@@ -194,7 +194,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         )
         return tools
 
-    async def activate_mcp_server(self):
+    async def activate_mcp_server(self, server_name_to_activate: Optional[str]):
         "activate the servers on the config"
         self.mcp_tools = []
         activated_tool_names = []
@@ -227,6 +227,11 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         if not error_message and "mcpServers" in mcp_server_config:
             logger.debug(mcp_server_config)
             for mcpserver_name in mcp_server_config["mcpServers"]:
+                if (
+                    server_name_to_activate
+                    and mcpserver_name != server_name_to_activate
+                ):
+                    continue
                 mcpserver = mcp_server_config["mcpServers"][mcpserver_name]
                 command = mcpserver.get("command")
                 args = mcpserver.get("args")

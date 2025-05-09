@@ -116,17 +116,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
-  // Add listener for the new MCP button
-  const mcpButton = document.getElementById("activate-mcp-btn");
-  if (mcpButton) {
-    mcpButton.onclick = function () {
-      showToast("Activating MCP Servers..."); // Give immediate feedback
-      chatSocket.send(JSON.stringify({ action: "activate_mcp" }));
-    };
-  } else {
-    console.error("MCP Activation button not found.");
-  }
-
   // Add listener for the MCP Config button
   const mcpConfigBtn = document.getElementById("config-mcp-btn");
   if (mcpConfigBtn) {

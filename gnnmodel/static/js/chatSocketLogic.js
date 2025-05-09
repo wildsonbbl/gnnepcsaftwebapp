@@ -221,12 +221,22 @@ function handleActionMessage(data) {
       const mcpConfigError = document.getElementById("mcp-config-error");
       mcpConfigError.classList.add("d-none");
       mcpConfigError.textContent = "";
-      if (data.error) {
+      if (data.error && !data.content) {
         mcpConfigContentInput.value = "";
         mcpConfigError.textContent = `Error loading MCP config: ${data.error}`;
         mcpConfigError.classList.remove("d-none");
+        populateMcpActivationDropdown([]);
       } else {
-        mcpConfigContentInput.value = data.content;
+        mcpConfigContentInput.value = data.content || "";
+        if (data.error) {
+          mcpConfigError.textContent = `Note: ${data.error}`;
+          mcpConfigError.classList.remove("d-none");
+        }
+        if (data.mcp_server_names && Array.isArray(data.mcp_server_names)) {
+          populateMcpActivationDropdown(data.mcp_server_names);
+        } else {
+          populateMcpActivationDropdown([]);
+        }
       }
       break;
     case "mcp_config_saved":

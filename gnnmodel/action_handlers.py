@@ -3,7 +3,7 @@
 import asyncio
 import json
 import uuid
-from typing import Any, Dict
+from typing import Any, Dict, List, Optional
 
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -43,7 +43,6 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             if action in [
                 "get_sessions",
                 "stop_generating",
-                "activate_mcp",
                 "get_mcp_config_content",
                 "update_ollama_models",
             ]:
@@ -80,9 +79,22 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             )
         )
 
-    async def handle_activate_mcp(self):
+    async def handle_activate_mcp(
+        self, text_data_json: Optional[Dict[str, Any]] = None
+    ):
         "handle activate mcp action"
-        activated_tool_names, error_message = await self.activate_mcp_server()
+
+        server_name_input = None
+        if text_data_json and "server_name" in text_data_json:
+            server_name_input: Optional[str] = text_data_json["server_name"]
+
+        server_name_to_activate = None
+        if server_name_input and server_name_input.lower() != "all":
+            server_name_to_activate = server_name_input
+
+        activated_tool_names, error_message = await self.activate_mcp_server(
+            server_name_to_activate=server_name_to_activate
+        )
 
         if error_message:
             await self.send(
@@ -305,34 +317,44 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
 
     async def handle_get_mcp_config_content(self):
         """Handles request to get MCP server configuration content."""
+        content = ""
+        error_message = None
+        mcp_server_names = []
         try:
             with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
                 content = f.read()
-            await self.send(
-                text_data=json.dumps(
-                    {"action": "mcp_config_content", "content": content}
+
+            try:
+                mcp_config: Dict[str, Dict[str, List[str]]] = json.loads(content)
+                if isinstance(mcp_config.get("mcpServers"), dict):
+                    mcp_server_names = list(mcp_config["mcpServers"].keys())
+            except json.JSONDecodeError:
+                logger.warning(
+                    "MCP config file is not valid JSON. Cannot parse server names."
                 )
-            )
+                error_message = (
+                    "Configuration file is not valid JSON. "
+                    "Server names could not be parsed."
+                )
+
         except FileNotFoundError:
-            logger.error(
-                "MCP configuration file not found at: %s", settings.MCP_SERVER_CONFIG
-            )
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "action": "mcp_config_content",
-                        "error": (
-                            "MCP configuration file not found."
-                            " The file will be created on save."
-                        ),
-                    }
-                )
-            )
+            error_message = "MCP configuration file not found."
+            logger.warning(error_message)
+
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error("Error reading MCP configuration file: %s", e)
-            await self.send(
-                text_data=json.dumps({"action": "mcp_config_content", "error": str(e)})
+            error_message = f"Error reading MCP configuration file: {e}"
+            logger.error(error_message)
+
+        await self.send(
+            text_data=json.dumps(
+                {
+                    "action": "mcp_config_content",
+                    "content": content,
+                    "error": error_message,
+                    "mcp_server_names": mcp_server_names,
+                }
             )
+        )
 
     async def handle_save_mcp_config_content(self, text_data_json: Dict[str, str]):
         """Handles request to save MCP server configuration content."""

@@ -367,3 +367,63 @@ function removeSelectedFile() {
   previewContainer.style.display = "none";
   previewContainer.innerHTML = "";
 }
+
+function populateMcpActivationDropdown(serverNames) {
+  const mcpList = document.getElementById("mcp-activation-list");
+  mcpList.innerHTML = ""; // Clear existing items
+
+  // Option to activate all
+  const activateAllLi = document.createElement("li");
+  const activateAllA = document.createElement("a");
+  activateAllA.className = "dropdown-item";
+  activateAllA.href = "#";
+  activateAllA.textContent = "Activate All Configured Servers";
+  activateAllA.dataset.mcpServerName = "all";
+  activateAllA.onclick = function () {
+    activateMcpServer("all");
+    return false;
+  };
+  activateAllLi.appendChild(activateAllA);
+  mcpList.appendChild(activateAllLi);
+
+  if (serverNames && serverNames.length > 0) {
+    const divider = document.createElement("li");
+    divider.innerHTML = '<hr class="dropdown-divider">';
+    mcpList.appendChild(divider);
+
+    serverNames.forEach(function (serverName) {
+      const li = document.createElement("li");
+      const a = document.createElement("a");
+      a.className = "dropdown-item";
+      a.href = "#";
+      a.textContent = `Activate: ${serverName}`;
+      a.dataset.mcpServerName = serverName;
+      a.onclick = function () {
+        activateMcpServer(serverName);
+        return false;
+      };
+      li.appendChild(a);
+      mcpList.appendChild(li);
+    });
+  } else {
+    const noServersLi = document.createElement("li");
+    noServersLi.innerHTML =
+      '<span class="dropdown-item text-muted">No specific servers found in config.</span>';
+    mcpList.appendChild(noServersLi);
+  }
+}
+
+// Function to be called by MCP activation dropdown items
+function activateMcpServer(serverName) {
+  showToast(
+    `Activating MCP: ${
+      serverName === "all" || serverName === null
+        ? "All Configured Servers"
+        : serverName
+    }...`,
+    "info"
+  );
+  chatSocket.send(
+    JSON.stringify({ action: "activate_mcp", server_name: serverName })
+  );
+}

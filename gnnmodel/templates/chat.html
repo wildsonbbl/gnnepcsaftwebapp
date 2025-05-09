@@ -47,13 +47,33 @@
                           data-bs-target="#mcpConfigModal">
                     <i class="fas fa-cogs"></i>
                   </button>
-                  <button id="activate-mcp-btn"
-                          type="button"
-                          class="btn btn-sm btn-outline-info rounded-circle me-1"
-                          title="Activate MCP Servers">
-                    <!-- Title will be updated by JS -->
-                    <i class="fas fa-server"></i>
-                  </button>
+                  <div class="dropdown me-1">
+                    <button id="activate-mcp-dropdown-btn"
+                            type="button"
+                            class="btn btn-sm btn-outline-info rounded dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Activate MCP Servers">
+                      <i class="fas fa-server"></i>
+                    </button>
+                    <ul class="dropdown-menu"
+                        id="mcp-activation-list"
+                        aria-labelledby="activate-mcp-dropdown-btn">
+                      <!-- MCP Servers will be populated here by JS -->
+                      <li>
+                        <a class="dropdown-item"
+                           href="#"
+                           data-mcp-server-name="all"
+                           onclick="activateMcpServer('all'); return false;">Activate All Configured</a>
+                      </li>
+                      <li>
+                        <hr class="dropdown-divider">
+                      </li>
+                      <li>
+                        <span class="dropdown-item text-muted">Load config (click <i class="fas fa-cogs"></i>) to see specific servers.</span>
+                      </li>
+                    </ul>
+                  </div>
                   <input type="file"
                          id="file-input"
                          class="d-none"
@@ -268,6 +288,12 @@
           <div class="modal-body">
             <p>
               Editing file: <code id="mcp-config-file-path"></code>
+            </p>
+            <p>
+              For examples and more information on MCP server configuration, visit:
+              <a href="https://modelcontextprotocol.io/examples"
+                 target="_blank"
+                 rel="noopener noreferrer">modelcontextprotocol.io/examples</a>
             </p>
             <div class="mb-3">
               <label for="mcp-config-content-input" class="form-label">Configuration (JSON format):</label>

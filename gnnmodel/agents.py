@@ -26,7 +26,7 @@ from gnnepcsaft_mcp_server.utils import (
     pure_phase,
 )
 
-from .agents_utils import get_gemini_models, get_ollama_models
+from .agents_utils import get_gemini_models, get_ollama_models, is_ollama_online
 
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
@@ -55,12 +55,13 @@ if (
 ):
     AVAILABLE_MODELS = gemini_models_data["models"]
 
-ollama_models_data = get_ollama_models()
-if ollama_models_data and "models" in ollama_models_data:
-    ollama_model_names = [
-        f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
-    ]
-    AVAILABLE_MODELS.extend(ollama_model_names)
+if is_ollama_online():
+    ollama_models_data = get_ollama_models()
+    if ollama_models_data and "models" in ollama_models_data:
+        ollama_model_names = [
+            f"ollama_chat/{model['name']}" for model in ollama_models_data["models"]
+        ]
+        AVAILABLE_MODELS.extend(ollama_model_names)
 
 # Ensure DEFAULT_MODEL is in the list, if not, set to the first available or a fallback
 if AVAILABLE_MODELS:

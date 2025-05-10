@@ -214,47 +214,41 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
             connection_params=StdioServerParameters(
                 command=command, args=args, env=env
             ),
-            async_exit_stack=mcp_exit_stack,
+            async_exit_stack=self.mcp_exit_stack,
         )
         return tools
 
-    async def activate_mcp_server(self, server_name_to_activate: Optional[str]):
+    async def activate_mcp_server(self, servers_to_process: List[str]):
         "activate the servers on the config"
         self.mcp_tools = []
         activated_tool_names = []
         error_message = None
+        await self.mcp_exit_stack.aclose()
+        mcp_server_config: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         try:
             with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as config_file:
-                mcp_server_config: Dict[str, Dict[str, Dict[str, Any]]] = json.load(
-                    config_file
-                )
+                mcp_server_config = json.load(config_file)
         except FileNotFoundError:
             error_message = "MCP configuration file not found, config file first."
             logger.error(error_message)
-            mcp_server_config = {}
         except json.JSONDecodeError as e:
             error_message = (
                 f"Error decoding JSON from MCP configuration"
                 f" file: {settings.MCP_SERVER_CONFIG}. Error: {e}"
             )
             logger.error(error_message)
-            mcp_server_config = {}
         except Exception as e:  # pylint: disable=broad-exception-caught
             error_message = (
                 f"Error reading MCP configuration"
                 f" file: {settings.MCP_SERVER_CONFIG}. Error: {e}"
             )
             logger.error(error_message)
-            mcp_server_config = {}
 
         if not error_message and "mcpServers" in mcp_server_config:
             logger.debug(mcp_server_config)
             for mcpserver_name in mcp_server_config["mcpServers"]:
-                if (
-                    server_name_to_activate
-                    and mcpserver_name != server_name_to_activate
-                ):
+                if mcpserver_name not in servers_to_process:
                     continue
                 mcpserver = mcp_server_config["mcpServers"][mcpserver_name]
                 command = mcpserver.get("command")

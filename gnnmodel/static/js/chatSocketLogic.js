@@ -128,11 +128,9 @@ function handleActionMessage(data) {
             ", "
           )}`
         );
-        showToast("To terminate MCP server, click the AI Chat button");
+        showToast("To terminate MCP server, click the AI Chat button", "info");
       } else {
-        showToast(
-          "MCP Servers processed. No new tools were activated (check config or server logs)."
-        );
+        showToast("MCP Servers processed. No new tools were activated.");
       }
       if (data.tool_descriptions) {
         Object.assign(toolDescriptions, data.tool_descriptions);
@@ -191,7 +189,7 @@ function handleActionMessage(data) {
       generatingContainer.innerHTML = "";
       generatingContainer.scrollIntoView();
       if (data.type === "stop_action") {
-        showToast("Stopped generating", "error");
+        showToast("Stopped generating", "info");
       }
       if (data.type === "interrupted") {
         showToast("LLM interrupted generating", "error");

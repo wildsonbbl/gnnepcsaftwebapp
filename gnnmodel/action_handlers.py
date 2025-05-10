@@ -3,7 +3,7 @@
 import asyncio
 import json
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List
 
 from channels.db import database_sync_to_async
 from django.conf import settings
@@ -79,21 +79,15 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             )
         )
 
-    async def handle_activate_mcp(
-        self, text_data_json: Optional[Dict[str, Any]] = None
-    ):
+    async def handle_activate_mcp(self, text_data_json: Dict[str, Any]):
         "handle activate mcp action"
 
-        server_name_input = None
-        if text_data_json and "server_name" in text_data_json:
-            server_name_input: Optional[str] = text_data_json["server_name"]
-
-        server_name_to_activate = None
-        if server_name_input and server_name_input.lower() != "all":
-            server_name_to_activate = server_name_input
+        server_names_list: List[str] = text_data_json.get(
+            "server_names_list", ["no server name found"]
+        )
 
         activated_tool_names, error_message = await self.activate_mcp_server(
-            server_name_to_activate=server_name_to_activate
+            servers_to_process=server_names_list
         )
 
         if error_message:

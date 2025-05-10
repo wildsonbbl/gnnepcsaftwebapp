@@ -11,6 +11,7 @@ var availableTools = [];
 var selectedTools = [];
 var selectedFile = null;
 var mcpConfigPath = "";
+var selectedMcpServers = [];
 const toolDescriptions = {
   ToolA: "Descrição da ToolA.",
   ToolB: "Descrição da ToolB.",

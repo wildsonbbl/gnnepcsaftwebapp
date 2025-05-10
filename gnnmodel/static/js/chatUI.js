@@ -260,17 +260,18 @@ function populateToolsList(tools) {
     li.onclick = function (event) {
       event.stopPropagation();
     };
-    li.className = "d-flex align-items-center";
+    li.className = "d-flex";
 
     var label = document.createElement("label");
     label.className = "dropdown-item";
 
     var checkbox = document.createElement("input");
     checkbox.type = "checkbox";
+    checkbox.className = "form-check-input me-1";
     checkbox.value = tool;
     checkbox.checked = selectedTools.includes(tool);
     checkbox.name = "tool-item";
-    checkbox.onchange = function (event) {
+    checkbox.onchange = function () {
       if (this.checked) {
         if (!selectedTools.includes(tool)) {
           selectedTools.push(tool);
@@ -329,9 +330,15 @@ function showToast(message, type = "success") {
   const toastId = "toast-" + Date.now();
   const toast = document.createElement("div");
   toast.id = toastId;
-  toast.className = `toast align-items-center ${
-    type === "error" ? "bg-danger" : "bg-success"
-  } text-white`;
+  let toastClass = "bg-success"; // Default to success
+  if (type === "error") {
+    toastClass = "bg-danger";
+  } else if (type === "info") {
+    toastClass = "bg-info";
+  } else if (type === "warning") {
+    toastClass = "bg-warning";
+  }
+  toast.className = `toast align-items-center ${toastClass} text-white`;
   toast.setAttribute("role", "alert");
   toast.setAttribute("aria-live", "assertive");
   toast.setAttribute("aria-atomic", "true");
@@ -372,58 +379,104 @@ function populateMcpActivationDropdown(serverNames) {
   const mcpList = document.getElementById("mcp-activation-list");
   mcpList.innerHTML = ""; // Clear existing items
 
-  // Option to activate all
-  const activateAllLi = document.createElement("li");
-  const activateAllA = document.createElement("a");
-  activateAllA.className = "dropdown-item";
-  activateAllA.href = "#";
-  activateAllA.textContent = "Activate All Configured Servers";
-  activateAllA.dataset.mcpServerName = "all";
-  activateAllA.onclick = function () {
-    activateMcpServer("all");
-    return false;
+  const activateSelectedLi = document.createElement("li");
+  const confirmBtn = document.createElement("button");
+  confirmBtn.className = "btn btn-sm btn-outline-success rounded-circle mx-1";
+  confirmBtn.innerHTML = "<i class='fas fa-check'></i>";
+  confirmBtn.title = "Activate MCP Servers";
+  confirmBtn.type = "button";
+  confirmBtn.onclick = function () {
+    showToast(
+      `Activating ${selectedMcpServers.length} MCP server(s)...`,
+      "info"
+    );
+    chatSocket.send(
+      JSON.stringify({
+        action: "activate_mcp",
+        server_names_list: selectedMcpServers,
+      })
+    );
   };
-  activateAllLi.appendChild(activateAllA);
-  mcpList.appendChild(activateAllLi);
+
+  activateSelectedLi.appendChild(confirmBtn);
+  mcpList.appendChild(activateSelectedLi);
 
   if (serverNames && serverNames.length > 0) {
+    const selectAllBtn = document.createElement("button");
+    selectAllBtn.className =
+      "btn btn-sm btn-outline-secondary rounded-circle mx-1";
+    selectAllBtn.innerHTML = "<i class='fas fa-list-check'></i>";
+    selectAllBtn.title = "Select/Deselect all MCP Servers";
+    selectAllBtn.type = "button";
+    selectAllBtn.onclick = function (event) {
+      event.stopPropagation();
+      const checkboxes = mcpList.querySelectorAll("input[type='checkbox']");
+      var allChecked = Array.from(checkboxes).every(
+        (checkbox) => checkbox.checked
+      );
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = !allChecked;
+        if (checkbox.checked) {
+          if (!selectedMcpServers.includes(checkbox.value)) {
+            selectedMcpServers.push(checkbox.value);
+          }
+        } else {
+          selectedMcpServers = selectedMcpServers.filter(
+            (t) => t !== checkbox.value
+          );
+        }
+      });
+    };
+    activateSelectedLi.appendChild(selectAllBtn);
+
     const divider = document.createElement("li");
     divider.innerHTML = '<hr class="dropdown-divider">';
     mcpList.appendChild(divider);
 
     serverNames.forEach(function (serverName) {
       const li = document.createElement("li");
-      const a = document.createElement("a");
-      a.className = "dropdown-item";
-      a.href = "#";
-      a.textContent = `Activate: ${serverName}`;
-      a.dataset.mcpServerName = serverName;
-      a.onclick = function () {
-        activateMcpServer(serverName);
-        return false;
+      li.onclick = function (event) {
+        event.stopPropagation();
       };
-      li.appendChild(a);
+      li.className = "d-flex";
+
+      const label = document.createElement("label");
+      label.className = "dropdown-item";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.className = "form-check-input me-1";
+      checkbox.value = serverName;
+      checkbox.checked = selectedMcpServers.includes(serverName);
+      checkbox.name = "mcp-item";
+      checkbox.onchange = function () {
+        if (this.checked) {
+          if (!selectedMcpServers.includes(serverName)) {
+            selectedMcpServers.push(serverName);
+          }
+        } else {
+          selectedMcpServers = selectedMcpServers.filter(
+            (s) => s !== serverName
+          );
+        }
+      };
+
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(` ${serverName}`));
+      li.appendChild(label);
       mcpList.appendChild(li);
     });
-  } else {
+  } else if (
+    !(serverNames && serverNames.length > 0) &&
+    !document
+      .getElementById("mcp-activation-list")
+      .querySelector(".dropdown-item.text-muted")
+  ) {
+    // Only add "No specific servers" if serverNames is empty AND it's not already there.
+    // This avoids adding it if only "Activate All" is present.
     const noServersLi = document.createElement("li");
     noServersLi.innerHTML =
       '<span class="dropdown-item text-muted">No specific servers found in config.</span>';
     mcpList.appendChild(noServersLi);
   }
-}
-
-// Function to be called by MCP activation dropdown items
-function activateMcpServer(serverName) {
-  showToast(
-    `Activating MCP: ${
-      serverName === "all" || serverName === null
-        ? "All Configured Servers"
-        : serverName
-    }...`,
-    "info"
-  );
-  chatSocket.send(
-    JSON.stringify({ action: "activate_mcp", server_name: serverName })
-  );
 }

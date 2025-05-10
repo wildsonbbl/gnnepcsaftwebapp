@@ -330,15 +330,15 @@ function showToast(message, type = "success") {
   const toastId = "toast-" + Date.now();
   const toast = document.createElement("div");
   toast.id = toastId;
-  let toastClass = "bg-success"; // Default to success
+  let toastClass = "bg-success text-white"; // Default to success
   if (type === "error") {
-    toastClass = "bg-danger";
+    toastClass = "bg-danger text-white";
   } else if (type === "info") {
-    toastClass = "bg-info";
+    toastClass = "bg-info text-dark";
   } else if (type === "warning") {
-    toastClass = "bg-warning";
+    toastClass = "bg-warning text-dark";
   }
-  toast.className = `toast align-items-center ${toastClass} text-white`;
+  toast.className = `toast align-items-center ${toastClass}`;
   toast.setAttribute("role", "alert");
   toast.setAttribute("aria-live", "assertive");
   toast.setAttribute("aria-atomic", "true");

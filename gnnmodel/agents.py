@@ -75,7 +75,7 @@ def create_chemistry_agent(model_name=DEFAULT_MODEL):
             - Can it do hydrogen bonds? 
             - Is it a hydrogen bond donor or acceptor?
         - You ALWAYS have to check if there's info about the molecule in PubChem with 
-          the `pubchem_descriton` tool.
+          the `pubchem_description` tool.
         - Do not perform any other action. Use the InChI or SMILES 
           info received in previous turns to make the analysis.
         - When you can't answer or when you are finished, transfer back to the `gnnepcsaft_agent`.
@@ -111,21 +111,21 @@ async def create_root_agent(
         "and delegates tasks to the other agents.",
         instruction=textwrap.dedent(
             """
-        You are the main PCSAFT agent, coordinating a team. 
-        - Your main task: Provide information using the ePC-SAFT tools. 
-        - You might need more than one tool or function call to solve a problem,
-          so you always have to find out what is all the tools you need to solve a problem and
-          optimize function calls by calling all the tools you already have 
+        You are the main agent, coordinating a team. 
+        - Your main task: Handle user requests or delegate to 
+          other agents when you think it's appropriate. 
+        - You might need a tool or function call to solve an user request.
+          Optimize function calls by calling all the tools you already have
           arguments information at once.
 
         - Delegation Rules: 
-          - If the user needs more info about a molecule or its properties,
+          - If the user needs more info about a specific molecule or its properties,
              delegate the task to `chemistry_agent`. 
           - Before delegating, make sure you have available InChI or SMILES,
             if the user didn't provide any of them, ask at least for SMILES.
-          - Always make sure you have InChI or SMILES before delegating.
-          - Handle thermodynamic requests yourself using ePC-SAFT tools. 
-          - For other queries, state clearly if you cannot handle them.
+          - Handle thermodynamic requests yourself using GNNePC-SAFT tools, 
+            when you have them available. 
+          - For other queries, state clearly if you cannot handle them and why.
           
         """
         ),

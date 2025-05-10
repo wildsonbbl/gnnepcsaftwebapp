@@ -107,26 +107,28 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     }
     availabel_models = available_models.copy()
     gemini_models = GEMINI_MODELS.copy()
+    mcp_exit_stack = mcp_exit_stack
 
-
-async def _get_mcp_server_names_from_config() -> List[str]:
-    """Reads MCP server names from the configuration file."""
-    mcp_server_names = []
-    try:
-        with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
-            content = f.read()
-        mcp_config: Dict[str, Dict[str, Any]] = json.loads(content)
-        if isinstance(mcp_config.get("mcpServers"), dict):
-            mcp_server_names = list(mcp_config["mcpServers"].keys())
-    except FileNotFoundError:
-        logger.warning(
-            "MCP configuration file not found when trying to read server names."
-        )
-    except json.JSONDecodeError:
-        logger.warning("MCP config file is not valid JSON. Cannot parse server names.")
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error("Error reading MCP configuration file for server names: %s", e)
-    return mcp_server_names
+    async def _get_mcp_server_names_from_config(self) -> List[str]:
+        """Reads MCP server names from the configuration file."""
+        mcp_server_names = []
+        try:
+            with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
+                content = f.read()
+            mcp_config: Dict[str, Dict[str, Any]] = json.loads(content)
+            if isinstance(mcp_config.get("mcpServers"), dict):
+                mcp_server_names = list(mcp_config["mcpServers"].keys())
+        except FileNotFoundError:
+            logger.warning(
+                "MCP configuration file not found when trying to read server names."
+            )
+        except json.JSONDecodeError:
+            logger.warning(
+                "MCP config file is not valid JSON. Cannot parse server names."
+            )
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error("Error reading MCP configuration file for server names: %s", e)
+        return mcp_server_names
 
 
 class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):

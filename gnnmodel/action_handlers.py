@@ -13,7 +13,6 @@ from . import logger
 from .agents import DEFAULT_MODEL
 from .agents_utils import get_ollama_models, is_ollama_online
 from .chat_utils import BlankLinkExtension, CustomJSONEncoder, start_agent_session
-from .consumer_utils import _get_mcp_server_names_from_config
 from .message_operations import ChatConsumerMessagingOperations
 from .models import ChatSession
 
@@ -190,7 +189,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         valid_selected_tools = await self.validate_and_update_tools(
             session, current_tool_map
         )
-        mcp_server_names_from_config = await _get_mcp_server_names_from_config()
+        mcp_server_names_from_config = await self._get_mcp_server_names_from_config()
         await self.load_session_data(
             session,
             current_tool_map,
@@ -224,7 +223,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 }
             )
         )
-        mcp_server_names_from_config = await _get_mcp_server_names_from_config()
+        mcp_server_names_from_config = await self._get_mcp_server_names_from_config()
         await self.load_session_data(
             session,
             current_tool_map,
@@ -250,7 +249,9 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             valid_selected_tools = await self.validate_and_update_tools(
                 session, current_tool_map
             )
-            mcp_server_names_from_config = await _get_mcp_server_names_from_config()
+            mcp_server_names_from_config = (
+                await self._get_mcp_server_names_from_config()
+            )
             await self.load_session_data(
                 session,
                 current_tool_map,
@@ -336,7 +337,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         """Handles request to get MCP server configuration content."""
         content = ""
         error_message = None
-        mcp_server_names = await _get_mcp_server_names_from_config()
+        mcp_server_names = await self._get_mcp_server_names_from_config()
         try:
             with open(settings.MCP_SERVER_CONFIG, "r", encoding="utf-8") as f:
                 content = f.read()
@@ -393,7 +394,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             logger.info(
                 "MCP configuration file updated: %s", settings.MCP_SERVER_CONFIG
             )
-            mcp_server_names_after_save = await _get_mcp_server_names_from_config()
+            mcp_server_names_after_save = await self._get_mcp_server_names_from_config()
             await self.send(
                 text_data=json.dumps(
                     {

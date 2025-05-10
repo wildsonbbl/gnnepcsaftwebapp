@@ -6,7 +6,7 @@ import io
 import json
 from atexit import register
 from contextlib import AsyncExitStack
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import filetype
 import PyPDF2
@@ -19,6 +19,7 @@ from google.adk.sessions.in_memory_session_service import Session
 from google.adk.tools.mcp_tool.mcp_toolset import (
     MCPTool,
     MCPToolset,
+    SseServerParams,
     StdioServerParameters,
 )
 from google.genai.types import Part
@@ -207,13 +208,27 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         await self.send(text_data=json.dumps({"text": error_message}))
 
     async def get_mcp(
-        self, command: str, args: List[str], env: Optional[Dict[str, str]] = None
+        self,
+        parameters: Tuple[
+            Optional[str],
+            Optional[List[str]],
+            Optional[Dict[str, str]],
+            Optional[str],
+            Optional[Dict[str, Any]],
+        ],
     ):
         "get mcp toolset"
-        tools, _ = await MCPToolset.from_server(
-            connection_params=StdioServerParameters(
+        command, args, env, url, headers = parameters
+        if command and args:
+            connection_params = StdioServerParameters(
                 command=command, args=args, env=env
-            ),
+            )
+        elif url:
+            connection_params = SseServerParams(url=url, headers=headers)
+        else:
+            return []
+        tools, _ = await MCPToolset.from_server(
+            connection_params=connection_params,
             async_exit_stack=self.mcp_exit_stack,
         )
         return tools
@@ -251,25 +266,22 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                 if mcpserver_name not in servers_to_process:
                     continue
                 mcpserver = mcp_server_config["mcpServers"][mcpserver_name]
-                command = mcpserver.get("command")
-                args = mcpserver.get("args")
-                env = mcpserver.get("env")
+                parameters = (
+                    mcpserver.get("command"),
+                    mcpserver.get("args"),
+                    mcpserver.get("env"),
+                    mcpserver.get("url"),
+                    mcpserver.get("headers"),
+                )
 
-                if not isinstance(command, str) or not command:
-                    logger.error(
-                        "Invalid or missing 'command' for MCP server: %s",
-                        mcpserver_name,
-                    )
-                    continue
-                if not isinstance(args, list):
-                    logger.error(
-                        "Invalid or missing 'args' for MCP server: %s. Must be a list.",
-                        mcpserver_name,
-                    )
+                parameters_valid = self.validate_mcp_parameters(
+                    parameters=(mcpserver_name, *parameters)
+                )
+                if not parameters_valid:
                     continue
 
                 try:
-                    new_tools = await self.get_mcp(command, args, env)
+                    new_tools = await self.get_mcp(parameters=parameters)
                     self.mcp_tools.extend(new_tools)
                     activated_tool_names.extend([t.name for t in new_tools])
                     for t in new_tools:
@@ -286,6 +298,39 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     logger.error(error_message)
 
         return activated_tool_names, error_message
+
+    def validate_mcp_parameters(self, parameters):
+        "validate mcp parameters"
+        mcpserver_name, command, args, env, url, headers = parameters
+        parameters_valid = True
+        if command and not isinstance(command, str):
+            logger.error(
+                "Invalid or missing 'command' for MCP server: %s",
+                mcpserver_name,
+            )
+            parameters_valid = False
+        if args and not isinstance(args, List):
+            logger.error(
+                "Invalid or missing 'args' for MCP server: %s. Must be a list.",
+                mcpserver_name,
+            )
+            parameters_valid = False
+        if env and not isinstance(env, Dict):
+            logger.error(
+                "Invalid or missing 'env' for MCP server: %s. Must be a dict.",
+                mcpserver_name,
+            )
+            parameters_valid = False
+        if url and not isinstance(url, str):
+            logger.error("Invalid or missing 'url' for MCP server: %s", mcpserver_name)
+            parameters_valid = False
+        if headers and not isinstance(headers, Dict):
+            logger.error(
+                "Invalid or missing 'headers' for MCP server: %s. Must be a dict.",
+                mcpserver_name,
+            )
+            parameters_valid = False
+        return parameters_valid
 
     async def process_uploaded_file(self, file_info: dict):
         """Processes base64 encoded file data into a Gemini Part."""

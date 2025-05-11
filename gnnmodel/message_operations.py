@@ -47,7 +47,7 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
 
     async def handle_api_key_validation(self) -> bool:
         "handle api key validation"
-        current_session: ChatSession = await self.get_or_create_session(self.session_id)
+        current_session: ChatSession = await self.get_or_create_session()
         model_name = current_session.model_name
         key_is_valid = True
 

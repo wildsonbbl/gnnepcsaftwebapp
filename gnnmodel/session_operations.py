@@ -22,7 +22,7 @@ class ChatSessionsDBOperations(CurrentChatSessionConsumerUtils):
             session = last_session
         else:
             self.session_id = str(uuid.uuid4())
-            session = await self.get_or_create_session(self.session_id)
+            session = await self.get_or_create_session()
         return session
 
     @database_sync_to_async
@@ -36,19 +36,18 @@ class ChatSessionsDBOperations(CurrentChatSessionConsumerUtils):
     @database_sync_to_async
     def get_or_create_session(
         self,
-        session_id,
         name="New Session",
         model_name=DEFAULT_MODEL,
         selected_tools=None,
     ) -> ChatSession:
         """Get or create a session"""
         try:
-            return ChatSession.objects.get(session_id=session_id)
+            return ChatSession.objects.get(session_id=self.session_id)
         except ChatSession.DoesNotExist:
             if selected_tools is None:
                 selected_tools = [t.__name__ for t in all_tools]
             return ChatSession.objects.create(
-                session_id=session_id,
+                session_id=self.session_id,
                 name=name,
                 model_name=model_name,
                 selected_tools=selected_tools,

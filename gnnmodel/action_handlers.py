@@ -100,7 +100,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 )
             )
         else:
-            session: ChatSession = await self.get_or_create_session(self.session_id)
+            session: ChatSession = await self.get_or_create_session()
             current_tools = self.original_tools + self.mcp_tools
             current_tool_map = self.get_current_tool_map(current_tools)
             valid_selected_tools = await self.validate_and_update_tools(
@@ -133,7 +133,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         await database_sync_to_async(
             ChatSession.objects.filter(session_id=self.session_id).update
         )(selected_tools=valid_selected_tools)
-        session: ChatSession = await self.get_or_create_session(self.session_id)
+        session: ChatSession = await self.get_or_create_session()
         self.runner, self.runner_session = await start_agent_session(
             self.session_id,
             session.model_name,
@@ -177,7 +177,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
     async def handle_load_session(self, text_data_json):
         "handle load session"
         self.session_id = text_data_json["session_id"]
-        session = await self.get_or_create_session(self.session_id)
+        session = await self.get_or_create_session()
         await self.load_session_data(
             session,
         )
@@ -194,7 +194,6 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             name for name in selected_tools_names if name in current_tool_map
         ]
         session = await self.get_or_create_session(
-            self.session_id,
             name=name,
             model_name=model_name,
             selected_tools=valid_selected_tools,

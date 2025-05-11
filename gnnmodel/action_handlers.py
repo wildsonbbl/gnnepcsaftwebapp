@@ -12,7 +12,7 @@ from markdown import markdown
 from . import logger
 from .agents import DEFAULT_MODEL
 from .agents_utils import get_ollama_models, is_ollama_online
-from .chat_utils import BlankLinkExtension, CustomJSONEncoder, start_agent_session
+from .chat_utils import BlankLinkExtension, CustomJSONEncoder
 from .message_operations import ChatConsumerMessagingOperations
 from .models import ChatSession
 
@@ -101,15 +101,8 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             )
         else:
             session: ChatSession = await self.get_or_create_session()
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            valid_selected_tools = await self.validate_and_update_tools(
-                session, current_tool_map
-            )
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                session.model_name,
-                tools=[current_tool_map[t] for t in valid_selected_tools],
+            current_tool_map, valid_selected_tools = await self.start_agent_session(
+                session
             )
             await self.send(
                 text_data=json.dumps(
@@ -125,25 +118,16 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
 
     async def handle_change_tools(self, text_data_json):
         "handle change tools"
-        current_tools = self.original_tools + self.mcp_tools
-        current_tool_map = self.get_current_tool_map(current_tools)
-        valid_selected_tools = [
-            t for t in text_data_json["tools"] if t in current_tool_map
-        ]
         await database_sync_to_async(
             ChatSession.objects.filter(session_id=self.session_id).update
-        )(selected_tools=valid_selected_tools)
+        )(selected_tools=text_data_json["tools"])
         session: ChatSession = await self.get_or_create_session()
-        self.runner, self.runner_session = await start_agent_session(
-            self.session_id,
-            session.model_name,
-            tools=[current_tool_map[t] for t in session.selected_tools],
-        )
+        current_tool_map, valid_selected_tools = await self.start_agent_session(session)
         await self.send(
             text_data=json.dumps(
                 {
                     "action": "tools_changed",
-                    "selected_tools": session.selected_tools,
+                    "selected_tools": valid_selected_tools,
                     "available_tools": list(current_tool_map),
                 }
             )
@@ -251,16 +235,8 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             await database_sync_to_async(
                 ChatSession.objects.filter(session_id=self.session_id).update
             )(model_name=model_name)
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            valid_selected_tools = [
-                name for name in text_data_json["tools"] if name in current_tool_map
-            ]
-            self.runner, self.runner_session = await start_agent_session(
-                self.session_id,
-                model_name,
-                [current_tool_map[name] for name in valid_selected_tools],
-            )
+            session: ChatSession = await self.get_or_create_session()
+            await self.start_agent_session(session)
             await self.send(
                 text_data=json.dumps(
                     {

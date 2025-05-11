@@ -101,6 +101,11 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
             )
         else:
             session: ChatSession = await self.get_or_create_session()
+            session.selected_mcp_servers = server_names_list
+            await database_sync_to_async(session.save)(
+                update_fields=["selected_mcp_servers"]
+            )
+
             current_tool_map, valid_selected_tools = await self.start_agent_session(
                 session
             )
@@ -112,6 +117,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                         "available_tools": list(current_tool_map),
                         "selected_tools": valid_selected_tools,
                         "tool_descriptions": self.tool_descriptions,
+                        "selected_mcp_servers": session.selected_mcp_servers,
                     }
                 )
             )
@@ -161,7 +167,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
     async def handle_load_session(self, text_data_json):
         "handle load session"
         self.session_id = text_data_json["session_id"]
-        session = await self.get_or_create_session()
+        session: ChatSession = await self.get_or_create_session()
         await self.load_session_data(
             session,
         )

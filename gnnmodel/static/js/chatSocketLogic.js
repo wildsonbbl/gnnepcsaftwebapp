@@ -80,6 +80,21 @@ function handleActionMessage(data) {
       if (data.tool_descriptions) {
         Object.assign(toolDescriptions, data.tool_descriptions);
       }
+
+      // Handle selected MCP servers
+      if (
+        data.selected_mcp_servers &&
+        Array.isArray(data.selected_mcp_servers)
+      ) {
+        selectedMcpServers = [...data.selected_mcp_servers];
+      } else {
+        selectedMcpServers = [];
+      }
+
+      if (selectedMcpServers && selectedMcpServers.length > 0) {
+        showToast("MCP Servers activated");
+      }
+
       // Populate MCP activation dropdown if server names are provided
       if (data.mcp_server_names && Array.isArray(data.mcp_server_names)) {
         populateMcpActivationDropdown(data.mcp_server_names);
@@ -119,8 +134,23 @@ function handleActionMessage(data) {
       showToast("Tools selection changed successfully");
       break;
     case "mcp_activated":
-      availableTools = [...data.available_tools];
-      selectedTools = [...data.selected_tools]; // Update selected tools based on server response
+      if (data.available_tools && Array.isArray(data.available_tools)) {
+        availableTools = [...data.available_tools];
+      }
+      if (data.selected_tools && Array.isArray(data.selected_tools)) {
+        selectedTools = [...data.selected_tools];
+      }
+      if (
+        data.selected_mcp_servers &&
+        Array.isArray(data.selected_mcp_servers)
+      ) {
+        selectedMcpServers = [...data.selected_mcp_servers];
+      } else {
+        selectedMcpServers = [];
+      }
+      if (data.mcp_server_names && Array.isArray(data.mcp_server_names)) {
+        populateMcpActivationDropdown(data.mcp_server_names);
+      }
       populateToolsList(availableTools);
       if (data.activated_tools && data.activated_tools.length > 0) {
         showToast(
@@ -128,7 +158,10 @@ function handleActionMessage(data) {
             ", "
           )}`
         );
-        showToast("To terminate MCP server, click the AI Chat button", "info");
+        showToast(
+          "To terminate MCP servers, either deselect all and click activate or click any menu button (apart from AI Chat)",
+          "info"
+        );
       } else {
         showToast("MCP Servers processed. No new tools were activated.");
       }

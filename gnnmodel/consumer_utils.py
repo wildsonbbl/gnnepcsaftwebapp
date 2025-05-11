@@ -140,6 +140,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         session: ChatSession,
     ):
         "load session data"
+        await self.activate_mcp_server(servers_to_process=session.selected_mcp_servers)
         current_tool_map, valid_selected_tools = await self.start_agent_session(session)
         mcp_server_names = await self._get_mcp_server_names_from_config()
 
@@ -156,6 +157,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
                     "tool_descriptions": self.tool_descriptions,
                     "mcp_config_path": str(settings.MCP_SERVER_CONFIG),
                     "mcp_server_names": mcp_server_names,
+                    "selected_mcp_servers": session.selected_mcp_servers,
                 },
                 cls=CustomJSONEncoder,
             )

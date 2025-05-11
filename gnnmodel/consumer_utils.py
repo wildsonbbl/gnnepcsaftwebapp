@@ -138,16 +138,19 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
     async def load_session_data(
         self,
         session: ChatSession,
-        current_tool_map: Dict[str, Any],
-        valid_selected_tools: List[str],
-        mcp_server_names: List[str],
     ):
         "load session data"
+        current_tools = self.original_tools + self.mcp_tools
+        current_tool_map = self.get_current_tool_map(current_tools)
+        valid_selected_tools = await self.validate_and_update_tools(
+            session, current_tool_map
+        )
         self.runner, self.runner_session = await start_agent_session(
             self.session_id,
             session.model_name,
             tools=[current_tool_map[tool] for tool in valid_selected_tools],
         )
+        mcp_server_names = await self._get_mcp_server_names_from_config()
 
         await self.send(
             text_data=json.dumps(

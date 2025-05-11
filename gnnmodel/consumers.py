@@ -14,17 +14,8 @@ class ChatConsumer(ChatConsumerHandleActions):
         await self.accept()
 
         session = await self.get_or_create_last_session()
-        current_tools = self.original_tools + self.mcp_tools
-        current_tool_map = self.get_current_tool_map(current_tools)
-        valid_selected_tools = await self.validate_and_update_tools(
-            session, current_tool_map
-        )
-        mcp_server_names_on_connect = await self._get_mcp_server_names_from_config()
         await self.load_session_data(
             session,
-            current_tool_map,
-            valid_selected_tools,
-            mcp_server_names_on_connect,
         )
 
     async def disconnect(self, code):

@@ -178,17 +178,8 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         "handle load session"
         self.session_id = text_data_json["session_id"]
         session = await self.get_or_create_session(self.session_id)
-        current_tools = self.original_tools + self.mcp_tools
-        current_tool_map = self.get_current_tool_map(current_tools)
-        valid_selected_tools = await self.validate_and_update_tools(
-            session, current_tool_map
-        )
-        mcp_server_names_from_config = await self._get_mcp_server_names_from_config()
         await self.load_session_data(
             session,
-            current_tool_map,
-            valid_selected_tools,
-            mcp_server_names_from_config,
         )
 
     async def handle_create_session(self, text_data_json: Dict[str, Any]):
@@ -217,12 +208,8 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 }
             )
         )
-        mcp_server_names_from_config = await self._get_mcp_server_names_from_config()
         await self.load_session_data(
             session,
-            current_tool_map,
-            valid_selected_tools,
-            mcp_server_names_from_config,
         )
 
     async def handle_get_sessions(self):
@@ -238,19 +225,8 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         success = await self.delete_session(session_id)
         if success and session_id == self.session_id:
             session = await self.get_or_create_last_session()
-            current_tools = self.original_tools + self.mcp_tools
-            current_tool_map = self.get_current_tool_map(current_tools)
-            valid_selected_tools = await self.validate_and_update_tools(
-                session, current_tool_map
-            )
-            mcp_server_names_from_config = (
-                await self._get_mcp_server_names_from_config()
-            )
             await self.load_session_data(
                 session,
-                current_tool_map,
-                valid_selected_tools,
-                mcp_server_names_from_config,
             )
         await self.send(
             text_data=json.dumps(

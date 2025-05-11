@@ -171,16 +171,11 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
         self.session_id = str(uuid.uuid4())
         name = text_data_json.get("name", "New Session")
         model_name = text_data_json.get("model_name", DEFAULT_MODEL)
-        current_tools = self.original_tools + self.mcp_tools
-        current_tool_map = self.get_current_tool_map(current_tools)
-        selected_tools_names = text_data_json.get("tools", list(current_tool_map))
-        valid_selected_tools = [
-            name for name in selected_tools_names if name in current_tool_map
-        ]
+        selected_tools_names = text_data_json.get("tools", [])
         session = await self.get_or_create_session(
             name=name,
             model_name=model_name,
-            selected_tools=valid_selected_tools,
+            selected_tools=selected_tools_names,
         )
         await self.send(
             text_data=json.dumps(

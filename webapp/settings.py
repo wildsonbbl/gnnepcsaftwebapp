@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from decouple import Csv, config
@@ -194,6 +195,9 @@ CSRF_TRUSTED_ORIGINS = config(
     cast=Csv(),
 )
 
+# Logging
+# https://docs.djangoproject.com/en/4.2/topics/logging/
+
 LOG_PATH = config("GNNEPCSAFT_LOG_PATH", default=BASE_DIR, cast=Path)
 LOG_LEVEL = config("GNNEPCSAFT_LOG_LEVEL", default="WARNING")
 
@@ -236,3 +240,9 @@ LOGGING = {
         },
     },
 }
+
+# ollama config
+
+os.environ["OLLAMA_API_BASE"] = str(
+    config("GNNEPCSAFT_OLLAMA_API_BASE", default="http://localhost:11434")
+)

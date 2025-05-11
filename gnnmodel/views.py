@@ -1,7 +1,6 @@
 "request handler."
 
 import json
-import os
 import os.path as osp
 
 from django.conf import settings
@@ -9,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 
-from .forms import GoogleAPIKeyForm, InChIorSMILESareaInput, InChIorSMILESinput
+from .forms import InChIorSMILESareaInput
 from .models import ChatSession
 from .utils import (
     available_params,
@@ -21,7 +20,6 @@ from .utils import (
     process_mixture_post,
     process_pure_post,
 )
-from .utils_llm import is_api_key_valid, resume_mol
 
 file_dir = osp.dirname(__file__)
 
@@ -95,54 +93,15 @@ def about(request):
     return render(request, "about.html")
 
 
-def description(request):
-    "handle request for molecule description"
-
-    html_output = ""
-
-    if request.method == "POST":
-        form = InChIorSMILESinput(request.POST)
-        google_api_key_form = GoogleAPIKeyForm(request.POST)
-        if google_api_key_form.is_valid() and form.is_valid():
-            smiles, inchi = form.cleaned_data["query"]
-            html_output = resume_mol(
-                inchi, smiles, google_api_key_form.cleaned_data["google_api_key"]
-            )
-    else:
-        form = InChIorSMILESinput()
-        google_api_key_form = GoogleAPIKeyForm()
-
-    return render(
-        request,
-        "description.html",
-        {
-            "output": html_output,
-            "google_api_key_form": google_api_key_form,
-        },
-    )
-
-
 def chat(request):
     "handle request for chat"
 
     if settings.PLATFORM == "webapp":
         return render(request, "chat-webapp.html")
 
-    show_form = True
-    if request.method == "POST":
-        google_api_key_form = GoogleAPIKeyForm(request.POST)
-        if google_api_key_form.is_valid():
-            show_form = False
-    else:
-        google_api_key_form = GoogleAPIKeyForm()
-        google_api_key = os.getenv("GOOGLE_API_KEY")
-        if google_api_key is not None and is_api_key_valid(google_api_key):
-            show_form = False
-
     return render(
         request,
         "chat.html",
-        {"show_form": show_form, "google_api_key_form": google_api_key_form},
     )
 
 

@@ -5,308 +5,343 @@
 {% endblock title %}
 {% block content %}
   <div class="col-lg">
-    {% if show_form %}
-      <form action="" method="post" id="submitGoogleApiKey">
-        {% csrf_token %}
-        <div class="row my-5 justify-content-center">
-          <div class="col-md-6">
-            {{ google_api_key_form.google_api_key }}
-            <p class="mx-2 my-1">
-              You can find more about Gemini API Keys
-              <a href="https://ai.google.dev/gemini-api/docs/api-key" target="_blank">here</a>.
-              This key is not stored for security reasons.
-            </p>
-            <input type="submit"
-                   value="Submit Gemini API Key"
-                   class="form-control btn-outline-primary" />
+    <div class="row justify-content-center" id="chatrow">
+      <div class="col-12">
+        <div class="card chat-card-style bg-light">
+          <div id="chat-log" class="card-body overflow-auto">
+            <!-- Chat messages will be populated here -->
           </div>
-        </div>
-      </form>
-      <div class="row my-1 justify-content-center">
-        <ul>
-          {% for error in google_api_key_form.google_api_key.errors %}
-            <li class="alert alert-danger">{{ error }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    {% else %}
-      <div class="row justify-content-center" id="chatrow">
-        <div class="col-12">
-          <div class="card chat-card-style bg-light">
-            <div id="chat-log" class="card-body overflow-auto">
-              <!-- Chat messages will be populated here -->
-            </div>
-            <div class="row d-flex justify-content-center" id="chat-form-row">
-              <form>
-                <div id="file-preview-container" class="m-1 p-1 border rounded bg-white"></div>
-                <div class="col-12 position-relative">
-                  <div class="pt-5 w-100 rounded bg-light position-absolute bottom-0">
-                    <!-- Chat textarea bottom buttons will be added on top of here -->
-                  </div>
-                  <div class="pt-5 w-100 rounded bg-light position-absolute top-0">
-                    <!-- Chat textarea top buttons will be added on top of here -->
-                  </div>
-                  <textarea id="chat-message-input"
-                            class="form-control bg-light py-5"
-                            placeholder="Write your message here"></textarea>
-                  <div class="d-flex position-absolute bottom-0 end-0 m-1">
-                    <!-- Chat textarea bottom buttons will be added here -->
-                    <div class="dropdown me-2">
-                      <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle"
-                              type="button"
-                              id="toolsDropdown"
-                              data-bs-toggle="dropdown"
-                              aria-expanded="false"
-                              title="Tools">
-                        <i class="fas fa-tools"></i>
-                      </button>
-                      <ul class="dropdown-menu" id="tools-list" aria-labelledby="toolsDropdown">
-                        <!-- Tools will be populated here -->
-                      </ul>
-                    </div>
-                    <button id="config-mcp-btn"
+          <div class="row d-flex justify-content-center" id="chat-form-row">
+            <form>
+              <div id="file-preview-container" class="m-1 p-1 border rounded bg-white"></div>
+              <div class="col-12 position-relative">
+                <div class="pt-5 w-100 rounded bg-light position-absolute bottom-0">
+                  <!-- Chat textarea bottom buttons will be added on top of here -->
+                </div>
+                <div class="pt-5 w-100 rounded bg-light position-absolute top-0">
+                  <!-- Chat textarea top buttons will be added on top of here -->
+                </div>
+                <textarea id="chat-message-input"
+                          class="form-control bg-light py-5"
+                          placeholder="Write your message here"></textarea>
+                <div class="d-flex position-absolute bottom-0 end-0 m-1">
+                  <!-- Chat textarea bottom buttons will be added here -->
+                  <div class="dropdown me-2">
+                    <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle"
                             type="button"
-                            class="btn btn-sm btn-outline-warning rounded me-1"
-                            title="Configure MCP Servers"
-                            data-bs-toggle="modal"
-                            data-bs-target="#mcpConfigModal">
-                      <i class="fas fa-cogs"></i>
+                            id="toolsDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="Tools">
+                      <i class="fas fa-tools"></i>
                     </button>
-                    <button id="activate-mcp-btn"
+                    <ul class="dropdown-menu" id="tools-list" aria-labelledby="toolsDropdown">
+                      <!-- Tools will be populated here -->
+                    </ul>
+                  </div>
+                  <button id="config-mcp-btn"
+                          type="button"
+                          class="btn btn-sm btn-outline-warning rounded me-1"
+                          title="Configure MCP Servers"
+                          data-bs-toggle="modal"
+                          data-bs-target="#mcpConfigModal">
+                    <i class="fas fa-cogs"></i>
+                  </button>
+                  <div class="dropdown me-1">
+                    <button id="activate-mcp-dropdown-btn"
                             type="button"
-                            class="btn btn-sm btn-outline-info rounded-circle me-1"
-                            title="Activate MCP Servers">
-                      <!-- Title will be updated by JS -->
+                            class="btn btn-sm btn-outline-info rounded dropdown-toggle"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            title="MCP Servers">
                       <i class="fas fa-server"></i>
                     </button>
-                    <input type="file"
-                           id="file-input"
-                           class="d-none"
-                           title="Upload file input"
-                           accept=".pdf,image/*">
-                    <button id="attach-file-button"
-                            type="button"
-                            class="btn btn-sm btn-outline-secondary rounded-circle me-1"
-                            title="Attach File">
-                      <i class="fas fa-paperclip"></i>
+                    <ul class="dropdown-menu"
+                        id="mcp-activation-list"
+                        aria-labelledby="activate-mcp-dropdown-btn">
+                      <!-- MCP Servers will be populated here by JS -->
+                    </ul>
+                  </div>
+                  <input type="file"
+                         id="file-input"
+                         class="d-none"
+                         title="Upload file input"
+                         accept=".pdf,image/*">
+                  <button id="attach-file-button"
+                          type="button"
+                          class="btn btn-sm btn-outline-secondary rounded-circle me-1"
+                          title="Attach File">
+                    <i class="fas fa-paperclip"></i>
+                  </button>
+                  <button id="chat-message-submit"
+                          type="button"
+                          class="btn btn-sm btn-outline-primary rounded-circle"
+                          title="Send Message">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+                <div class="d-flex position-absolute top-0 start-0 m-1">
+                  <!-- Chat textarea top buttons will be added here -->
+                  <div class="m-1">
+                    <button id="new-session-btn"
+                            class="btn btn-sm btn-outline-success rounded-circle"
+                            title="New Session"
+                            type="button">
+                      <i class="fas fa-square-plus"></i>
                     </button>
-                    <button id="chat-message-submit"
+                    <button id="rename-session-btn"
+                            class="btn btn-sm btn-outline-secondary rounded-circle"
+                            title="Rename Session"
+                            type="button">
+                      <i class="fas fa-edit"></i>
+                    </button>
+                    <button id="chat-log-save_button"
                             type="button"
-                            class="btn btn-sm btn-outline-primary rounded-circle"
-                            title="Send Message">
-                      <i class="fas fa-paper-plane"></i>
+                            class="btn btn-sm btn-outline-secondary rounded-circle"
+                            title="Save Chat Log"
+                            type="button">
+                      <i class="fas fa-file-export"></i>
                     </button>
                   </div>
-                  <div class="d-flex position-absolute top-0 start-0 m-1">
-                    <!-- Chat textarea top buttons will be added here -->
-                    <div class="m-1">
-                      <button id="new-session-btn"
-                              class="btn btn-sm btn-outline-success rounded-circle"
-                              title="New Session"
-                              type="button">
-                        <i class="fas fa-square-plus"></i>
-                      </button>
-                      <button id="rename-session-btn"
-                              class="btn btn-sm btn-outline-secondary rounded-circle"
-                              title="Rename Session"
-                              type="button">
-                        <i class="fas fa-edit"></i>
-                      </button>
-                      <button id="chat-log-save_button"
+                  <div class="m-1 d-flex align-items-center">
+                    <div class="dropdown">
+                      <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle "
                               type="button"
-                              class="btn btn-sm btn-outline-secondary rounded-circle"
-                              title="Save Chat Log"
-                              type="button">
-                        <i class="fas fa-file-export"></i>
+                              id="modelDropdown"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        <span id="current-model-name">Model</span>
                       </button>
+                      <ul class="dropdown-menu"
+                          id="models-list"
+                          aria-labelledby="modelDropdown">
+                        <!-- Models will be populated here -->
+                      </ul>
                     </div>
-                    <div class="m-1 d-flex">
-                      <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary rounded dropdown-toggle "
-                                type="button"
-                                id="modelDropdown"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                          <span id="current-model-name">Model</span>
-                        </button>
-                        <ul class="dropdown-menu"
-                            id="models-list"
-                            aria-labelledby="modelDropdown">
-                          <!-- Models will be populated here -->
-                        </ul>
-                      </div>
-                      <div class="dropdown mx-1">
-                        <button class="btn btn-sm btn-outline-primary rounded dropdown-toggle"
-                                type="button"
-                                id="sessionDropdown"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false">
-                          <span id="current-session-name">Current Session</span>
-                        </button>
-                        <ul class="dropdown-menu"
-                            id="sessions-list"
-                            aria-labelledby="sessionDropdown">
-                          <!-- Sessions will be populated here -->
-                        </ul>
-                      </div>
+                    <button id="update-ollama-models-btn"
+                            type="button"
+                            class="btn btn-sm btn-outline-info rounded ms-1"
+                            title="Update Ollama Models">
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <div class="dropdown mx-1">
+                      <button class="btn btn-sm btn-outline-primary rounded dropdown-toggle"
+                              type="button"
+                              id="sessionDropdown"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false">
+                        <span id="current-session-name">Current Session</span>
+                      </button>
+                      <ul class="dropdown-menu"
+                          id="sessions-list"
+                          aria-labelledby="sessionDropdown">
+                        <!-- Sessions will be populated here -->
+                      </ul>
                     </div>
                   </div>
                 </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- New Session Modal -->
-      <div class="modal fade"
-           id="newSessionModal"
-           tabindex="-1"
-           aria-labelledby="newSessionModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="newSessionModalLabel">Create New Session</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="new-session-name" class="form-label">Session Name</label>
-                <input type="text"
-                       class="form-control"
-                       id="new-session-name"
-                       placeholder="Enter session name">
               </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="create-session-btn">Create</button>
-            </div>
+            </form>
           </div>
         </div>
       </div>
-      <!-- Rename Session Modal -->
-      <div class="modal fade"
-           id="renameSessionModal"
-           tabindex="-1"
-           aria-labelledby="renameSessionModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="renameSessionModalLabel">Rename Session</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
+    </div>
+    <!-- New Session Modal -->
+    <div class="modal fade"
+         id="newSessionModal"
+         tabindex="-1"
+         aria-labelledby="newSessionModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="newSessionModalLabel">Create New Session</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="new-session-name" class="form-label">Session Name</label>
+              <input type="text"
+                     class="form-control"
+                     id="new-session-name"
+                     placeholder="Enter session name">
             </div>
-            <div class="modal-body">
-              <div class="mb-3">
-                <label for="rename-session-name" class="form-label">New Session Name</label>
-                <input type="text"
-                       class="form-control"
-                       id="rename-session-name"
-                       placeholder="Enter new session name">
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="save-rename-btn">Save</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="create-session-btn">Create</button>
           </div>
         </div>
       </div>
-      <!-- Delete Session Modal -->
-      <div class="modal fade"
-           id="deleteSessionModal"
-           tabindex="-1"
-           aria-labelledby="deleteSessionModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="deleteSessionModalLabel">Delete Session</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
+    </div>
+    <!-- Rename Session Modal -->
+    <div class="modal fade"
+         id="renameSessionModal"
+         tabindex="-1"
+         aria-labelledby="renameSessionModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="renameSessionModalLabel">Rename Session</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="rename-session-name" class="form-label">New Session Name</label>
+              <input type="text"
+                     class="form-control"
+                     id="rename-session-name"
+                     placeholder="Enter new session name">
             </div>
-            <div class="modal-body">
-              <p>
-                Are you sure you want to delete the session "<span id="delete-session-name"></span>"?
-              </p>
-              <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
-            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-rename-btn">Save</button>
           </div>
         </div>
       </div>
-      <!-- Tool info modal -->
-      <div class="modal fade"
-           id="toolInfoModal"
-           tabindex="-1"
-           aria-labelledby="toolInfoModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="toolInfoModalLabel">Tool Info</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="tool-info-body"></div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
+    </div>
+    <!-- Delete Session Modal -->
+    <div class="modal fade"
+         id="deleteSessionModal"
+         tabindex="-1"
+         aria-labelledby="deleteSessionModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteSessionModalLabel">Delete Session</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Are you sure you want to delete the session "<span id="delete-session-name"></span>"?
+            </p>
+            <p class="text-danger">This action cannot be undone.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger" id="confirm-delete-btn">Delete</button>
           </div>
         </div>
       </div>
-      <!-- MCP Config Modal -->
-      <div class="modal fade"
-           id="mcpConfigModal"
-           tabindex="-1"
-           aria-labelledby="mcpConfigModalLabel"
-           aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title" id="mcpConfigModalLabel">MCP Server Configuration</h5>
-              <button type="button"
-                      class="btn-close"
-                      data-bs-dismiss="modal"
-                      aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-              <p>
-                Editing file: <code id="mcp-config-file-path"></code>
-              </p>
-              <div class="mb-3">
-                <label for="mcp-config-content-input" class="form-label">Configuration (JSON format):</label>
-                <textarea class="form-control"
-                          id="mcp-config-content-input"
-                          rows="15"
-                          placeholder="MCP server configuration in JSON format..."></textarea>
-              </div>
-              <div id="mcp-config-error" class="alert alert-danger d-none" role="alert"></div>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-primary" id="save-mcp-config-btn">Save Configuration</button>
-            </div>
+    </div>
+    <!-- Tool info modal -->
+    <div class="modal fade"
+         id="toolInfoModal"
+         tabindex="-1"
+         aria-labelledby="toolInfoModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="toolInfoModalLabel">Tool Info</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+          </div>
+          <div class="modal-body" id="tool-info-body"></div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
       </div>
-    {% endif %}
+    </div>
+    <!-- MCP Config Modal -->
+    <div class="modal fade"
+         id="mcpConfigModal"
+         tabindex="-1"
+         aria-labelledby="mcpConfigModalLabel"
+         aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="mcpConfigModalLabel">MCP Server Configuration</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              Editing file: <code id="mcp-config-file-path"></code>
+            </p>
+            <p>
+              For examples and more information on MCP server configuration, visit:
+              <a href="https://modelcontextprotocol.io/examples"
+                 target="_blank"
+                 rel="noopener noreferrer">modelcontextprotocol.io/examples</a>
+            </p>
+            <p>
+              Some MCP server recomendations:
+              <ul>
+                <li>
+                  <a href="https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem"
+                     target="_blank"
+                     rel="noopener noreferrer">Filesystem MCP Server</a>
+                </li>
+                <li>
+                  <a href="https://github.com/blazickjp/arxiv-mcp-server"
+                     target="_blank"
+                     rel="noopener noreferrer">ArXiv MCP Server</a>
+                </li>
+                <li>
+                  <a href="https://github.com/kdqed/zaturn"
+                     target="_blank"
+                     rel="noopener noreferrer">Zaturn</a>
+                </li>
+                <li>
+                  <a href="https://github.com/modelcontextprotocol/servers/tree/main/src/brave-search"
+                     target="_blank"
+                     rel="noopener noreferrer">Brave Search MCP Server</a>
+                </li>
+                <li>
+                  <a href="https://github.com/modelcontextprotocol/servers/tree/main/src/fetch"
+                     target="_blank"
+                     rel="noopener noreferrer">Fetch MCP Server</a>
+                </li>
+                <li>
+                  <a href="https://github.com/modelcontextprotocol/servers/tree/main/src/sequentialthinking"
+                     target="_blank"
+                     rel="noopener noreferrer">Sequential Thinking MCP Server</a>
+                </li>
+                <li>
+                  <a href="https://github.com/kujenga/zotero-mcp"
+                     target="_blank"
+                     rel="noopener noreferrer">Zotero MCP Server</a>
+                </li>
+              </ul>
+            </p>
+            <div class="mb-3">
+              <label for="mcp-config-content-input" class="form-label">Configuration (JSON format):</label>
+              <textarea class="form-control"
+                        id="mcp-config-content-input"
+                        rows="15"
+                        placeholder="MCP server configuration in JSON format..."></textarea>
+            </div>
+            <div id="mcp-config-error" class="alert alert-danger d-none" role="alert"></div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="save-mcp-config-btn">Save Configuration</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  {% if not show_form %}
-    <script src={% static "js/chat.js" %}></script>
-  {% endif %}
+  <script src={% static "js/chatSession.js" %}></script>
+  <script src={% static "js/chatSocketLogic.js" %}></script>
+  <script src={% static "js/chatUI.js" %}></script>
+  <script src={% static "js/chat.js" %}></script>
 {% endblock content %}

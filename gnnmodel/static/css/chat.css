@@ -26,6 +26,17 @@
   max-width: 75%;
 }
 
+.bot-message think {
+  display: block;
+  background-color: rgba(147, 57, 237, 0);
+  padding: 5px 10px;
+  margin-bottom: 5px;
+  border-radius: 10px;
+  font-style: italic;
+  color: #555;
+  border-left: 3px solid rgba(147, 57, 237, 0.5);
+}
+
 .user-message {
   background-color: rgba(57, 192, 237, 0.2);
   border-radius: 15px;

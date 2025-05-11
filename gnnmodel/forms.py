@@ -10,7 +10,7 @@ from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
 from pydantic import SecretStr
 
-from .utils_llm import is_api_key_valid
+from .agents_utils import is_api_key_valid
 
 
 class InChIorSMILESinput(forms.Form):

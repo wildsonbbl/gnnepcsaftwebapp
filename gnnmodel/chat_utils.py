@@ -11,11 +11,11 @@ from django.conf import settings
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
-from markdown import markdown
-from markdown.extensions import Extension
-from markdown.treeprocessors import Treeprocessor
+from markdown_it import MarkdownIt
 
 from .agents import DEFAULT_MODEL, create_root_agent
+
+md_parser = MarkdownIt("gfm-like")
 
 APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)
@@ -108,7 +108,7 @@ def docstring_to_html(doc):
         doc = doc.replace("<b>Args:</b>", "<b>Args:</b><ul>")
         doc += "</ul>"
     # Agora sim, passar pelo markdown para processar crases e parágrafos
-    return markdown(doc)
+    return md_parser.render(doc)
 
 
 class CustomJSONEncoder(json.JSONEncoder):
@@ -122,17 +122,11 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-class BlankLinkExtension(Extension):
-    "extension to set links to target=_blank"
+def markdown_to_html(txt: str):
+    """Convert markdown to HTML"""
+    if not txt:
+        return ""
+    txt = textwrap.dedent(txt).strip()
+    txt = txt.replace("<think>", "<think>\n\n").replace("</think>", "\n\n</think>")
 
-    def extendMarkdown(self, md):
-        md.treeprocessors.register(BlankLinkProcessor(md), "blank_link_processor", 15)
-
-
-class BlankLinkProcessor(Treeprocessor):  # pylint: disable=too-few-public-methods
-    "processor to set links to target=_blank"
-
-    def run(self, root):
-        for element in root.iter("a"):
-            element.set("target", "_blank")
-        return root
+    return md_parser.render(txt)

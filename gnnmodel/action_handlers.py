@@ -7,12 +7,11 @@ from typing import Any, Dict, List
 
 from channels.db import database_sync_to_async
 from django.conf import settings
-from markdown import markdown
 
 from . import logger
 from .agents import DEFAULT_MODEL
 from .agents_utils import get_ollama_models, is_ollama_online
-from .chat_utils import BlankLinkExtension, CustomJSONEncoder
+from .chat_utils import CustomJSONEncoder, markdown_to_html
 from .message_operations import ChatConsumerMessagingOperations
 from .models import ChatSession
 
@@ -247,10 +246,7 @@ class ChatConsumerHandleActions(ChatConsumerMessagingOperations):
                 )
             )
             system_message = {
-                "msg": markdown(
-                    f"Model changed to `{model_name}`",
-                    extensions=[BlankLinkExtension()],
-                ),
+                "msg": markdown_to_html(f"Model changed to `{model_name}`"),
                 "source": "user",
             }
             await self.save_message_to_db(system_message)

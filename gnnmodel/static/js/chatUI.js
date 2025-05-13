@@ -128,6 +128,12 @@ function updateChatLog() {
     }
     messageText.innerHTML += msg.msg; // Append the text message
 
+    const links = messageText.getElementsByTagName("a");
+    for (let i = 0; i < links.length; i++) {
+      links[i].setAttribute("target", "_blank");
+      links[i].setAttribute("rel", "noopener noreferrer");
+    }
+
     // Assemble the elements
     messageBubble.appendChild(messageText);
     messageContainer.appendChild(messageBubble);

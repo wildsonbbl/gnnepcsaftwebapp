@@ -146,6 +146,15 @@ function updateChatLog() {
   generatingContainer.id = "bottom-chat-log";
   chatLog.appendChild(generatingContainer);
   generatingContainer.scrollIntoView();
+  const latexElements = document.querySelectorAll(".math");
+  latexElements.forEach((element) => {
+    const mathContent = element.textContent;
+    const htmlContent = katex.renderToString(mathContent, {
+      throwOnError: false,
+      displayMode: element.classList.contains("block"),
+    });
+    element.innerHTML = htmlContent;
+  });
 }
 
 // Populate the sessions dropdown

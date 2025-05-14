@@ -12,10 +12,12 @@ from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactServ
 from google.adk.runners import Runner
 from google.adk.sessions.database_session_service import DatabaseSessionService
 from markdown_it import MarkdownIt
+from mdit_py_plugins.dollarmath import dollarmath_plugin
 
 from .agents import DEFAULT_MODEL, create_root_agent
 
 md_parser = MarkdownIt("gfm-like")
+md_parser.use(dollarmath_plugin)
 
 APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)

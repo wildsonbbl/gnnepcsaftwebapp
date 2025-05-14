@@ -3,6 +3,8 @@ langchain-google-genai
 langchain-community
 #unstructured
 markdown-it-py
+linkify-it-py
+mdit_py_plugins
 langgraph
 google-adk
 litellm>=1.68.1

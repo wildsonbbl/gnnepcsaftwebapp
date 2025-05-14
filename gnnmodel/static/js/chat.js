@@ -44,9 +44,6 @@ function initializeChat(sessionId = null) {
     katexCSS.rel = "stylesheet";
     katexCSS.href =
       "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css";
-    katexCSS.integrity =
-      "sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV";
-    katexCSS.crossOrigin = "anonymous";
     document.head.appendChild(katexCSS);
   }
 
@@ -55,9 +52,6 @@ function initializeChat(sessionId = null) {
     const katexJS = document.createElement("script");
     katexJS.defer = true;
     katexJS.src = "https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js";
-    katexJS.integrity =
-      "sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmImKTjytR";
-    katexJS.crossOrigin = "anonymous";
     document.head.appendChild(katexJS);
   }
 }

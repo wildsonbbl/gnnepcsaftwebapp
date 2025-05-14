@@ -5,11 +5,10 @@ import json
 import os
 
 from google.genai.types import Content, Part
-from markdown import markdown
 
 from . import logger
 from .agents_utils import is_api_key_valid
-from .chat_utils import USER_ID, BlankLinkExtension
+from .chat_utils import USER_ID, markdown_to_html
 from .models import ChatSession
 from .session_operations import ChatSessionsDBOperations
 
@@ -33,9 +32,7 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
         except Exception as e:  # pylint: disable=broad-exception-caught
             logger.error(e)
             message = {
-                "msg": markdown(
-                    f"***Error with agent**: `{e}`*", extensions=[BlankLinkExtension()]
-                ),
+                "msg": markdown_to_html(f"***Error with agent**: `{e}`*"),
                 "source": "assistant",
             }
             await self.send(text_data=json.dumps({"text": message}))
@@ -67,15 +64,14 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
                     )
                 )
                 error_message_for_log = {
-                    "msg": markdown(
+                    "msg": markdown_to_html(
                         f"**System Message:** Cannot process message. "
                         f"Google API Key is missing or invalid for model `{model_name}`. "
                         "Please ensure the `GOOGLE_API_KEY` or `GEMINI_API_KEY` "
                         "environment variable is correctly set. "
                         "You can find more about Gemini API Keys "
                         "<a href='https://ai.google.dev/gemini-api/docs/api-key' "
-                        "target='_blank'>here</a>.",
-                        extensions=[BlankLinkExtension()],
+                        "target='_blank'>here</a>."
                     ),
                     "source": "assistant",
                 }
@@ -91,7 +87,7 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
     async def client_to_agent_messaging(self, text, file_info_for_db=None):
         """Client to agent communication"""
         user_message = {
-            "msg": markdown(text, extensions=[BlankLinkExtension()]),
+            "msg": markdown_to_html(text),
             "source": "user",
         }
         if file_info_for_db:
@@ -102,37 +98,6 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
             text_data=json.dumps({"text": user_message}),
         )
         await self.send(text_data=json.dumps({"action": "ongoing_turn"}))
-
-    async def bot_to_client_messaging(self):
-        """Bot to client communication, for testing"""
-        textes = [
-            "***Error with agent**: `{error}`*",
-            "booot 2",
-            "booot 3",
-            "'I'M A BOT",
-        ]
-        for text in textes:
-            await self.send(
-                text_data=json.dumps(
-                    {
-                        "text": {
-                            "msg": markdown(text, extensions=[BlankLinkExtension()]),
-                            "source": "assistant",
-                        }
-                    }
-                ),
-            )
-            await asyncio.sleep(2)
-        await self.send(
-            text_data=json.dumps(
-                {
-                    "text": {
-                        "msg": "Turn completed, brother",
-                        "source": "turn_end",
-                    }
-                }
-            ),
-        )
 
     async def process_user_message(self, parts):
         "process user message"
@@ -163,7 +128,7 @@ class ChatConsumerMessagingOperations(ChatSessionsDBOperations):
                     resp_text = None
                 if resp_text:
                     message = {
-                        "msg": markdown(resp_text, extensions=[BlankLinkExtension()]),
+                        "msg": markdown_to_html(resp_text),
                         "source": "assistant",
                     }
                     await self.send(text_data=json.dumps({"text": message}))

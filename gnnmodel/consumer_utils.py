@@ -23,15 +23,14 @@ from google.adk.tools.mcp_tool.mcp_toolset import (
     StdioServerParameters,
 )
 from google.genai.types import Part
-from markdown import markdown
 
 from . import logger
 from .agents import all_tools
 from .agents_utils import get_gemini_models, get_ollama_models, is_ollama_online
 from .chat_utils import (
-    BlankLinkExtension,
     CustomJSONEncoder,
     docstring_to_html,
+    markdown_to_html,
     start_agent_session,
 )
 from .models import ChatSession
@@ -65,7 +64,6 @@ available_models = []
 GEMINI_MODELS = [
     "gemini-2.5-flash-preview-04-17",
     "gemini-2.5-pro-preview-05-06",
-    "gemini-2.5-pro-exp-03-25",
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-flash",
@@ -211,9 +209,7 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
     async def send_error_message(self, error_text):
         """Sends an error message formatted as a system message."""
         error_message = {
-            "msg": markdown(
-                f"**Error:** {error_text}", extensions=[BlankLinkExtension()]
-            ),
+            "msg": markdown_to_html(f"**Error:** {error_text}"),
             "source": "assistant",
         }
         await self.send(text_data=json.dumps({"text": error_message}))

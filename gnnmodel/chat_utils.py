@@ -19,6 +19,8 @@ from .agents import DEFAULT_MODEL, create_root_agent
 md_parser = MarkdownIt("gfm-like")
 md_parser.use(dollarmath_plugin)
 
+md_parser.render(r"$$J_w = \frac{Q}{ADT}$$")
+
 APP_NAME = "GNNePCSAFT_Agent"
 DB_URL = "sqlite:///" + str(settings.DB_CHAT_PATH)
 session_service = DatabaseSessionService(DB_URL)

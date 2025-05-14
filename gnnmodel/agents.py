@@ -53,49 +53,10 @@ all_tools = [
 ]
 
 
-def create_chemistry_agent(model_name=DEFAULT_MODEL):
-    """Create a chemistry agent with the specified model"""
-    return LlmAgent(
-        model=(
-            model_name if model_name.startswith("gemini") else LiteLlm(model=model_name)
-        ),
-        name="chemistry_agent",
-        instruction=textwrap.dedent(
-            """
-        You are a chemistry expert that uses InChI and SMILES to analyse molecules. 
-        - Your main task: Find out the molecule structure, name, and general properties. 
-        - To be able to do that you are gonna need to take into account all the 
-          organic groups known in chemistry, the difference between 
-          a Lewis acid and base, the concept of a hydrogen bond, a hydrogen bond donor 
-          and hydrogen bond acceptor. Once you have all this information 
-          gathered, you will be able to analyse the molecule. 
-        - You can use theses questions to help yourself describe the molecule in detail.
-            - What organic groups does it have?
-            - Is it a Lewis acid or base or both? 
-            - Can it do hydrogen bonds? 
-            - Is it a hydrogen bond donor or acceptor?
-        - You ALWAYS have to check if there's info about the molecule in PubChem with 
-          the `pubchem_description` tool.
-        - Do not perform any other action. Use the InChI or SMILES 
-          info received in previous turns to make the analysis.
-        - When you can't answer or when you are finished, transfer back to the `gnnepcsaft_agent`.
-        """
-        ),
-        description="A chemistry expert that handles analyses of molecules from InChI and SMILES.",
-        tools=[
-            pubchem_description,
-            batch_smiles_to_inchi,
-            batch_inchi_to_smiles,
-            batch_molecular_weights,
-        ],
-    )
-
-
 async def create_root_agent(
     model_name: str = DEFAULT_MODEL, tools: Optional[List] = None
 ):
     """Create a root agent with the specified model"""
-    chemistry_agent_ = create_chemistry_agent(model_name)
 
     if tools is None:
         tools_ = all_tools
@@ -107,28 +68,17 @@ async def create_root_agent(
             model_name if model_name.startswith("gemini") else LiteLlm(model=model_name)
         ),
         name="gnnepcsaft_agent",
-        description="The main agent in the system. It coordinates the team "
-        "and delegates tasks to the other agents.",
+        description="Helpfull assistant for the GNNePCSAFT app",
         instruction=textwrap.dedent(
             """
-        You are the main agent, coordinating a team. 
-        - Your main task: Handle user requests or delegate to 
-          other agents when you think it's appropriate. 
-        - You might need a tool or function call to solve an user request.
-          Optimize function calls by calling all the tools you already have
-          arguments information at once.
-
-        - Delegation Rules: 
-          - If the user needs more info about a specific molecule or its properties,
-             delegate the task to `chemistry_agent`. 
-          - Before delegating, make sure you have available InChI or SMILES,
-            if the user didn't provide any of them, ask at least for SMILES.
-          - Handle thermodynamic requests yourself using GNNePC-SAFT tools, 
-            when you have them available. 
-          - For other queries, state clearly if you cannot handle them and why.
+        You are a helpful assistant for the GNNePCSAFT app.
+        The user might give you some tools/functions to use. 
+        Make sure to check the tools available in the last 
+        user message and their descriptions, then use them when needed.
+        Do not refuse to answer the user, you should just ask 
+        the user for more information if needed.
           
         """
         ),
         tools=tools_,
-        sub_agents=[chemistry_agent_],
     )

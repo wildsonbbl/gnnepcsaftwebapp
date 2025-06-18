@@ -76,13 +76,14 @@ class ChatSessionsDBOperations(CurrentChatSessionConsumerUtils):
         )
         return [self.serialize_session(session) for session in sessions]
 
-    @database_sync_to_async
-    def delete_session(self, session_id):
+    async def delete_session(self, session_id):
         """Delete a session"""
         try:
-            session = ChatSession.objects.get(session_id=session_id)
-            session.delete()
-            session_service.delete_session(
+            session: ChatSession = await database_sync_to_async(
+                ChatSession.objects.get
+            )(session_id=session_id)
+            await database_sync_to_async(session.delete)()
+            await session_service.delete_session(
                 app_name=APP_NAME, user_id=USER_ID, session_id=session_id
             )
             return True

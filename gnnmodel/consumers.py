@@ -19,7 +19,8 @@ class ChatConsumer(ChatConsumerHandleActions):
         )
 
     async def disconnect(self, code):
-        await self.mcp_exit_stack.aclose()
+        if self.mcp_tool_set:
+            await self.mcp_tool_set.close()
 
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None

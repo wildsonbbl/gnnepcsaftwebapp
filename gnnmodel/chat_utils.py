@@ -28,12 +28,14 @@ USER_ID = "LOCAL_USER_01"
 artifact_service = InMemoryArtifactService()
 
 
-def get_sessions_ids():
+async def get_sessions_ids():
     """Get the list of sessions ids"""
-    active_sessions = session_service.list_sessions(
+    active_sessions = await session_service.list_sessions(
         app_name=APP_NAME, user_id=USER_ID
-    ).model_dump()
-    sessions_ids = [session["id"] for session in active_sessions["sessions"]]
+    )
+    sessions_ids = [
+        session["id"] for session in active_sessions.model_dump()["sessions"]
+    ]
     return sessions_ids
 
 
@@ -43,19 +45,19 @@ async def start_agent_session(
     tools: Optional[List[Callable]] = None,
 ):
     """Starts an agent session"""
-    sessions_ids = get_sessions_ids()
+    sessions_ids = await get_sessions_ids()
 
     root_agent = await create_root_agent(model_name, tools)
 
     # Create a Session
     if session_id not in sessions_ids:
-        session = session_service.create_session(
+        session = await session_service.create_session(
             app_name=APP_NAME,
             user_id=USER_ID,
             session_id=session_id,
         )
     else:
-        session = session_service.get_session(
+        session = await session_service.get_session(
             app_name=APP_NAME,
             user_id=USER_ID,
             session_id=session_id,

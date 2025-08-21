@@ -37,7 +37,7 @@ available_models = []
 GEMINI_MODELS = [
     "gemini-2.5-flash",
     "gemini-2.5-pro",
-    "gemini-2.0-flash",
+    "gemini-2.5-flash-lite",
 ]
 
 gemini_models_data = get_gemini_models()

@@ -49,7 +49,7 @@ class ChatSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     messages = models.JSONField(default=list)
-    model_name = models.CharField(max_length=100, default="gemini-2.0-flash")
+    model_name = models.CharField(max_length=100, default="gemini-2.5-flash")
     selected_tools = models.JSONField(default=list)
     selected_mcp_servers = models.JSONField(default=list)
 

@@ -1,11 +1,8 @@
 """Consumer utils for the current chat session."""
 
-import asyncio
 import base64
 import io
 import json
-from atexit import register
-from contextlib import AsyncExitStack
 from typing import Any, Dict, List, Optional, Tuple
 
 import filetype
@@ -15,14 +12,14 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from django.conf import settings
 from google.adk.agents.run_config import RunConfig
 from google.adk.runners import Runner
-from google.adk.sessions.in_memory_session_service import Session
-from google.adk.tools.mcp_tool.mcp_toolset import (
-    MCPTool,
-    MCPToolset,
-    SseServerParams,
-    StdioServerParameters,
+from google.adk.sessions.session import Session
+from google.adk.tools.mcp_tool.mcp_session_manager import (
+    SseConnectionParams,
+    StdioConnectionParams,
 )
+from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.genai.types import Part
+from mcp.client.stdio import StdioServerParameters
 
 from . import logger
 from .agents import all_tools
@@ -35,40 +32,12 @@ from .chat_utils import (
 )
 from .models import ChatSession
 
-# MCPToolset exit stack
-mcp_exit_stack = AsyncExitStack()
-
-
-def _cleanup_mcp_resources_on_exit():
-    """Função síncrona para limpar recursos de mcp_exit_stack na saída do programa."""
-    try:
-        asyncio.run(mcp_exit_stack.aclose())
-        logger.info("mcp_exit_stack fechado com sucesso via atexit.")
-    except RuntimeError as e:
-        logger.warning(
-            "RuntimeError durante a limpeza atexit para mcp_exit_stack: %s. "
-            "Isso pode ser normal se já estiver fechado ou devido"
-            " ao estado do loop de eventos na saída.",
-            e,
-        )
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        logger.error(
-            "Erro inesperado durante a limpeza atexit para mcp_exit_stack: %s", e
-        )
-
-
-register(_cleanup_mcp_resources_on_exit)
-
 available_models = []
 
 GEMINI_MODELS = [
-    "gemini-2.5-flash-preview-04-17",
-    "gemini-2.5-pro-preview-05-06",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-8b",
+    "gemini-2.5-flash",
+    "gemini-2.5-pro",
+    "gemini-2.5-flash-lite",
 ]
 
 gemini_models_data = get_gemini_models()
@@ -98,7 +67,7 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     runner: Runner
     run_config = RunConfig(response_modalities=["TEXT"])
     agent_task = None
-    mcp_tools: List[MCPTool] = []
+    mcp_tools: List[Any] = []
     original_tools: List[Any] = all_tools
     tool_descriptions: Dict[str, str] = {
         t.__name__: docstring_to_html(t.__doc__) or "No description available"
@@ -106,7 +75,7 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     }
     availabel_models = available_models.copy()
     gemini_models = GEMINI_MODELS.copy()
-    mcp_exit_stack = mcp_exit_stack
+    mcp_tool_sets = []
 
     async def _get_mcp_server_names_from_config(self) -> List[str]:
         """Reads MCP server names from the configuration file."""
@@ -227,25 +196,26 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
         "get mcp toolset"
         command, args, env, url, headers = parameters
         if command and args:
-            connection_params = StdioServerParameters(
-                command=command, args=args, env=env
+            connection_params = StdioConnectionParams(
+                server_params=StdioServerParameters(command=command, args=args, env=env)
             )
         elif url:
-            connection_params = SseServerParams(url=url, headers=headers)
+            connection_params = SseConnectionParams(url=url, headers=headers)
         else:
             return []
-        tools, _ = await MCPToolset.from_server(
-            connection_params=connection_params,
-            async_exit_stack=self.mcp_exit_stack,
-        )
-        return tools
+        mcp_tool_set = MCPToolset(connection_params=connection_params)
+        self.mcp_tool_sets.append(mcp_tool_set)
+        return await mcp_tool_set.get_tools()
 
     async def activate_mcp_server(self, servers_to_process: List[str]):
         "activate the servers on the config"
         self.mcp_tools = []
         activated_tool_names = []
         error_message = None
-        await self.mcp_exit_stack.aclose()
+        for mcp_tool_set in self.mcp_tool_sets[::-1]:
+            logger.debug("Closing MCP tool set: %s", mcp_tool_set)
+            await mcp_tool_set.close()
+        self.mcp_tool_sets = []
         mcp_server_config: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         try:

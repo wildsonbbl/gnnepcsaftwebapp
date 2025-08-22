@@ -30,7 +30,7 @@ os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "False"
 
 
 # Default model
-DEFAULT_MODEL = "gemini-2.0-flash"
+DEFAULT_MODEL = "gemini-2.5-flash"
 
 
 all_tools = [

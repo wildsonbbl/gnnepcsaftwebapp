@@ -3,6 +3,7 @@
 import json
 from typing import Any, Dict
 
+from . import logger
 from .action_handlers import ChatConsumerHandleActions
 
 
@@ -19,8 +20,10 @@ class ChatConsumer(ChatConsumerHandleActions):
         )
 
     async def disconnect(self, code):
-        if self.mcp_tool_set:
-            await self.mcp_tool_set.close()
+        for mcp_tool_set in self.mcp_tool_sets[::-1]:
+            logger.debug("Closing MCP tool set: %s", mcp_tool_set)
+            await mcp_tool_set.close()
+        self.mcp_tool_sets = []
 
     async def receive(self, text_data=None, bytes_data=None):
         assert text_data is not None
@@ -28,6 +31,7 @@ class ChatConsumer(ChatConsumerHandleActions):
 
         if "action" in text_data_json:
             await self.handle_actions(text_data_json)
+            logger.debug("Handled action: %s", text_data_json["action"])
         elif "text" in text_data_json:
             text = text_data_json["text"]
             file_info = text_data_json.get("file")
@@ -36,3 +40,4 @@ class ChatConsumer(ChatConsumerHandleActions):
                 return
 
             await self.handle_text(text, file_info)
+            logger.debug("Handled text input")

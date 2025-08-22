@@ -75,7 +75,7 @@ class CurrentChatSessionConsumer(AsyncWebsocketConsumer):
     }
     availabel_models = available_models.copy()
     gemini_models = GEMINI_MODELS.copy()
-    mcp_tool_set: Optional[MCPToolset] = None
+    mcp_tool_sets = []
 
     async def _get_mcp_server_names_from_config(self) -> List[str]:
         """Reads MCP server names from the configuration file."""
@@ -203,16 +203,19 @@ class CurrentChatSessionConsumerUtils(CurrentChatSessionConsumer):
             connection_params = SseConnectionParams(url=url, headers=headers)
         else:
             return []
-        self.mcp_tool_set = MCPToolset(connection_params=connection_params)
-        return await self.mcp_tool_set.get_tools()
+        mcp_tool_set = MCPToolset(connection_params=connection_params)
+        self.mcp_tool_sets.append(mcp_tool_set)
+        return await mcp_tool_set.get_tools()
 
     async def activate_mcp_server(self, servers_to_process: List[str]):
         "activate the servers on the config"
         self.mcp_tools = []
         activated_tool_names = []
         error_message = None
-        if self.mcp_tool_set:
-            await self.mcp_tool_set.close()
+        for mcp_tool_set in self.mcp_tool_sets[::-1]:
+            logger.debug("Closing MCP tool set: %s", mcp_tool_set)
+            await mcp_tool_set.close()
+        self.mcp_tool_sets = []
         mcp_server_config: Dict[str, Dict[str, Dict[str, Any]]] = {}
 
         try:

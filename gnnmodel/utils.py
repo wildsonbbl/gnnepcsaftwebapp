@@ -85,7 +85,7 @@ def make_dataset() -> dict[str, tuple[List[List[float]], List[List[float]]]]:
             .to_numpy()
             .tolist()
         )
-        rho = (
+        rho = np.copy(
             data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 1)
             .select("TK", "PPa", "phase", "tp", "m")
             .filter(pl.col("PPa") == 101325)

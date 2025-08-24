@@ -195,7 +195,7 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "batch.html")
         self.assertEqual(mock_get_pred.call_count, 2)  # Called twice for two compounds
-        mock_get_pred.assert_called_with(self.valid_smiles, self.valid_inchi)
+        mock_get_pred.assert_called_with(self.valid_smiles)
 
     def test_about(self):
         """Test about page view."""

@@ -65,7 +65,7 @@ file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
 
 
-def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
+def make_dataset() -> dict[str, tuple[List[List[float]], List[List[float]]]]:
     "Make dict dataset for inference."
     import polars as pl  # # pylint: disable = C0415
 
@@ -81,50 +81,46 @@ def make_dataset() -> dict[str, tuple[np.ndarray, np.ndarray]]:
         vp = (
             data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 3)
             .select("TK", "PPa", "phase", "tp", "m")
+            .sort("TK")
             .to_numpy()
+            .tolist()
         )
-        rho = (
+        rho = np.copy(
             data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 1)
             .select("TK", "PPa", "phase", "tp", "m")
+            .filter(pl.col("PPa") == 101325)
+            .sort("TK")
             .to_numpy()
         )
 
         rho[:, -1] *= 1000 / molw  # convert to mol/ m³
 
-        _tml_data[inchi] = (rho, vp)
+        _tml_data[inchi] = (rho.tolist(), vp)
     return _tml_data
 
 
 # pylint: disable=R0914
 def plotdata(
-    para: list, inchi: str, tml_data: dict[str, tuple[np.ndarray, np.ndarray]]
-) -> tuple[dict, dict]:
+    para: List[float], rho: np.ndarray, vp: np.ndarray
+) -> Tuple[Dict[str, List[float]], Dict[str, List[float]]]:
     "Organize data for plotting."
     plotden, plotvp = {}, {}
-    if inchi in tml_data:
-        rho, vp = tml_data[inchi]
-        pred_rho, pred_vp = rhovp_data(para, rho, vp)
-        # plot rho data
-        if rho.shape[0] > 2:
-            idx_p = abs(rho[:, 1] - 101325) < 1_000
-            rho_p = rho[idx_p]
-            pred_rho = pred_rho[idx_p]
+    pred_rho, pred_vp = rhovp_data(para, rho, vp)
 
-            if rho_p.shape[0] > 2:
-                idx = np.argsort(rho_p[:, 0], 0)
-                plotden = {
-                    "T": rho_p[idx, 0].tolist(),
-                    "TML": rho_p[idx, -1].tolist(),
-                    "GNN": pred_rho[idx].tolist(),
-                }
-        # plot vp data
-        if vp.shape[0] > 2:
-            idx = np.argsort(vp[:, 0], 0)
-            plotvp = {
-                "T": vp[idx, 0].tolist(),
-                "TML": (vp[idx, -1] / 1000).tolist(),  # Pressure in kPa
-                "GNN": (pred_vp[idx] / 1000).tolist(),
-            }
+    if rho.shape[0] > 2:
+
+        plotden = {
+            "T": rho[:, 0].tolist(),
+            "TML": rho[:, -1].tolist(),
+            "GNN": pred_rho,
+        }
+    # plot vp data
+    if vp.shape[0] > 2:
+        plotvp = {
+            "T": vp[:, 0].tolist(),
+            "TML": (vp[:, -1] / 1000).tolist(),  # Pressure in kPa
+            "GNN": pred_vp,
+        }
 
     return plotden, plotvp
 
@@ -208,21 +204,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     tml_data = make_dataset()
 
     for inchi in tqdm(tml_data):
-        molecule = GnnepcsaftPara.objects.filter(inchi=inchi)  # pylint: disable=E1101
-        if len(molecule) == 0:
-            continue
-        molecule = molecule[0]
-        para = [
-            molecule.m,
-            molecule.sigma,
-            molecule.e,
-            molecule.k_ab,
-            molecule.e_ab,
-            molecule.mu,
-            molecule.na,
-            molecule.nb,
-        ]
-        plotden, plotvp = plotdata(para, inchi, tml_data)
+        plotden, plotvp = tml_data[inchi]
         if plotden:
             new_comp = ThermoMLDenData(inchi=inchi, den=json.dumps(plotden))
             new_comp.save()
@@ -232,7 +214,9 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
     logger.info("Updated database with plotden, plotvp")
 
 
-def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
+def rhovp_data(
+    parameters: List[float], rho: np.ndarray, vp: np.ndarray
+) -> Tuple[List[float], List[float]]:
     """Calculates density and vapor pressure with ePC-SAFT"""
 
     all_pred_den = []
@@ -241,17 +225,15 @@ def rhovp_data(parameters: list, rho: np.ndarray, vp: np.ndarray):
             try:
                 all_pred_den += [pure_den_feos(parameters, state)]
             except (AssertionError, RuntimeError):
-                all_pred_den += [np.nan]
-    all_pred_den = np.asarray(all_pred_den)
+                all_pred_den += [float("nan")]
 
     all_pred_vp = []
     if vp.shape[0] > 0:
         for state in vp:
             try:
-                all_pred_vp += [pure_vp_feos(parameters, state)]
+                all_pred_vp += [pure_vp_feos(parameters, state) / 1000]  # to kPA
             except (AssertionError, RuntimeError):
-                all_pred_vp += [np.nan]
-    all_pred_vp = np.asarray(all_pred_vp)
+                all_pred_vp += [float("nan")]
 
     return all_pred_den, all_pred_vp
 
@@ -332,25 +314,9 @@ def custom_plot(
     return all_plots
 
 
-def get_pred(smiles: str, inchi: str) -> list[float]:
+def get_pred(smiles: str) -> List[float]:
     "get prediction"
-    all_comp_matched = GnnepcsaftPara.objects.filter(  # pylint: disable=E1101
-        inchi=inchi
-    ).all()
-    if len(all_comp_matched) == 0:
-        pred = predict_epcsaft_parameters(smiles)
-    else:
-        comp = all_comp_matched[0]
-        pred: List[float] = [
-            comp.m,
-            comp.sigma,
-            comp.e,
-            comp.k_ab,
-            comp.e_ab,
-            comp.mu,
-            comp.na,
-            comp.nb,
-        ]
+    pred = predict_epcsaft_parameters(smiles)
 
     try:
         critical_points = critical_points_feos(pred.copy())
@@ -362,18 +328,22 @@ def get_pred(smiles: str, inchi: str) -> list[float]:
     return pred
 
 
-def get_main_plots_data(inchi):
+def get_main_plots_data(inchi: str, parameters: List) -> Tuple[str, str, str]:
     "get main plot data"
 
     alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
     if len(alldata) > 0:
-        plotvp = alldata[0].vp
+        vp_data = np.asarray(json.loads(alldata[0].vp))
+        _, plotvp = plotdata(parameters, np.array([]), vp_data)
+        plotvp = json.dumps(plotvp)
     else:
         plotvp = ""
 
     alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
     if len(alldata) > 0:
-        plotden = alldata[0].den
+        den_data = np.asarray(json.loads(alldata[0].den))
+        plotden, _ = plotdata(parameters, den_data, np.array([]))
+        plotden = json.dumps(plotden)
     else:
         plotden = ""
 
@@ -648,8 +618,8 @@ def process_pure_post(
         return None
 
     smiles, inchi = form.cleaned_data["query"]
-    pred = get_pred(smiles, inchi)
-    plotden, plotvp, molimg = get_main_plots_data(inchi)
+    pred = get_pred(smiles)
+    plotden, plotvp, molimg = get_main_plots_data(inchi, pred)
     output = True
 
     plot_checkbox.full_clean()
@@ -769,7 +739,7 @@ def process_mixture_post(
     if form.is_valid():
         inchi_list, smiles_list, mole_fractions_list = form.cleaned_data["text_area"]
         for smiles, inchi in zip(smiles_list, inchi_list):
-            para_pred = [round(para, 5) for para in get_pred(smiles, inchi)]
+            para_pred = [round(para, 5) for para in get_pred(smiles)]
             para_pred_list.append(para_pred)
             para_pred_for_plot.append(para_pred + [mw(inchi)])
         mixture_plots_ = get_mixture_plots_data(

@@ -67,32 +67,93 @@ class ChatSession(models.Model):
 
 
 def database_compatibility():
-    """Check if the local database is compatible with the django models schema."""
+    """Check if the local database is compatible."""
 
-    app_db = settings.BASE_DIR / "gnnepcsaft.db"
-    local_db = settings.DB_PATH
-    conn = sqlite3.connect(local_db)
-    cursor = conn.cursor()
-    # code to check the tables in mydatabase
-    logger.info("Verifying database compatibility...")
-    tables = cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table';"
-    ).fetchall()
-    conn.close()
-    chat_tables = [
-        "sessions",
-        "app_states",
-        "user_states",
-        "events",
-    ]
+    app_db = str(settings.BASE_DIR / "gnnepcsaft.db")
+    local_db = str(settings.DB_PATH)
 
-    if any((chat_table,) in tables for chat_table in chat_tables):
-        # Backup do banco antigo
-        backup_path = f"{local_db}.broken_{int(time.time())}"
-        os.rename(local_db, backup_path)
-        logger.warning("Broken database detected. Backup saved in %s", backup_path)
-        # Substitui pelo novo
-        shutil.copyfile(app_db, local_db)
-        logger.warning("Database substituted by new copy from %s", app_db)
-    else:
-        logger.info("Database is compatible with django models schema.")
+    try:
+        logger.info("Verifying database compatibility...")
+
+        # Se o DB local não existe, tente semear a partir do template
+        if not os.path.exists(local_db):
+            logger.info("Local DB not found at %s", local_db)
+            if os.path.exists(app_db) and os.path.abspath(app_db) != os.path.abspath(
+                local_db
+            ):
+                # Garante que o diretório existe
+                os.makedirs(os.path.dirname(local_db) or ".", exist_ok=True)
+                shutil.copyfile(app_db, local_db)
+                logger.warning("Database created from template %s", app_db)
+            else:
+                if not os.path.exists(app_db):
+                    logger.warning(
+                        "Template DB not found at %s; skipping seeding.", app_db
+                    )
+            return
+
+        # Não tente abrir o template se ele não existir (evita criar DB vazio)
+        if not os.path.exists(app_db):
+            logger.error(
+                "Template DB not found at %s; skipping "
+                "compatibility check to avoid creating a blank DB.",
+                app_db,
+            )
+            return
+
+        def fetch_example(db_path: str):
+            try:
+                with sqlite3.connect(db_path) as conn:
+                    cur = conn.cursor()
+                    row = cur.execute(
+                        "SELECT den FROM gnnmodel_thermomldendata WHERE inchi = ?;",
+                        ("InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3",),
+                    ).fetchone()
+                return row, None
+            except sqlite3.Error as e:
+                return None, e
+
+        example_local, err_local = fetch_example(local_db)
+        example_app, err_app = fetch_example(app_db)
+
+        # Trate qualquer erro ou ausência do registro sentinela como incompatível
+        incompatible = (
+            err_local is not None
+            or err_app is not None
+            or example_local is None
+            or example_app is None
+            or example_local != example_app
+        )
+
+        if incompatible:
+            logger.warning(
+                "Incompatible database detected (local=%s, app=%s, err_local=%s, err_app=%s)",
+                example_local,
+                example_app,
+                err_local,
+                err_app,
+            )
+            # Substituir apenas se o template for distinto do local
+            if os.path.abspath(app_db) != os.path.abspath(local_db):
+                backup_path = f"{local_db}.broken_{int(time.time())}"
+                try:
+                    os.rename(local_db, backup_path)
+                    logger.warning(
+                        "Broken database detected. Backup saved in %s", backup_path
+                    )
+                except OSError as ex:
+                    logger.error("Failed to backup DB %s: %s", local_db, ex)
+                try:
+                    shutil.copyfile(app_db, local_db)
+                    logger.warning("Database substituted by new copy from %s", app_db)
+                except OSError as ex:
+                    logger.error(
+                        "Failed to copy template DB from %s to %s: %s",
+                        app_db,
+                        local_db,
+                        ex,
+                    )
+        else:
+            logger.info("Database is compatible.")
+    except Exception as ex:  # pylint: disable=broad-except
+        logger.error("Error while checking DB compatibility: %s", ex)

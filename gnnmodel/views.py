@@ -47,10 +47,10 @@ def batch(request):
     if request.method == "POST":
         form = InChIorSMILESareaInput(request.POST)
         if form.is_valid():
-            inchi_list, smiles_list = form.cleaned_data["text_area"]
+            _, smiles_list = form.cleaned_data["text_area"]
 
-            for smiles, inchi in zip(smiles_list, inchi_list):
-                pred_list.append([round(para, 5) for para in get_pred(smiles, inchi)])
+            for smiles in smiles_list:
+                pred_list.append([round(para, 5) for para in get_pred(smiles)])
             output = True
     else:
         form = InChIorSMILESareaInput()

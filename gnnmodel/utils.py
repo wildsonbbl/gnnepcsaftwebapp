@@ -435,32 +435,35 @@ def get_custom_plots_data(
 
 
 def get_mixture_plots_data(
-    para_pred_list: list[list],
-    mole_fractions_list: list[float],
+    para_pred_list: List[List],
+    mole_fractions_list: List[float],
     plot_config: CustomPlotConfigForm,
-) -> tuple[list, list]:
+    kij_matrix: List[List[float]],
+) -> Tuple[List, List]:
     "get mixture plots data"
 
     plot_config.full_clean()
     mixture_plot = mixture_plots(
         para_pred_list,
-        mole_fractions_list,
-        plot_config.cleaned_data["temp_min"],
-        plot_config.cleaned_data["temp_max"],
-        plot_config.cleaned_data["pressure"],
+        (
+            mole_fractions_list,
+            plot_config.cleaned_data["temp_min"],
+            plot_config.cleaned_data["temp_max"],
+            plot_config.cleaned_data["pressure"],
+        ),
+        kij_matrix,
     )
 
     return mixture_plot
 
 
 def mixture_plots(
-    para_pred_list: list[list],
-    mole_fractions_list: list[float],
-    temp_min: float,
-    temp_max: float,
-    pressure: float,
-) -> tuple[list, list]:
+    para_pred_list: List[List[float]],
+    state_list: Tuple[List[float], float, float, float],
+    kij_matrix: List[List[float]],
+) -> Tuple[List, List]:
     "get mixture plots data"
+    mole_fractions_list, temp_min, temp_max, pressure = state_list
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)
     p_range = np.asarray([pressure] * 100, dtype=np.float64)
     mole_fractions = np.asarray([mole_fractions_list] * 100, dtype=np.float64)
@@ -475,8 +478,16 @@ def mixture_plots(
     for state in states:
         try:
 
-            prop_for_state = mix_den_feos(para_pred_list.copy(), state)
-            bubble_for_state, dew_for_state = mix_vp_feos(para_pred_list.copy(), state)
+            prop_for_state = mix_den_feos(
+                para_pred_list.copy(),
+                state,
+                kij_matrix.copy(),
+            )
+            bubble_for_state, dew_for_state = mix_vp_feos(
+                para_pred_list.copy(),
+                state,
+                kij_matrix.copy(),
+            )
             plot_data_den["T"].append(state[0])
             plot_data_den["GNN"].append(prop_for_state)
             plot_data_bubble["T"].append(state[0])
@@ -737,13 +748,28 @@ def process_mixture_post(
     output = False
 
     if form.is_valid():
-        inchi_list, smiles_list, mole_fractions_list = form.cleaned_data["text_area"]
+        inchi_list, smiles_list, mole_fractions_list, kij = form.cleaned_data[
+            "text_area"
+        ]
+        kij_matrix = [
+            [0.0 for _ in range(len(smiles_list))] for _ in range(len(smiles_list))
+        ]
+        # fill kij_matrix
+        k_idx = 0
+        for i in range(len(smiles_list)):
+            for j in range(i + 1, len(smiles_list)):
+                kij_matrix[i][j] = kij[k_idx]
+                kij_matrix[j][i] = kij[k_idx]
+                k_idx += 1
         for smiles, inchi in zip(smiles_list, inchi_list):
             para_pred = [round(para, 5) for para in get_pred(smiles)]
             para_pred_list.append(para_pred)
             para_pred_for_plot.append(para_pred + [mw(inchi)])
         mixture_plots_ = get_mixture_plots_data(
-            para_pred_for_plot, mole_fractions_list, plot_config
+            para_pred_for_plot,
+            mole_fractions_list,
+            plot_config,
+            kij_matrix,
         )
         output = True
 

@@ -128,6 +128,26 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         data: str = self.cleaned_data["text_area"]
 
         lines = data.split("\n")
+        kij = lines.pop()
+        kij = kij.strip().split(" ")
+        if len(kij) != len(lines):
+            raise ValidationError(
+                _(
+                    f"Number of Kij values ({len(kij)}) must "
+                    f"be equal to number of substances ({len(lines)})."
+                )
+            )
+        # check if all kij are float
+        try:
+            kij = [float(i) for i in kij]
+        except ValueError as e:
+            raise ValidationError(
+                _("All Kij values in last line must be valid numbers.")
+            ) from e
+        for k in kij:
+            if k < -1.0 or k > 1.0:
+                raise ValidationError(_("Kij values must be between -1 and 1."))
+
         if settings.PLATFORM == "webapp" and len(lines) > 10:
             raise ValidationError(_("Maximum 10 components allowed for webapp."))
         inchi_list, smiles_list = [], []
@@ -173,7 +193,7 @@ class InChIorSMILESareaInputforMixture(forms.Form):
                 raise ValidationError(
                     _(f'Invalid Mole Fraction: "{mole_fraction}" in line "{full_line}"')
                 ) from e
-        return inchi_list, smiles_list, mole_fraction_list
+        return inchi_list, smiles_list, mole_fraction_list, kij
 
 
 class CustomPlotConfigForm(forms.Form):

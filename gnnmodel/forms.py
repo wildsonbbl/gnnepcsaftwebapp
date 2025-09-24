@@ -118,7 +118,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
                 "class": "form-control my-2",
                 "aria-label": "Type/Paste InChI or SMILES",
                 "placeholder": "One 'InChI/SMILES Mole Fraction' per line,"
-                " example:\n\nCCO 0.33\nCC 0.33\nInChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33",
+                " example:\n\nCCO 0.33\nCC 0.33\nInChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33\n"
+                "k12 k13 k23\n\n(Note: last line is kij values)",
             }
         ),
     )

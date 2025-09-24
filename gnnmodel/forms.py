@@ -4,6 +4,7 @@ import os
 import re
 
 from django import forms
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from gnnepcsaft.data.ogb_utils import smiles2graph
@@ -76,6 +77,8 @@ class InChIorSMILESareaInput(forms.Form):
         data: str = self.cleaned_data["text_area"]
 
         lines = data.split("\n")
+        if settings.PLATFORM == "webapp" and len(lines) > 10:
+            raise ValidationError(_("Maximum 10 substances allowed for webapp."))
         inchi_list, smiles_list = [], []
         for line in lines:
             line = line.strip()
@@ -125,6 +128,8 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         data: str = self.cleaned_data["text_area"]
 
         lines = data.split("\n")
+        if settings.PLATFORM == "webapp" and len(lines) > 10:
+            raise ValidationError(_("Maximum 10 components allowed for webapp."))
         inchi_list, smiles_list = [], []
         mole_fraction_list = []
         for full_line in lines:

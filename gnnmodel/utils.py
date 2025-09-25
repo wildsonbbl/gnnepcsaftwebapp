@@ -15,6 +15,8 @@ from gnnepcsaft.data.rdkit_util import inchitosmiles, mw
 from gnnepcsaft.epcsaft.epcsaft_feos import (
     critical_points_feos,
     mix_den_feos,
+    mix_lle_diagram_feos,
+    mix_vle_diagram_feos,
     mix_vp_feos,
     phase_diagram_feos,
     pure_den_feos,
@@ -143,7 +145,7 @@ def plotmol(inchi: str) -> str:
 
 
 def para_update_database(app, schema_editor):  # pylint: disable=W0613
-    "fn to update database with epcsaft parameters"
+    "fn to update database with pcsaft parameters"
     from tqdm import tqdm  # pylint: disable=C0415
 
     tml_data = make_dataset()
@@ -194,7 +196,7 @@ def para_update_database(app, schema_editor):  # pylint: disable=W0613
             ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]
         )
         writer.writerows(data)
-    logger.info("Updated database with epcsaft parameters")
+    logger.info("Updated database with pcsaft parameters")
 
 
 def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
@@ -217,7 +219,7 @@ def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
 def rhovp_data(
     parameters: List[float], rho: np.ndarray, vp: np.ndarray
 ) -> Tuple[List[float], List[float]]:
-    """Calculates density and vapor pressure with ePC-SAFT"""
+    """Calculates density and vapor pressure with PC-SAFT"""
 
     all_pred_den = []
     if rho.shape[0] > 0:
@@ -246,12 +248,12 @@ def custom_plot(
     checkboxes: list[bool],
 ) -> Union[list[tuple[str, int, str, str]], list]:
     """
-    Custom plot function for ePC-SAFT parameters.
+    Custom plot function for PC-SAFT parameters.
 
     args
     ---------
     parameters: list
-      list with ePC-SAFT parameters
+      list with PC-SAFT parameters
     temp_min: float
       minimum temperature in Kelvin
     temp_max: float
@@ -379,7 +381,7 @@ def get_custom_plots_data(
         STCheckForm,
     ],
 ) -> tuple[list, list]:
-    "get custom plots data"
+    "get custom plots data for pure component"
 
     (
         rho_checkbox_,
@@ -439,7 +441,7 @@ def get_mixture_plots_data(
     mole_fractions_list: List[float],
     plot_config: CustomPlotConfigForm,
     kij_matrix: List[List[float]],
-) -> Tuple[List, List]:
+) -> Tuple[List[Tuple[str, int, str]], List[str]]:
     "get mixture plots data"
 
     plot_config.full_clean()
@@ -461,7 +463,7 @@ def mixture_plots(
     para_pred_list: List[List[float]],
     state_list: Tuple[List[float], float, float, float],
     kij_matrix: List[List[float]],
-) -> Tuple[List, List]:
+) -> Tuple[List[Tuple[str, int, str]], List[str]]:
     "get mixture plots data"
     mole_fractions_list, temp_min, temp_max, pressure = state_list
     temp_range = np.linspace(temp_min, temp_max, 100, dtype=np.float64)

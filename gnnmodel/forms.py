@@ -311,6 +311,57 @@ class SlvCheckForm(forms.Form):
     )
 
 
+class TernaryLLECheckForm(forms.Form):
+    "Form to check liquid-liquid equilibrium."
+
+    ternary_lle_checkbox = forms.BooleanField(
+        label="Ternary LLE",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Ternary Liquid-liquid equilibrium",
+            }
+        ),
+    )
+
+
+class BinaryLLECheckForm(forms.Form):
+    "Form to check liquid-liquid equilibrium."
+
+    binary_lle_checkbox = forms.BooleanField(
+        label="Binary LLE (T-x-x)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Binary Liquid-liquid equilibrium",
+            }
+        ),
+    )
+
+
+class BinaryVLECheckForm(forms.Form):
+    "Form to check vapor-liquid equilibrium."
+
+    binary_vle_checkbox = forms.BooleanField(
+        label="Binary VLE (T-x-y + x-y)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Binary Vapor-liquid equilibrium",
+            }
+        ),
+    )
+
+
 class PhaseDiagramCheckForm(forms.Form):
     "Form to check phase diagram."
 

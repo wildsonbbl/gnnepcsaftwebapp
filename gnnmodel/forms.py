@@ -131,11 +131,11 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         lines = data.split("\n")
         kij = lines.pop()
         kij = kij.strip().split(" ")
-        if len(kij) != len(lines):
+        if len(kij) != (len(lines) ** 2 - len(lines)) / 2:
             raise ValidationError(
                 _(
                     f"Number of Kij values ({len(kij)}) must "
-                    f"be equal to number of substances ({len(lines)})."
+                    f"be equal to {int((len(lines) ** 2 - len(lines)) / 2)}."
                 )
             )
         # check if all kij are float

@@ -16,6 +16,7 @@ from gnnepcsaft.epcsaft.epcsaft_feos import (
     critical_points_feos,
     mix_den_feos,
     mix_lle_diagram_feos,
+    mix_lle_feos,
     mix_vle_diagram_feos,
     mix_vp_feos,
     phase_diagram_feos,
@@ -436,12 +437,48 @@ def get_custom_plots_data(
     return phase_diagrams, custom_plots
 
 
+def _get_ternary_lle_data(
+    params: List[List[float]], kij_matrix: List[List[float]], state: List[float]
+) -> Dict[str, List[float]]:
+    t, p = state  # Temperatura (K) e pressão (Pa)
+
+    def _grid(n_pts: int = 25):
+        xi = np.linspace(1e-5, 0.999, n_pts, dtype=np.float64)
+        x1_m, x2_m = np.meshgrid(xi, xi, indexing="xy")
+        x3_m = 1.0 - x1_m - x2_m
+        return x1_m, x2_m, x3_m, (x3_m >= 0.0)
+
+    def _collect_tie_lines(x1_m, x2_m, x3_m, mask):
+        valid_idx = np.argwhere(mask)
+        ternary_data = {"x0": [], "x1": [], "x2": [], "y0": [], "y1": [], "y2": []}
+        for i, j in valid_idx:
+            try:
+                lle = mix_lle_feos(
+                    params,
+                    [t, p, x1_m[i, j].item(), x2_m[i, j].item(), x3_m[i, j].item()],
+                    kij_matrix,
+                )
+            except (RuntimeError, ValueError):
+                continue
+            # For LLE, y is one phase and x is the other phase
+            ternary_data["x0"].extend(lle["x0"])
+            ternary_data["x1"].extend(lle["x1"])
+            ternary_data["x2"].extend(lle["x2"])
+            ternary_data["y0"].extend(lle["y0"])
+            ternary_data["y1"].extend(lle["y1"])
+            ternary_data["y2"].extend(lle["y2"])
+        return ternary_data
+
+    x1, x2, x3, mask = _grid()
+    return _collect_tie_lines(x1, x2, x3, mask)
+
+
 def get_mixture_plots_data(
     para_pred_list: List[List],
     mole_fractions_list: List[float],
     plot_config: CustomPlotConfigForm,
     kij_matrix: List[List[float]],
-) -> Tuple[Tuple[List[Tuple[str, int, str]], List[str]], str, str]:
+) -> Tuple[Tuple[List[Tuple[str, int, str]], List[str]], str, str, str]:
     "get mixture plots data"
 
     plot_config.full_clean()
@@ -455,6 +492,22 @@ def get_mixture_plots_data(
         ),
         kij_matrix,
     )
+
+    try:
+        if len(para_pred_list) != 3:
+            raise ValueError("LLE phase diagram only for ternary mixtures.")
+        ternary_lle_phase_diagram_data = _get_ternary_lle_data(
+            para_pred_list,
+            kij_matrix,
+            [
+                plot_config.cleaned_data["temp_min"],
+                plot_config.cleaned_data["pressure"],
+            ],
+        )
+        ternary_lle_phase_diagram_data = json.dumps(ternary_lle_phase_diagram_data)
+    except (ValueError, RuntimeError) as err:
+        logger.debug(err)
+        ternary_lle_phase_diagram_data = ""
 
     try:
         if len(para_pred_list) != 2:
@@ -492,6 +545,7 @@ def get_mixture_plots_data(
         mixture_plot,
         binary_lle_phase_diagram_data,
         vle_phase_diagram_data,
+        ternary_lle_phase_diagram_data,
     )
 
 
@@ -782,7 +836,7 @@ def process_mixture_post(
     para_pred_list = []
     para_pred_for_plot = []
     mole_fractions_list = []
-    mixture_plots_ = (([], []), "", "")
+    mixture_plots_ = (([], []), "", "", "")
     output = False
 
     if form.is_valid():
@@ -835,6 +889,7 @@ def build_mixture_context(post_data=None):
             "vp_plots": post_data["mixture_plots"][0][1],
             "binary_lle_phase_diagram_data": post_data["mixture_plots"][1],
             "vle_phase_diagram_data": post_data["mixture_plots"][2],
+            "ternary_lle_phase_diagram_data": post_data["mixture_plots"][3],
             "output": post_data["output"],
         }
     return {

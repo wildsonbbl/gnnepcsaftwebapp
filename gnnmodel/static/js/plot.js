@@ -1,8 +1,9 @@
 // plots the GNN ePC-SAFT model results
 // and the ThermoML archive data
 
-function get_layout(xlegendpos, xtitle, ytitle) {
+function get_layout(xlegendpos = 0, xtitle = "", ytitle = "", title = "") {
   return {
+    title: { text: title },
     font: {
       family: "Times New Roman",
     },
@@ -198,10 +199,20 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
     type: "scatter",
     name: "Liquid phase 2",
   };
+
+  var pressure_el = document.getElementById("id_pressure");
+  var temp_min_el = document.getElementById("id_temp_min");
+  var pressure = pressure_el
+    ? (pressure_el.value || pressure_el.textContent || "").trim()
+    : "";
+  var temp_min = temp_min_el
+    ? (temp_min_el.value || temp_min_el.textContent || "").trim()
+    : "";
+  var _Title = "LLE at " + pressure + " Pa, starting at " + temp_min + " K";
   Plotly.newPlot(
     "binary_lle_phase_diagram",
     [trace1, trace2],
-    get_layout(0, "x<sub>1</sub>", "Temperature (K)"),
+    get_layout(0, "x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
@@ -224,10 +235,15 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
     type: "scatter",
     name: "Vapor phase",
   };
+  var pressure_el = document.getElementById("id_pressure");
+  var pressure = pressure_el
+    ? (pressure_el.value || pressure_el.textContent || "").trim()
+    : "";
+  var _Title = "VLE at " + pressure + " Pa";
   Plotly.newPlot(
     "vle_phase_diagram_txy",
     [trace1, trace2],
-    get_layout(0, "x<sub>1</sub>", "Temperature (K)"),
+    get_layout(0, "x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
@@ -243,10 +259,15 @@ function get_binary_vle_phase_diagram_xy(vle_phase_diagram_data) {
     type: "scatter",
     name: "VLE",
   };
+  var pressure_el = document.getElementById("id_pressure");
+  var pressure = pressure_el
+    ? (pressure_el.value || pressure_el.textContent || "").trim()
+    : "";
+  var _Title = "VLE at " + pressure + " Pa";
   Plotly.newPlot(
     "vle_phase_diagram_xy",
     [trace1],
-    get_layout(0, "x<sub>1</sub>", "y<sub>1</sub>"),
+    get_layout(0, "x<sub>1</sub>", "y<sub>1</sub>", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],

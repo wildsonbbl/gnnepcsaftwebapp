@@ -22,7 +22,12 @@
           <div class="row justify-content-center">
             <div class="col-sm-6">{{ form.text_area }}</div>
             <div class="col-sm-4">
-              <div class="form-control my-2">{{ plot_config }}</div>
+              <div class="form-control my-2">
+                {{ plot_config }}
+                <div class="form-check form-switch">{{ binary_vle_checkform }}</div>
+                <div class="form-check form-switch">{{ binary_lle_checkform }}</div>
+                <div class="form-check form-switch">{{ ternary_lle_checkform }}</div>
+              </div>
             </div>
           </div>
           <div class="row justify-content-center">

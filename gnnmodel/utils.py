@@ -32,6 +32,8 @@ from gnnepcsaft_mcp_server.utils import predict_epcsaft_parameters
 
 from . import logger
 from .forms import (
+    BinaryLLECheckForm,
+    BinaryVLECheckForm,
     CustomPlotCheckForm,
     CustomPlotConfigForm,
     GoogleAPIKeyForm,
@@ -42,6 +44,7 @@ from .forms import (
     RhoCheckForm,
     SlvCheckForm,
     STCheckForm,
+    TernaryLLECheckForm,
     VPCheckForm,
 )
 from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
@@ -476,12 +479,24 @@ def _get_ternary_lle_data(
 def get_mixture_plots_data(
     para_pred_list: List[List],
     mole_fractions_list: List[float],
-    plot_config: CustomPlotConfigForm,
+    config: Tuple[
+        CustomPlotConfigForm,
+        TernaryLLECheckForm,
+        BinaryVLECheckForm,
+        BinaryLLECheckForm,
+    ],
     kij_matrix: List[List[float]],
 ) -> Tuple[Tuple[List[Tuple[str, int, str]], List[str]], str, str, str]:
     "get mixture plots data"
 
+    plot_config, ternary_lle_checkform, binary_vle_checkform, binary_lle_checkform = (
+        config
+    )
+
     plot_config.full_clean()
+    ternary_lle_checkform.full_clean()
+    binary_vle_checkform.full_clean()
+    binary_lle_checkform.full_clean()
     mixture_plot = mixture_plots(
         para_pred_list,
         (
@@ -494,8 +509,11 @@ def get_mixture_plots_data(
     )
 
     try:
+        if ternary_lle_checkform.cleaned_data["ternary_lle_checkbox"] is False:
+            raise ValueError("Ternary LLE checkbox not selected.")
         if len(para_pred_list) != 3:
             raise ValueError("LLE phase diagram only for ternary mixtures.")
+
         ternary_lle_phase_diagram_data = _get_ternary_lle_data(
             para_pred_list,
             kij_matrix,
@@ -510,8 +528,11 @@ def get_mixture_plots_data(
         ternary_lle_phase_diagram_data = ""
 
     try:
+        if binary_lle_checkform.cleaned_data["binary_lle_checkbox"] is False:
+            raise ValueError("Binary LLE checkbox not selected.")
         if len(para_pred_list) != 2:
             raise ValueError("LLE phase diagram only for binary mixtures.")
+
         binary_lle_phase_diagram_data = mix_lle_diagram_feos(
             para_pred_list,
             [
@@ -527,8 +548,11 @@ def get_mixture_plots_data(
         binary_lle_phase_diagram_data = ""
 
     try:
+        if binary_vle_checkform.cleaned_data["binary_vle_checkbox"] is False:
+            raise ValueError("Binary VLE checkbox not selected.")
         if len(para_pred_list) != 2:
             raise ValueError("VLE phase diagram only for binary mixtures.")
+
         vle_phase_diagram_data = mix_vle_diagram_feos(
             para_pred_list,
             [
@@ -821,18 +845,36 @@ def init_mixture_forms(post_data=None):
         return (
             InChIorSMILESareaInputforMixture(post_data),
             CustomPlotConfigForm(post_data),
+            BinaryVLECheckForm(post_data),
+            BinaryLLECheckForm(post_data),
+            TernaryLLECheckForm(post_data),
         )
     return (
         InChIorSMILESareaInputforMixture(),
         CustomPlotConfigForm(),
+        BinaryVLECheckForm(),
+        BinaryLLECheckForm(),
+        TernaryLLECheckForm(),
     )
 
 
 def process_mixture_post(
-    forms: Tuple[InChIorSMILESareaInputforMixture, CustomPlotConfigForm],
+    forms: Tuple[
+        InChIorSMILESareaInputforMixture,
+        CustomPlotConfigForm,
+        BinaryVLECheckForm,
+        BinaryLLECheckForm,
+        TernaryLLECheckForm,
+    ],
 ):
     "process the post data from the mixture page"
-    form, plot_config = forms
+    (
+        form,
+        plot_config,
+        binary_vle_checkform,
+        binary_lle_checkform,
+        ternary_lle_checkform,
+    ) = forms
     para_pred_list = []
     para_pred_for_plot = []
     mole_fractions_list = []
@@ -860,13 +902,21 @@ def process_mixture_post(
         mixture_plots_ = get_mixture_plots_data(
             para_pred_for_plot,
             mole_fractions_list,
-            plot_config,
+            (
+                plot_config,
+                ternary_lle_checkform,
+                binary_vle_checkform,
+                binary_lle_checkform,
+            ),
             kij_matrix,
         )
         output = True
 
     return {
         "form": form,
+        "binary_vle_checkform": binary_vle_checkform,
+        "binary_lle_checkform": binary_lle_checkform,
+        "ternary_lle_checkform": ternary_lle_checkform,
         "plot_config": plot_config,
         "para_pred_list": para_pred_list,
         "mole_fractions_list": mole_fractions_list,
@@ -881,6 +931,9 @@ def build_mixture_context(post_data=None):
         return {
             "form": post_data["form"],
             "plot_config": post_data["plot_config"],
+            "binary_vle_checkform": post_data["binary_vle_checkform"],
+            "binary_lle_checkform": post_data["binary_lle_checkform"],
+            "ternary_lle_checkform": post_data["ternary_lle_checkform"],
             "available_params": available_params,
             "parameters_molefractions_list": list(
                 zip(post_data["para_pred_list"], post_data["mole_fractions_list"])
@@ -894,6 +947,9 @@ def build_mixture_context(post_data=None):
         }
     return {
         "form": InChIorSMILESareaInputforMixture(),
+        "binary_vle_checkform": BinaryVLECheckForm(),
+        "binary_lle_checkform": BinaryLLECheckForm(),
+        "ternary_lle_checkform": TernaryLLECheckForm(),
         "plot_config": CustomPlotConfigForm(),
         "available_params": available_params,
         "parameters_molefractions_list": [],

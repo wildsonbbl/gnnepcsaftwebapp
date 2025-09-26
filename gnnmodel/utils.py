@@ -441,7 +441,7 @@ def get_mixture_plots_data(
     mole_fractions_list: List[float],
     plot_config: CustomPlotConfigForm,
     kij_matrix: List[List[float]],
-) -> Tuple[List[Tuple[str, int, str]], List[str]]:
+) -> Tuple[Tuple[List[Tuple[str, int, str]], List[str]], str, str]:
     "get mixture plots data"
 
     plot_config.full_clean()
@@ -456,7 +456,29 @@ def get_mixture_plots_data(
         kij_matrix,
     )
 
-    return mixture_plot
+    lle_phase_diagram_data = mix_lle_diagram_feos(
+        para_pred_list,
+        [
+            plot_config.cleaned_data["temp_min"],
+            plot_config.cleaned_data["pressure"],
+            *mole_fractions_list,
+        ],
+        kij_matrix,
+    )
+
+    vle_phase_diagram_data = mix_vle_diagram_feos(
+        para_pred_list,
+        [
+            plot_config.cleaned_data["pressure"],
+        ],
+        kij_matrix,
+    )
+
+    return (
+        mixture_plot,
+        json.dumps(lle_phase_diagram_data),
+        json.dumps(vle_phase_diagram_data),
+    )
 
 
 def mixture_plots(
@@ -746,7 +768,7 @@ def process_mixture_post(
     para_pred_list = []
     para_pred_for_plot = []
     mole_fractions_list = []
-    mixture_plots_ = ([], [])
+    mixture_plots_ = (([], []), "", "")
     output = False
 
     if form.is_valid():
@@ -795,8 +817,10 @@ def build_mixture_context(post_data=None):
             "parameters_molefractions_list": list(
                 zip(post_data["para_pred_list"], post_data["mole_fractions_list"])
             ),
-            "mixture_plots": post_data["mixture_plots"][0],
-            "vp_plots": post_data["mixture_plots"][1],
+            "mixture_plots": post_data["mixture_plots"][0][0],
+            "vp_plots": post_data["mixture_plots"][0][1],
+            "lle_phase_diagram_data": post_data["mixture_plots"][1],
+            "vle_phase_diagram_data": post_data["mixture_plots"][2],
             "output": post_data["output"],
         }
     return {
@@ -806,5 +830,7 @@ def build_mixture_context(post_data=None):
         "parameters_molefractions_list": [],
         "mixture_plots": [],
         "vp_plots": [],
+        "lle_phase_diagram_data": "",
+        "vle_phase_diagram_data": "",
         "output": False,
     }

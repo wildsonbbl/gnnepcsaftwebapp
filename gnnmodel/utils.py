@@ -456,28 +456,42 @@ def get_mixture_plots_data(
         kij_matrix,
     )
 
-    lle_phase_diagram_data = mix_lle_diagram_feos(
-        para_pred_list,
-        [
-            plot_config.cleaned_data["temp_min"],
-            plot_config.cleaned_data["pressure"],
-            *mole_fractions_list,
-        ],
-        kij_matrix,
-    )
+    try:
+        if len(para_pred_list) != 2:
+            raise ValueError("LLE phase diagram only for binary mixtures.")
+        binary_lle_phase_diagram_data = mix_lle_diagram_feos(
+            para_pred_list,
+            [
+                plot_config.cleaned_data["temp_min"],
+                plot_config.cleaned_data["pressure"],
+                *mole_fractions_list,
+            ],
+            kij_matrix,
+        )
+        binary_lle_phase_diagram_data = json.dumps(binary_lle_phase_diagram_data)
+    except (ValueError, RuntimeError) as err:
+        logger.debug(err)
+        binary_lle_phase_diagram_data = ""
 
-    vle_phase_diagram_data = mix_vle_diagram_feos(
-        para_pred_list,
-        [
-            plot_config.cleaned_data["pressure"],
-        ],
-        kij_matrix,
-    )
+    try:
+        if len(para_pred_list) != 2:
+            raise ValueError("VLE phase diagram only for binary mixtures.")
+        vle_phase_diagram_data = mix_vle_diagram_feos(
+            para_pred_list,
+            [
+                plot_config.cleaned_data["pressure"],
+            ],
+            kij_matrix,
+        )
+        vle_phase_diagram_data = json.dumps(vle_phase_diagram_data)
+    except (ValueError, RuntimeError) as err:
+        logger.debug(err)
+        vle_phase_diagram_data = ""
 
     return (
         mixture_plot,
-        json.dumps(lle_phase_diagram_data),
-        json.dumps(vle_phase_diagram_data),
+        binary_lle_phase_diagram_data,
+        vle_phase_diagram_data,
     )
 
 
@@ -819,7 +833,7 @@ def build_mixture_context(post_data=None):
             ),
             "mixture_plots": post_data["mixture_plots"][0][0],
             "vp_plots": post_data["mixture_plots"][0][1],
-            "lle_phase_diagram_data": post_data["mixture_plots"][1],
+            "binary_lle_phase_diagram_data": post_data["mixture_plots"][1],
             "vle_phase_diagram_data": post_data["mixture_plots"][2],
             "output": post_data["output"],
         }
@@ -830,7 +844,7 @@ def build_mixture_context(post_data=None):
         "parameters_molefractions_list": [],
         "mixture_plots": [],
         "vp_plots": [],
-        "lle_phase_diagram_data": "",
+        "binary_lle_phase_diagram_data": "",
         "vle_phase_diagram_data": "",
         "output": False,
     }

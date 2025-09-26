@@ -120,6 +120,128 @@ InChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33
             Plotly.addTraces("vp_plots", trace2);
           </script>
         </div>
+        {% if ternary_lle_phase_diagram_data %}
+          <div class="col-lg-4 mt-2">
+            <div id="ternary_lle_phase_diagram" alt="Ternary LLE phase diagram plot">
+              <script>var ternary_lle_phase_diagram_data = {{ternary_lle_phase_diagram_data|safe}};
+              var trace1 = {
+                a: ternary_lle_phase_diagram_data["x0"],
+                b: ternary_lle_phase_diagram_data["x1"],
+                c: ternary_lle_phase_diagram_data["x2"],
+                mode: "lines",
+                type: "scatterternary",
+                name:"Liquid phase 1"
+              };
+              var trace2 = {
+                a: ternary_lle_phase_diagram_data["y0"],
+                b: ternary_lle_phase_diagram_data["y1"],
+                c: ternary_lle_phase_diagram_data["y2"],
+                mode: "lines",
+                type: "scatterternary",
+                name:"Liquid phase 2"
+              };
+              Plotly.newPlot(
+                "ternary_lle_phase_diagram",
+                [trace1, trace2],
+                get_layout(0 ,"x", "y"), 
+                {
+                responsive: true,
+                modeBarButtonsToRemove: ["select2d", "lasso2d"],
+                }
+                );
+              </script>
+            </div>
+          </div>
+        {% endif %}
+        {% if binary_lle_phase_diagram_data %}
+          <div class="col-lg-4 mt-2">
+            <div id="binary_lle_phase_diagram" alt=" binary LLE phase diagram plot">
+              <script>
+              var binary_lle_phase_diagram_data = {{binary_lle_phase_diagram_data|safe}};
+              var trace1 = {
+                x: binary_lle_phase_diagram_data["x0"],
+                y: binary_lle_phase_diagram_data["temperature"],
+                mode: "lines",
+                type: "scatter",
+                name:"Liquid phase 1"
+              }
+              var trace2 = {
+                x: binary_lle_phase_diagram_data["y0"],
+                y: binary_lle_phase_diagram_data["temperature"],
+                mode: "lines",
+                type: "scatter",
+                name:"Liquid phase 2"
+              }
+              Plotly.newPlot(
+                "binary_lle_phase_diagram",
+                [trace1, trace2],
+                get_layout(0, "x<sub>1</sub>","Temperature (K)"), 
+                {
+                responsive: true,
+                modeBarButtonsToRemove: ["select2d", "lasso2d"],
+                }
+                );
+                
+              </script>
+            </div>
+          </div>
+        {% endif %}
+        {% if vle_phase_diagram_data %}
+          <div class="col-lg-4 mt-2">
+            <div id="vle_phase_diagram_txy" alt="VLE phase diagram plot">
+              <script>
+              var vle_phase_diagram_data = {{vle_phase_diagram_data|safe}};
+              var trace1 = {
+                x: vle_phase_diagram_data["x0"],
+                y: vle_phase_diagram_data["temperature"],
+                mode: "lines",
+                type: "scatter",
+                name:"Liquid phase"
+              }
+              var trace2 = {
+                x: vle_phase_diagram_data["y0"],
+                y: vle_phase_diagram_data["temperature"],
+                mode: "lines",
+                type: "scatter",
+                name:"Vapor phase"
+              }
+              Plotly.newPlot(
+                "vle_phase_diagram_txy",
+                [trace1, trace2],
+                get_layout(0, "x<sub>1</sub>","Temperature (K)"), 
+                {
+                responsive: true,
+                modeBarButtonsToRemove: ["select2d", "lasso2d"],
+                }
+                );
+              </script>
+            </div>
+          </div>
+          <div class="col-lg-4 mt-2">
+            <div id="vle_phase_diagram_xy" alt="VLE phase diagram plot">
+              <script>
+              var vle_phase_diagram_data = {{vle_phase_diagram_data|safe}};
+              var trace1 = {
+                x: vle_phase_diagram_data["x0"],
+                y: vle_phase_diagram_data["y0"],
+                mode: "lines",
+                type: "scatter",
+                name: "VLE"
+              }
+              Plotly.newPlot(
+                "vle_phase_diagram_xy",
+                [trace1],
+                get_layout(0, "x<sub>1</sub>","y<sub>1</sub>"), 
+                {
+                responsive: true,
+                modeBarButtonsToRemove: ["select2d", "lasso2d"],
+                }
+                );
+                
+              </script>
+            </div>
+          </div>
+        {% endif %}
       {% endif %}
     </div>
   </div>

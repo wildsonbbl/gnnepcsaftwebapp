@@ -40,8 +40,6 @@ def pure(request):
 
 def batch(request):
     "handle request for batch of substances"
-    if settings.PLATFORM == "webapp":
-        return render(request, "batch-webapp.html")
     pred_list = []
     output = False
     if request.method == "POST":
@@ -67,8 +65,6 @@ def batch(request):
 
 def mixture(request):
     "handle request for mixture"
-    if settings.PLATFORM == "webapp":
-        return render(request, "mixture-webapp.html")
     if request.method == "POST":
         forms = init_mixture_forms(request.POST)
         post_data = process_mixture_post(forms)

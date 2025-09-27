@@ -9,7 +9,7 @@ django-bootstrap-v5
 whitenoise
 gunicorn
 fontawesomefree
-gnnepcsaft>=0.2.4
+gnnepcsaft>=0.2.6
 gnnepcsaft-mcp-server>=0.3.0
 jq
 #teqp

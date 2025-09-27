@@ -533,15 +533,18 @@ def get_mixture_plots_data(
         if len(para_pred_list) != 2:
             raise ValueError("LLE phase diagram only for binary mixtures.")
 
-        binary_lle_phase_diagram_data = mix_lle_diagram_feos(
-            para_pred_list,
-            [
-                plot_config.cleaned_data["temp_min"],
-                plot_config.cleaned_data["pressure"],
-                *mole_fractions_list,
-            ],
-            kij_matrix,
-        )
+        try:
+            binary_lle_phase_diagram_data = mix_lle_diagram_feos(
+                para_pred_list,
+                [
+                    plot_config.cleaned_data["temp_min"],
+                    plot_config.cleaned_data["pressure"],
+                    *mole_fractions_list,
+                ],
+                kij_matrix,
+            )
+        except ValueError:
+            binary_lle_phase_diagram_data = {"x0": [], "y0": [], "temperature": []}
         binary_lle_phase_diagram_data = json.dumps(binary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
@@ -553,13 +556,16 @@ def get_mixture_plots_data(
         if len(para_pred_list) != 2:
             raise ValueError("VLE phase diagram only for binary mixtures.")
 
-        vle_phase_diagram_data = mix_vle_diagram_feos(
-            para_pred_list,
-            [
-                plot_config.cleaned_data["pressure"],
-            ],
-            kij_matrix,
-        )
+        try:
+            vle_phase_diagram_data = mix_vle_diagram_feos(
+                para_pred_list,
+                [
+                    plot_config.cleaned_data["pressure"],
+                ],
+                kij_matrix,
+            )
+        except ValueError:
+            vle_phase_diagram_data = {"x0": [], "y0": [], "temperature": []}
         vle_phase_diagram_data = json.dumps(vle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)

@@ -16,3 +16,4 @@ gha-creds-*.json
 gnnepcsaft*.db*
 mydata.csv
 mcp_server.json
+traefik/docker-run.sh

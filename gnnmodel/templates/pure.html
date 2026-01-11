@@ -9,13 +9,8 @@
       <div class="col-md-12">
         <div class="alert alert-success text-center mb-4">
           <h4 class="mb-2">
-            <i class="fas fa-flask text-primary"></i> Welcome to GNNePCSAFT!
+            <i class="fas fa-flask text-primary"></i> Pure-component Parameter Estimation
           </h4>
-          <p class="mb-0">
-            Experience next-generation thermodynamic modeling powered by AI.
-            <br>
-            Estimate PC-SAFT parameters for your molecule in seconds!
-          </p>
         </div>
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
@@ -46,18 +41,6 @@
           </div>
         </div>
         <script src={% static "js/loading.js" %}></script>
-        <div class="alert alert-info mt-4">
-          <i class="fas fa-lightbulb text-warning"></i>
-          <strong>Tip:</strong> You can use <abbr title="Simplified Molecular-Input Line-Entry System">SMILES</abbr> or <abbr title="International Chemical Identifier">InChI</abbr> strings. Find them at <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">PubChem</a> or build your own at <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a>.
-        </div>
-        <div class="alert alert-primary mt-3">
-          <i class="fas fa-robot text-primary"></i>
-          <strong>Try the new AI Chat!</strong>
-          <p class="mb-1">
-            Talk to the GNNePCSAFT agent and get thermodynamic properties like <span class="fw-bold">density</span>, <span class="fw-bold">vapor pressure</span>, <span class="fw-bold">enthalpy of vaporization</span>, and more — just by chatting!
-          </p>
-          <span class="text-muted">Available in the desktop app for Windows, Mac, and Linux.</span>
-        </div>
       </div>
     </div>
     <div class="row" id="mol_identifiers">

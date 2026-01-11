@@ -11,11 +11,6 @@
           <h4 class="mb-2">
             <i class="fas fa-flask text-primary"></i> Mixture Parameter Estimation
           </h4>
-          <p class="mb-0">
-            Effortlessly test PC-SAFT parameters for complex mixtures using AI.
-            <br>
-            Enter your <span class="fw-bold">InChI</span> or <span class="fw-bold">SMILES</span> strings with mole fractions below and let GNNePCSAFT do the rest!
-          </p>
         </div>
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
@@ -44,25 +39,6 @@
           </div>
         </div>
         <script src={% static "js/loading.js" %}></script>
-        <div class="alert alert-info mt-4">
-          <i class="fas fa-lightbulb text-warning"></i>
-          <strong>Tip:</strong> Enter one <span class="fw-bold">InChI/SMILES Mole Fraction</span> per line.
-          <br>
-          <span class="text-muted">Example:</span>
-          <pre class="bg-light border rounded p-2 mt-2 text-start small mb-0">CCO 0.33
-CC 0.33
-InChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33
-0.0 0.0 0.0</pre>
-          <span class="text-muted">Find identifiers at <a href="https://pubchem.ncbi.nlm.nih.gov/" target="_blank">PubChem</a> or build your own at <a href="https://bit.ly/DIYmol" target="_blank">DIYmol</a>.</span>
-        </div>
-        <div class="alert alert-primary mt-3">
-          <i class="fas fa-robot text-primary"></i>
-          <strong>Try the new AI Chat!</strong>
-          <p class="mb-1">
-            Chat with the GNNePCSAFT agent to get thermodynamic properties for your mixtures, such as <span class="fw-bold">density</span>, <span class="fw-bold">vapor pressure</span>, <span class="fw-bold">enthalpy of vaporization</span>, and more — all in natural language!
-          </p>
-          <span class="text-muted">Available in the desktop app for Windows, Mac, and Linux.</span>
-        </div>
       </div>
     </div>
     <div class="row justify-content-center" id="output">

@@ -1,18 +1,18 @@
 # GNNePCSAFT App
 
-## Project Overview: Smart Thermodynamic Modeling with Graph Neural Networks
+The project focuses on using Graph Neural Networks ([GNN](https://en.wikipedia.org/wiki/Graph_neural_network)) to estimate the pure-component parameters of the Equation of State [PC-SAFT](https://en.wikipedia.org/wiki/PC-SAFT).
 
-Our project harnesses the power of Graph Neural Network ([GNN](https://en.wikipedia.org/wiki/Graph_neural_network)) to estimate pure-component parameters of the state-of-the-art Equation of State, [PC-SAFT](https://en.wikipedia.org/wiki/PC-SAFT). We aim to empower users to leverage this robust equation without the need for prior experimental data, revolutionizing the calculation of thermodynamic properties and enhancing process simulations. [FeOS](https://github.com/feos-org/feos) is used for the PC-SAFT calculations. The estimated parameters can be used in [DWSIM](https://dwsim.org/) and [Aspen HYSYS](https://www.aspentech.com/en/products/engineering/aspen-hysys) process simulators.
+Currently, the model takes into account the hard-chain, dispersive, and associative terms of PC-SAFT. Future work on polar and ionic terms is being studied.
 
-### Current Capabilities
+Code is being developed mainly in Pytorch ([PyG](https://pytorch-geometric.readthedocs.io/en/latest/index.html#)).
 
-Focus on the hard-chain, dispersive, and associative terms of PC-SAFT.
+You can find a model deployed in a Desktop App at [SourceForge](https://sourceforge.net/projects/gnnepcsaft/).
 
-Robust, accurate, and ready to streamline your thermodynamic calculations.
+A CLI to use a model can be found at [GNNePCSAFT CLI](https://github.com/wildsonbbl/gnnepcsaftcli) and installed with [pipx](https://github.com/pypa/pipx):
 
-### Future Aspirations
-
-Ongoing research on incorporating polar and ionic terms for comprehensive modeling.
+```bash
+pipx install gnnepcsaftcli
+```
 
 ---
 

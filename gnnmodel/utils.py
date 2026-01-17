@@ -63,6 +63,7 @@ available_params = [
     "Dipole moment (D)*",
     "Number of association site A",
     "Number of association site B",
+    "Molecular weight (g/mol)",
     "Critical temperature (K)",
     "Critical pressure (Bar)",
 ]
@@ -124,7 +125,7 @@ def plotdata(
     if vp.shape[0] > 2:
         plotvp = {
             "T": vp[:, 0].tolist(),
-            "TML": (vp[:, -1] / 1000).tolist(),  # Pressure in kPa
+            "TML": (vp[:, -1]).tolist(),
             "GNN": pred_vp,
         }
 
@@ -237,7 +238,7 @@ def rhovp_data(
     if vp.shape[0] > 0:
         for state in vp:
             try:
-                all_pred_vp += [pure_vp_feos(parameters, state) / 1000]  # to kPA
+                all_pred_vp += [pure_vp_feos(parameters, state)]
             except (AssertionError, RuntimeError):
                 all_pred_vp += [float("nan")]
 
@@ -306,9 +307,7 @@ def custom_plot(
                     logger.debug(e)
             all_plots.append((json.dumps(plot_data), xpos, prop_name, prop_id))
     if plot_sf:
-        surface_tension, temp_st = pure_surface_tension_feos(
-            parameters + ["unk", "unk", 1], [temp_min]
-        )
+        surface_tension, temp_st = pure_surface_tension_feos(parameters, [temp_min])
         plot_data = {
             "T": temp_st.tolist(),
             "GNN": surface_tension.tolist(),

@@ -106,7 +106,7 @@
         {% if plotvp %}
           <div class="col-lg-4 my-2 ">
             <div id="vp_plot" alt="Vapor pressure plot"></div>
-            <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (kPa)","vp_plot");</script>
+            <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (Pa)","vp_plot");</script>
           </div>
         {% endif %}
         {% for data_json, xlegendpos, ytitle, id in custom_plots %}

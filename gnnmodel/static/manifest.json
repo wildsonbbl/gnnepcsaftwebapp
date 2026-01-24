@@ -1,7 +1,7 @@
 {
-  "name": "GNNePCSAFT",
-  "short_name": "GNNePCSAFT",
-  "description": "Thermodynamic Modeling with GNNePCSAFT",
+  "name": "GNNPCSAFT Webapp",
+  "short_name": "GNNPCSAFT Webapp",
+  "description": "Thermodynamic Modeling with GNNPCSAFT",
   "start_url": "/",
   "display": "fullscreen",
   "scope": "/",
@@ -499,48 +499,6 @@
       "form_factor": "narrow"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Offline Mode",
-      "short_name": "Off",
-      "url": "/offline",
-      "description": "Offline Mode access a local database to give the model results.",
-      "icons": [
-        {
-          "src": "/static/images/icons/android/android-launchericon-96-96.png",
-          "sizes": "96x96"
-        },
-        {
-          "src": "/static/images/icons/android/android-launchericon-72-72.png",
-          "sizes": "72x72"
-        },
-        {
-          "src": "/static/images/icons/android/android-launchericon-48-48.png",
-          "sizes": "48x48"
-        }
-      ]
-    },
-    {
-      "name": "Online Mode",
-      "short_name": "On",
-      "url": "/",
-      "description": "Online Mode access the server to give updated model results.",
-      "icons": [
-        {
-          "src": "/static/images/icons/android/android-launchericon-96-96.png",
-          "sizes": "96x96"
-        },
-        {
-          "src": "/static/images/icons/android/android-launchericon-72-72.png",
-          "sizes": "72x72"
-        },
-        {
-          "src": "/static/images/icons/android/android-launchericon-48-48.png",
-          "sizes": "48x48"
-        }
-      ]
-    }
-  ],
   "id": "/",
   "display_override": [
     "fullscreen",
@@ -557,6 +515,31 @@
       "platform": "python",
       "url": "https://pypi.org/project/pcsaft/",
       "id": "pcsaft"
+    },
+    {
+      "platform": "python",
+      "url": "https://pypi.org/project/gnnepcsaft/",
+      "id": "gnnepcsaft"
+    },
+    {
+      "platform": "python",
+      "url": "https://pypi.org/project/gnnepcsaft-mcp-server/",
+      "id": "gnnepcsaft-mcp-server"
+    },
+    {
+      "platform": "python",
+      "url": "https://pypi.org/project/gnnepcsaftcli/",
+      "id": "gnnepcsaftcli"
+    },
+    {
+      "platform": "python",
+      "url": "https://github.com/wildsonbbl/gnnpcsaftapp",
+      "id": "gnnpcsaftapp"
+    },
+    {
+      "platform": "python",
+      "url": "https://github.com/feos-org/feos",
+      "id": "feos"
     }
   ],
   "handle_links": "not-preferred"

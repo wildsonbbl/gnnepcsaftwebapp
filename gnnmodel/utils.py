@@ -1,6 +1,5 @@
 "Module for utils like plotting data."
 
-import csv
 import json
 import os.path as osp
 from json import loads
@@ -11,8 +10,8 @@ from urllib.request import HTTPError, urlopen
 import numpy as np
 import onnxruntime as ort
 from django.conf import settings
-from gnnepcsaft.data.rdkit_util import inchitosmiles, mw
-from gnnepcsaft.epcsaft.epcsaft_feos import (
+from gnnepcsaft.data.rdkit_util import mw
+from gnnepcsaft.pcsaft.pcsaft_feos import (
     critical_points_feos,
     mix_den_feos,
     mix_lle_diagram_feos,
@@ -26,9 +25,8 @@ from gnnepcsaft.epcsaft.epcsaft_feos import (
     pure_surface_tension_feos,
     pure_vp_feos,
 )
+from gnnepcsaft_mcp_server.utils import predict_pcsaft_parameters
 from rdkit.Chem import AllChem as Chem
-
-from gnnepcsaft_mcp_server.utils import predict_epcsaft_parameters
 
 from . import logger
 from .forms import (
@@ -36,7 +34,6 @@ from .forms import (
     BinaryVLECheckForm,
     CustomPlotCheckForm,
     CustomPlotConfigForm,
-    GoogleAPIKeyForm,
     HlvCheckForm,
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
@@ -47,7 +44,7 @@ from .forms import (
     TernaryLLECheckForm,
     VPCheckForm,
 )
-from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
+from .models import ThermoMLDenData, ThermoMLVPData
 
 # lazy import
 # import polars as pl
@@ -147,61 +144,6 @@ def plotmol(inchi: str) -> str:
     # mol = Chem.RemoveHs(mol, implicitOnly=False)
     imgmol = Chem.MolToV3KMolBlock(mol)  # type: ignore
     return imgmol
-
-
-def para_update_database(app, schema_editor):  # pylint: disable=W0613
-    "fn to update database with pcsaft parameters"
-    from tqdm import tqdm  # pylint: disable=C0415
-
-    tml_data = make_dataset()
-
-    data = []
-    for inchi in tqdm(tml_data):
-        try:
-            smiles = inchitosmiles(inchi, False, False)
-            para = predict_epcsaft_parameters(smiles)
-        except ValueError as e:
-            logger.debug("%s: \n\n%s", e, inchi)
-            continue
-        if para[0] is None:
-            continue
-        new_comp = GnnepcsaftPara(
-            inchi=inchi,
-            smiles=smiles,
-            m=para[0],
-            sigma=para[1],
-            e=para[2],
-            k_ab=para[3],
-            e_ab=para[4],
-            mu=para[5],
-            na=para[6],
-            nb=para[7],
-        )
-        data.append(
-            [
-                para[0],
-                para[1],
-                para[2],
-                para[3],
-                para[4],
-                para[5],
-                para[6],
-                para[7],
-                inchi,
-                smiles,
-            ]
-        )
-        new_comp.save()
-    with open(
-        settings.BASE_DIR / "gnnmodel/static/mydata.csv", "w", encoding="UTF-8"
-    ) as f:
-        writer = csv.writer(f, delimiter="|", lineterminator="\n")
-
-        writer.writerow(
-            ["m", "sigma", "e", "k_ab", "e_ab", "mu", "na", "nb", "inchi", "smiles"]
-        )
-        writer.writerows(data)
-    logger.info("Updated database with pcsaft parameters")
 
 
 def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
@@ -321,7 +263,7 @@ def custom_plot(
 
 def get_pred(smiles: str) -> List[float]:
     "get prediction"
-    pred = predict_epcsaft_parameters(smiles)
+    pred = predict_pcsaft_parameters(smiles)
 
     try:
         critical_points = critical_points_feos(pred.copy())
@@ -368,7 +310,6 @@ def get_forms(request):
         SlvCheckForm(request.POST),
         PhaseDiagramCheckForm(request.POST),
         STCheckForm(request.POST),
-        GoogleAPIKeyForm(request.POST),
     )
 
 
@@ -887,9 +828,7 @@ def process_mixture_post(
     output = False
 
     if form.is_valid():
-        inchi_list, smiles_list, mole_fractions_list, kij = form.cleaned_data[
-            "text_area"
-        ]
+        _, smiles_list, mole_fractions_list, kij = form.cleaned_data["text_area"]
         kij_matrix = [
             [0.0 for _ in range(len(smiles_list))] for _ in range(len(smiles_list))
         ]
@@ -900,10 +839,10 @@ def process_mixture_post(
                 kij_matrix[i][j] = kij[k_idx]
                 kij_matrix[j][i] = kij[k_idx]
                 k_idx += 1
-        for smiles, inchi in zip(smiles_list, inchi_list):
+        for smiles in smiles_list:
             para_pred = [round(para, 5) for para in get_pred(smiles)]
             para_pred_list.append(para_pred)
-            para_pred_for_plot.append(para_pred + [mw(inchi)])
+            para_pred_for_plot.append(para_pred)
         mixture_plots_ = get_mixture_plots_data(
             para_pred_for_plot,
             mole_fractions_list,

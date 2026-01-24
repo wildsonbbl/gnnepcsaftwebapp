@@ -5,8 +5,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Thermodynamic Modeling with GNNePCSAFT">
-    <meta name="keywords" content="HTML, Django, CSS, GNNePCSAFT">
+    <meta name="description" content="Thermodynamic Modeling with GNNPCSAFT">
+    <meta name="keywords" content="HTML, Django, CSS, GNNPCSAFT">
     <meta name="author" content="Wildson B B Lima">
     <link href="{% static 'fontawesomefree/css/fontawesome.css' %}"
           rel="stylesheet"
@@ -18,7 +18,6 @@
           rel="stylesheet"
           type="text/css">
     <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
-    <link href="{% static 'css/chat.css' %}" rel="stylesheet" type="text/css" />
     {% bootstrap_css %} {% bootstrap_javascript %}
     <link rel="manifest" href="{% static "/manifest.json" %}">
     <script>
@@ -42,9 +41,6 @@
           href="{% static "images/icons/ios/16.png" %}"
           type="image/png"
           sizes="16x16">
-    <script src="https://cdn.jsdelivr.net/npm/idb@8/build/umd.js"></script>
-    <script src="https://cdn.jsdelivr.net/alasql/0.2/alasql.min.js"></script>
-    <script src={% static "js/myidb.js" %} async></script>
     <title>
       {% block title %}
       {% endblock title %}
@@ -64,7 +60,6 @@
           <a class="nav-link" href="{% url 'pure' %}" title="Pure"><i class="fas fa-flask"></i></a>
           <a class="nav-link" href="{% url 'mixture' %}" title="Mixture"><i class="fas fa-vials"></i></a>
           <a class="nav-link" href="{% url 'batch' %}" title="Batch"><i class="fas fa-layer-group"></i></a>
-          <a class="nav-link" href="{% url 'chat' %}" title="AI Chat"><i class="fas fa-robot"></i></a>
           <a class="nav-link" href="{% url 'about' %}" title="About"><i class="fas fa-info-circle"></i></a>
         </nav>
       </div>

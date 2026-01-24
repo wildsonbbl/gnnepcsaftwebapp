@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-from ..utils import para_update_database, thermo_update_database
+from ..utils import thermo_update_database
 
 
 class Migration(migrations.Migration):
@@ -68,6 +68,5 @@ class Migration(migrations.Migration):
                 ("vp", models.JSONField()),
             ],
         ),
-        migrations.RunPython(para_update_database),
         migrations.RunPython(thermo_update_database),
     ]

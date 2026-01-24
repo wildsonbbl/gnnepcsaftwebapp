@@ -1,7 +1,7 @@
 {% extends "master.html" %}
 {% load static %}
 {% block title %}
-  GNNePCSAFT
+  GNNPCSAFT
 {% endblock title %}
 {% block content %}
   <div class="col-lg">
@@ -65,7 +65,7 @@
     </div>
     <div class="row justify-content-center" id="results">
       {% if output %}
-        <script src={% static "js/plotly-2.35.2.min.js" %} charset="utf-8"></script>
+        <script src={% static "js-minified/plotly-2.35.2.min.js" %} charset="utf-8"></script>
         <script src={% static "js/plot.js" %}></script>
         <div class="col-lg-4 my-2 text-success">
           <h3 class="text-center">
@@ -140,7 +140,7 @@
       {% if output %}
         <div class="col-lg-6 d-flex border border-dark p-0">
           <div id="molplot" class="molplot-style"></div>
-          <script src={% static "js/3Dmol-min.js" %}></script>
+          <script src={% static "js-minified/3Dmol-min.js" %}></script>
           <script src={% static "js/plotmol.js" %}></script>
           <script>loadmol(`{{mol_data}}`);</script>
           <div class="d-grid m-3 h-25">

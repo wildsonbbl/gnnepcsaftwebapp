@@ -1,0 +1,12 @@
+{
+  "include": ["gnnmodel", "manage.py", "webapp"],
+  "exclude": [
+    "**/app_pkg",
+    "**/.venv",
+    "**/node_modules",
+    "**/out",
+    "**/electron"
+  ],
+  "typeCheckingMode": "standard",
+  "reportMissingTypeStubs": "none"
+}

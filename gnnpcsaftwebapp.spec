@@ -2,7 +2,6 @@
 from PyInstaller.utils.hooks import copy_metadata
 
 datas = [
-    ("./icons.json", "."),
     ("./gnnpcsaftwebapp.db", "."),
     ("./gnnmodel/templates", "./gnnmodel/templates"),
     ("./productionfiles", "./productionfiles"),

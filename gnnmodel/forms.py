@@ -74,7 +74,7 @@ class InChIorSMILESareaInput(forms.Form):
 
         lines = data.split("\n")
         if settings.PLATFORM == "webapp" and len(lines) > 10:
-            raise ValidationError(_("Maximum 10 substances allowed for webapp."))
+            raise ValidationError(_("Maximum 10 substances allowed for web app."))
         inchi_list, smiles_list = [], []
         for line in lines:
             line = line.strip()
@@ -146,7 +146,7 @@ class InChIorSMILESareaInputforMixture(forms.Form):
                 raise ValidationError(_("Kij values must be between -1 and 1."))
 
         if settings.PLATFORM == "webapp" and len(lines) > 10:
-            raise ValidationError(_("Maximum 10 components allowed for webapp."))
+            raise ValidationError(_("Maximum 10 components allowed for web app."))
         inchi_list, smiles_list = [], []
         mole_fraction_list = []
         for full_line in lines:

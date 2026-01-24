@@ -1,5 +1,5 @@
 {
-  "name": "gnnpcsaftweapp",
+  "name": "gnnpcsaftwebapp",
   "version": "7.0.0",
   "description": "Thermodynamic Modeling with GNNPCSAFT",
   "main": "main.cjs",

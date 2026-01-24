@@ -12,31 +12,28 @@ jobs:
   check:
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
         runs-on: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           lfs: true
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.13"
+          activate-environment: true
       - name: Install dependencies
-        run: |
-          uv pip install pyinstaller tqdm
-          uv pip install -r requirements.txt
-          uv pip install -r requirements-llm.txt
+        run: uv pip install -r requirements.txt
       - name: Package Web App with PyInstaller
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
-          pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
+          pyinstaller --distpath ./app_pkg/dist --workpath ./app_pkg/build --noconfirm --clean gnnpcsaftwebapp.spec
       - name: Check pyinstaller file
-        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
+        run: ./app_pkg/dist/gnnpcsaftwebapp/gnnpcsaftwebapp* check
       - name: Check files
-        run: ls -l ./apppkg/dist/gnnepcsaftwebapp
+        run: ls -l ./app_pkg/dist/gnnpcsaftwebapp

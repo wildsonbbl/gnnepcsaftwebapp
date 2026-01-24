@@ -18,3 +18,6 @@ onnxruntime
 channels
 daphne
 djlint
+pylint
+pylint-django
+pyinstaller

@@ -13,30 +13,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="GnnepcsaftPara",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("inchi", models.CharField(max_length=255)),
-                ("smiles", models.CharField(max_length=255)),
-                ("m", models.FloatField()),
-                ("sigma", models.FloatField()),
-                ("e", models.FloatField()),
-                ("k_ab", models.FloatField()),
-                ("e_ab", models.FloatField()),
-                ("mu", models.FloatField()),
-                ("na", models.IntegerField()),
-                ("nb", models.IntegerField()),
-            ],
-        ),
-        migrations.CreateModel(
             name="ThermoMLDenData",
             fields=[
                 (

@@ -16,22 +16,20 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           lfs: true
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22.13.1
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.10.16"
+          python-version: "3.13"
+          activate-environment: true
       - name: Install dependencies
-        run: |
-          uv pip install pyinstaller tqdm
-          uv pip install -r requirements.txt
-          uv pip install -r requirements-llm.txt
+        run: uv pip install -r requirements.txt
       - name: Check versions
         run: |
           npm install -g npm@11.1.0
@@ -39,24 +37,18 @@ jobs:
           npm -v
           python --version
           pyinstaller --version
-      - name: Download models from HuggingFace
-        run: |
-          git clone https://huggingface.co/wildsonbbl/gnnepcsaft  hfdata
-          cp hfdata/*.onnx* ./gnnmodel/static
-          mkdir ./productionfiles
-          cp hfdata/*.onnx* ./productionfiles
       - name: Package Web App with PyInstaller
         run: |
           python manage.py collectstatic --no-input
           python manage.py migrate --no-input
-          pyinstaller --distpath ./apppkg/dist --workpath ./apppkg/build --noconfirm --clean gnnepcsaftwebapp.spec
+          pyinstaller --distpath ./app_pkg/dist --workpath ./app_pkg/build --noconfirm --clean gnnpcsaftwebapp.spec
 
       - name: Check pyinstaller file
-        run: ./apppkg/dist/gnnepcsaftwebapp/gnnepcsaftwebapp* check
+        run: ./app_pkg/dist/gnnpcsaftwebapp/gnnpcsaftwebapp* check
       - name: Build and Publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd gnnepcsaftelectron
+          cd electron
           npm install
           npm run publish

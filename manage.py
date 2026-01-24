@@ -7,11 +7,12 @@ import sys
 import bootstrap5
 import debug_toolbar
 import feos
-import webapp.asgi
-import webapp.wsgi
 import whitenoise
 from decouple import config
 from uvicorn import run
+
+import webapp.asgi
+import webapp.wsgi
 
 
 def main():
@@ -33,9 +34,7 @@ def main():
 
 
 if __name__ == "__main__":
-    from gnnmodel.models import database_compatibility
 
-    database_compatibility()
     if "uvicorn" in sys.argv:
         run(
             "webapp.asgi:application",

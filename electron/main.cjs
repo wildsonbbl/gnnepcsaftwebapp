@@ -2,7 +2,6 @@ const { app, BrowserWindow, shell, Menu } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const log = require("electron-log/main");
-const fetch = require("node-fetch");
 const fs = require("fs");
 
 const controller = new AbortController();
@@ -13,31 +12,24 @@ let djangoBackend;
 const appVersion = app.getVersion();
 const userDataPath = app.getPath("userData");
 const dbDir = path.join(userDataPath, "db");
-const dbPath = path.join(dbDir, "gnnepcsaft.db");
-const dbChatPath = path.join(dbDir, "gnnepcsaft.chat.db");
+const dbPath = path.join(dbDir, "gnnpcsaftwebapp.db");
 const migrateFlag = path.join(dbDir, `.db_migrated_v${appVersion}`);
 const logPath = path.join(userDataPath, "logs");
-const mcpConfigPath = path.join(userDataPath, "mcp_server.json");
 
 const env = {
   ...process.env,
-  GNNEPCSAFT_DB_PATH: dbPath,
-  GNNEPCSAFT_DB_CHAT_PATH: dbChatPath,
-  GNNEPCSAFT_LOG_PATH: logPath,
-  GNNEPCSAFT_MCP_SERVER_CONFIG: mcpConfigPath,
+  GNNPCSAFTWEBAPP_DB_PATH: dbPath,
+  GNNPCSAFTWEBAPP_LOG_PATH: logPath,
 };
 
 let appPath;
 if (process.platform === "win32") {
   appPath = path.join(
     process.resourcesPath,
-    "gnnepcsaftwebapp/gnnepcsaftwebapp.exe"
+    "gnnpcsaftwebapp/gnnpcsaftwebapp.exe",
   );
 } else {
-  appPath = path.join(
-    process.resourcesPath,
-    "gnnepcsaftwebapp/gnnepcsaftwebapp"
-  );
+  appPath = path.join(process.resourcesPath, "gnnpcsaftwebapp/gnnpcsaftwebapp");
 }
 
 // Optional, initialize the logger for any renderer process
@@ -53,8 +45,7 @@ const createWindow = async () => {
   }
 
   // Check if we need to copy the initial database
-  copyDB("gnnepcsaft.db");
-  copyDB("gnnepcsaft.chat.db");
+  copyDB("gnnpcsaftwebapp.db");
 
   const win = new BrowserWindow({
     width: 1280,
@@ -62,12 +53,10 @@ const createWindow = async () => {
     minWidth: 600,
     minHeight: 680,
     titleBarStyle: "default",
-    title: "GNNePCSAFT",
+    title: "GNNPCSAFT Web App",
   });
 
   win.loadFile(path.join(__dirname, "index.html"));
-
-  await ensureDbMigrated();
 
   // Start Django with the user database path
   startDjangoServer();
@@ -86,7 +75,7 @@ const createWindow = async () => {
           height: 680,
           minWidth: 600,
           minHeight: 680,
-          title: "GNNePCSAFT",
+          title: "GNNPCSAFT Web App",
         },
       };
     }
@@ -113,7 +102,14 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  djangoBackend = spawn(appPath, ["uvicorn"], { signal, env });
+  djangoBackend = spawn(
+    appPath,
+    ["runserver", "--skip-checks", "-noreload", "19770"],
+    {
+      signal,
+      env,
+    },
+  );
 
   djangoBackend.on("error", (error) => {
     log.error(error.message);
@@ -153,8 +149,8 @@ function copyDB(dbName) {
   if (!fs.existsSync(userDbPath)) {
     const resourceDbPath = path.join(
       process.resourcesPath,
-      "gnnepcsaftwebapp/_internal",
-      dbName
+      "gnnpcsaftwebapp/_internal",
+      dbName,
     );
 
     // Copy the database if it exists in resources
@@ -177,7 +173,7 @@ function runDbMigrate() {
     const dbMigrate = spawn(
       appPath,
       ["migrate", "--noinput", "--skip-checks"],
-      { env }
+      { env },
     );
 
     dbMigrate.on("close", (code) => {

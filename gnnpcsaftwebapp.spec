@@ -3,7 +3,7 @@ from PyInstaller.utils.hooks import copy_metadata
 
 datas = [
     ("./icons.json", "."),
-    ("./gnnepcsaft.db", "."),
+    ("./gnnpcsaftwebapp.db", "."),
     ("./gnnmodel/templates", "./gnnmodel/templates"),
     ("./productionfiles", "./productionfiles"),
 ]
@@ -30,7 +30,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="gnnepcsaftwebapp",
+    name="gnnpcsaftwebapp",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -49,5 +49,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name="gnnepcsaftwebapp",
+    name="gnnpcsaftwebapp",
 )

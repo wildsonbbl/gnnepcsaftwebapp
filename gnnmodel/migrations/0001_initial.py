@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-from ..utils import para_update_database, thermo_update_database
+from ..utils import thermo_update_database
 
 
 class Migration(migrations.Migration):
@@ -12,30 +12,6 @@ class Migration(migrations.Migration):
     dependencies = []
 
     operations = [
-        migrations.CreateModel(
-            name="GnnepcsaftPara",
-            fields=[
-                (
-                    "id",
-                    models.BigAutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
-                ),
-                ("inchi", models.CharField(max_length=255)),
-                ("smiles", models.CharField(max_length=255)),
-                ("m", models.FloatField()),
-                ("sigma", models.FloatField()),
-                ("e", models.FloatField()),
-                ("k_ab", models.FloatField()),
-                ("e_ab", models.FloatField()),
-                ("mu", models.FloatField()),
-                ("na", models.IntegerField()),
-                ("nb", models.IntegerField()),
-            ],
-        ),
         migrations.CreateModel(
             name="ThermoMLDenData",
             fields=[
@@ -68,6 +44,5 @@ class Migration(migrations.Migration):
                 ("vp", models.JSONField()),
             ],
         ),
-        migrations.RunPython(para_update_database),
         migrations.RunPython(thermo_update_database),
     ]

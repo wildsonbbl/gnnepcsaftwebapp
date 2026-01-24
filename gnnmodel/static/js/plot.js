@@ -51,7 +51,7 @@ function get_layout(xlegendpos = 0, xtitle = "", ytitle = "", title = "") {
   };
 }
 
-function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNePCSAFT") {
+function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNPCSAFT") {
   var alldata = JSON.parse(data_json);
 
   var trace1 = {
@@ -180,7 +180,7 @@ function get_ternary_lle_phase_diagram(ternary_lle_phase_diagram_data) {
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
-    }
+    },
   );
 }
 
@@ -216,7 +216,7 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
-    }
+    },
   );
 }
 
@@ -247,7 +247,7 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
-    }
+    },
   );
 }
 
@@ -271,6 +271,6 @@ function get_binary_vle_phase_diagram_xy(vle_phase_diagram_data) {
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
-    }
+    },
   );
 }

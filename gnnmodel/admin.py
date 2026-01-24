@@ -2,18 +2,7 @@
 
 from django.contrib import admin
 
-from .models import GnnepcsaftPara, ThermoMLDenData, ThermoMLVPData
-
-
-class TablesAdmin(admin.ModelAdmin):
-    "DB table row look at admin page."
-    list_display = ["smiles", "inchi"]
-
-
-admin.site.register(
-    GnnepcsaftPara,
-    TablesAdmin,
-)
+from .models import ThermoMLDenData, ThermoMLVPData
 
 admin.site.register(
     ThermoMLDenData,

@@ -2,14 +2,15 @@ name: PyInstaller check test
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "**.py"
+  workflow_run:
+    workflows: ["Unit Tests"]
+    branches: [main]
+    types:
+      - completed
 
 jobs:
   check:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     strategy:
       matrix:
         runs-on: [windows-latest, ubuntu-latest, macos-latest]

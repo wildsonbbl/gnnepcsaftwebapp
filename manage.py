@@ -5,7 +5,6 @@ import sys
 
 # pylint: disable = W0611,C0411
 import bootstrap5
-import debug_toolbar
 import feos
 import whitenoise
 from decouple import config

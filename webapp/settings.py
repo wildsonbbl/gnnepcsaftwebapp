@@ -99,7 +99,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "webapp.wsgi.application"
 
 
-# ASGI_APPLICATION = "webapp.asgi.application"
+ASGI_APPLICATION = "webapp.asgi.application"
 
 
 # Database

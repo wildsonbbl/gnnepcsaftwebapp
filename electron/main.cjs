@@ -102,14 +102,10 @@ app.on("window-all-closed", () => {
 });
 
 const startDjangoServer = () => {
-  djangoBackend = spawn(
-    appPath,
-    ["runserver", "--skip-checks", "-noreload", "19770"],
-    {
-      signal,
-      env,
-    },
-  );
+  djangoBackend = spawn(appPath, ["uvicorn"], {
+    signal,
+    env,
+  });
 
   djangoBackend.on("error", (error) => {
     log.error(error.message);

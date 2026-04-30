@@ -1,0 +1,61 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="GNNPCSAFT Web App" Language="1033" Version="$(var.ProductVersion)"
+    Manufacturer="Wildson B. B. Lima" UpgradeCode="{df748ee4-8696-4e1a-bb50-f6470a57c58d}">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of gnnpcsaft web app is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    <Icon Id="AppIcon" SourceFile="$(var.ProjectDir)\electron\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="AppIcon" />
+    <Property Id="ARPCONTACT" Value="wil_bbl@hotmail.com" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/wildsonbbl/gnnpcsaftwebapp" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/wildsonbbl/gnnpcsaftwebapp/issues" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLDIR" Name="gnnpcsaftwebapp" />
+    </StandardDirectory>
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="gnnpcsaftwebapp" />
+    </StandardDirectory>
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="MainFeature" Title="gnnpcsaftwebapp" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcutComponent" />
+      <ComponentRef Id="DesktopShortcutComponent" />
+    </Feature>
+  </Package>
+
+  <Fragment>
+    <ComponentGroup Id="AppFiles" Directory="INSTALLDIR">
+      <Files Include="$(var.SourceDir)\**" />
+    </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcutComponent" Guid="{87a32be4-7d70-44ff-bfef-5e78d93396d8}">
+        <Shortcut Id="ApplicationStartMenuShortcut" Name="gnnpcsaftwebapp"
+          Description="GNNPCSAFT Web App desktop application"
+          Target="[INSTALLDIR]gnnpcsaftwebapp.exe"
+          WorkingDirectory="INSTALLDIR" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="StartMenuShortcut"
+          Type="integer"
+          Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <StandardDirectory Id="DesktopFolder">
+      <Component Id="DesktopShortcutComponent" Guid="{1e84cfa3-5bfc-42c0-988e-e26dea839d18}">
+        <Shortcut Id="ApplicationDesktopShortcut" Name="gnnpcsaftwebapp"
+          Description="GNNPCSAFT Web App desktop application"
+          Target="[INSTALLDIR]gnnpcsaftwebapp.exe"
+          WorkingDirectory="INSTALLDIR" />
+        <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="DesktopShortcut"
+          Type="integer"
+          Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+  </Fragment>
+</Wix>

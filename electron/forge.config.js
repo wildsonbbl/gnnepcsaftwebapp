@@ -11,14 +11,6 @@ module.exports = {
   rebuildConfig: {},
   makers: [
     {
-      name: "@electron-forge/maker-squirrel",
-      config: {
-        setupIcon: "./storelogo_scale_400_hf3_icon.ico",
-        iconUrl:
-          "https://raw.githubusercontent.com/wildsonbbl/gnnepcsaftwebapp/refs/heads/main/electron/storelogo_scale_400_hf3_icon.ico",
-      },
-    },
-    {
       name: "@electron-forge/maker-deb",
       config: {
         options: {

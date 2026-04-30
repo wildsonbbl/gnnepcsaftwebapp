@@ -10,7 +10,7 @@ jobs:
   publish:
     strategy:
       matrix:
-        runs-on: [windows-latest, macos-latest, ubuntu-latest]
+        runs-on: [ macos-latest, ubuntu-latest ]
     runs-on: ${{ matrix.runs-on }}
     permissions:
       contents: write
@@ -50,5 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd electron
-          npm install
+          npm ci --prefer-offline --no-audit
+          npm dedupe
           npm run publish

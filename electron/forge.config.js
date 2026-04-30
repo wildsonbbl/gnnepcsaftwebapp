@@ -5,7 +5,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
     name: "gnnpcsaftwebapp",
-    icon: "./storelogo_scale_400_hf3_icon.ico",
+    icon: "./icon.ico",
     extraResource: ["../app_pkg/dist/gnnpcsaftwebapp"],
   },
   rebuildConfig: {},
@@ -16,7 +16,7 @@ module.exports = {
         options: {
           maintainer: "Wildson Lima",
           homepage: "https://github.com/wildsonbbl/gnnepcsaftwebapp",
-          icon: "./storelogo_scale_400_hf3_icon.ico",
+          icon: "./icon.ico",
         },
       },
     },
@@ -24,7 +24,7 @@ module.exports = {
       name: "@electron-forge/maker-dmg",
       config: {
         format: "ULFO",
-        icon: "./storelogo_scale_400_hf3_icon.ico",
+        icon: "./icon.ico",
       },
     },
   ],

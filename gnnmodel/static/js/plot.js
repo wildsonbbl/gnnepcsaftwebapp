@@ -1,4 +1,4 @@
-// plots the GNN ePC-SAFT model results
+// plots the GNN PC-SAFT model results
 // and the ThermoML archive data
 
 function get_layout(xlegendpos = 0, xtitle = "", ytitle = "", title = "") {

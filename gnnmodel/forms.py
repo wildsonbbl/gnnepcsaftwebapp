@@ -243,14 +243,14 @@ class RhoCheckForm(forms.Form):
     "Form to check density."
 
     rho_checkbox = forms.BooleanField(
-        label="Density (mol / m³)",
+        label="Density (rho-T)",
         label_suffix="",
         required=False,
         initial=True,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Density (mol / m³)",
+                "aria-label": "Density (rho-T)",
             }
         ),
     )
@@ -260,14 +260,14 @@ class VPCheckForm(forms.Form):
     "Form to check vapor pressure."
 
     vp_checkbox = forms.BooleanField(
-        label="Vapor pressure (Pa)",
+        label="Vap. Pres. (P-T)",
         label_suffix="",
         required=False,
         initial=True,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Vapor pressure (Pa)",
+                "aria-label": "Vap. Pres. (P-T)",
             }
         ),
     )
@@ -277,14 +277,14 @@ class HlvCheckForm(forms.Form):
     "Form to check enthalpy of vaporization."
 
     h_lv_checkbox = forms.BooleanField(
-        label="Enthalpy of vaporization (kJ/mol)",
+        label="Enthalpy of Vap (Hvap-T)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Enthalpy of vaporization (kJ/mol)",
+                "aria-label": "Enthalpy of Vap (Hvap-T)",
             }
         ),
     )
@@ -294,14 +294,14 @@ class SlvCheckForm(forms.Form):
     "Form to check entropy of vaporization."
 
     s_lv_checkbox = forms.BooleanField(
-        label="Entropy of vaporization (J/mol/K)",
+        label="Entropy of Vap. (Svap-T)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Entropy of vaporization (J/mol/K)",
+                "aria-label": "Entropy of Vap. (Svap-T)",
             }
         ),
     )
@@ -311,14 +311,14 @@ class TernaryLLECheckForm(forms.Form):
     "Form to check liquid-liquid equilibrium."
 
     ternary_lle_checkbox = forms.BooleanField(
-        label="Ternary LLE",
+        label="Ternary VLE/LLE (x1-x2)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Ternary Liquid-liquid equilibrium",
+                "aria-label": "Ternary VLE/LLE (x1-x2)",
             }
         ),
     )
@@ -335,7 +335,7 @@ class BinaryLLECheckForm(forms.Form):
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Binary Liquid-liquid equilibrium",
+                "aria-label": "Binary LLE (T-x-x)",
             }
         ),
     )
@@ -352,7 +352,7 @@ class BinaryVLECheckForm(forms.Form):
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Binary Vapor-liquid equilibrium",
+                "aria-label": "Binary VLE (T-x-y + x-y)",
             }
         ),
     )
@@ -362,14 +362,14 @@ class PhaseDiagramCheckForm(forms.Form):
     "Form to check phase diagram."
 
     phase_diagram_checkbox = forms.BooleanField(
-        label="Phase diagrams",
+        label="Phase Diag. (T-rho + P-rho)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Phase diagrams",
+                "aria-label": "Phase Diag. (T-rho + P-rho)",
             }
         ),
     )
@@ -379,14 +379,14 @@ class STCheckForm(forms.Form):
     "Form to check surface tension."
 
     st_checkbox = forms.BooleanField(
-        label="Surface tension (mN/m)",
+        label="Surface tension (sigma-T)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Surface tension (mN/m)",
+                "aria-label": "Surface tension (sigma-T)",
             }
         ),
     )

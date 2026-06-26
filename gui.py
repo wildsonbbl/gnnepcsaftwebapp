@@ -40,8 +40,13 @@ def _start_django():
     sys.stderr = open(os.devnull, "w", encoding="utf-8")  # pylint: disable=R1732
 
     # Run the server on the dynamic port without the auto-reloader
-    execute_from_command_line(
-        [sys.argv[0], "runserver", f"127.0.0.1:{PORT}", "--noreload"]
+    # execute_from_command_line(
+    #     [sys.argv[0], "runserver", f"127.0.0.1:{PORT}", "--noreload"]
+    # )
+
+    run(
+        "webapp.asgi:application",
+        port=PORT,
     )
 
 

@@ -35,18 +35,6 @@ jobs:
           python-version: "3.13"
           activate-environment: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22.13.1
-
-      - name: Check versions
-        run: |
-          npm install -g npm@11.1.0
-          node -v
-          npm -v
-          python --version
-
       - name: Build MSI
         id: build
         shell: pwsh

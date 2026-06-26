@@ -2,11 +2,13 @@ param(
 	[switch]$SkipUpload
 )
 
-$packageFile = Join-Path $PSScriptRoot 'electron/package.json'
-$versionNumber = (Get-Content -Path $packageFile -Raw | ConvertFrom-Json).version
+$versionFile = Join-Path $PSScriptRoot 'webapp/_version.py'
+$versionNumber = Select-String -Path $versionFile -Pattern '"([0-9]+\.[0-9]+\.[0-9]+)"' |
+	Select-Object -First 1 |
+	ForEach-Object { $_.Matches[0].Groups[1].Value }
 
 if (-not $versionNumber) {
-	throw "Could not find version in $packageFile"
+	throw "Could not find version in $versionFile"
 }
 
 $version = "v$versionNumber"
@@ -18,14 +20,10 @@ uv pip install -r requirements.txt
 uv run python manage.py collectstatic --no-input
 uv run python manage.py migrate --no-input
 uv run pyinstaller --distpath ./app_pkg/dist --workpath ./app_pkg/build --noconfirm --clean ./gnnpcsaftwebapp.spec
-cd electron 
-npm ci --prefer-offline --no-audit
-npm dedupe
-npm run package
 
-$distDir = Join-Path $PSScriptRoot 'electron/out/gnnpcsaftwebapp-win32-x64'
+$distDir = Join-Path $PSScriptRoot 'app_pkg/dist/gnnpcsaftwebapp'
 if (-not (Test-Path $distDir)) {
-	throw "Could not find electron dist directory at $distDir"
+	throw "Could not find app_pkg/dist directory at $distDir"
 }
 
 ## create installer

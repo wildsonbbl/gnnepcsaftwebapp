@@ -36,8 +36,8 @@ def _start_django():
 
     # In PyInstaller, standard outputs can crash hidden console apps,
     # so we redirect them if necessary or run with stdout bypass
-    sys.stdout = open(os.devnull, "w", encoding="utf-8")
-    sys.stderr = open(os.devnull, "w", encoding="utf-8")
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")  # pylint: disable=R1732
+    sys.stderr = open(os.devnull, "w", encoding="utf-8")  # pylint: disable=R1732
 
     # Run the server on the dynamic port without the auto-reloader
     execute_from_command_line(

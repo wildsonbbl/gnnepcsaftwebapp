@@ -2,10 +2,7 @@
 
 import json
 import os.path as osp
-from json import loads
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-from urllib.parse import quote
-from urllib.request import HTTPError, urlopen
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import onnxruntime as ort
@@ -530,73 +527,6 @@ def mixture_plots(
     vp_plots.append(json.dumps(plot_data_dew))
 
     return all_plots, vp_plots
-
-
-def pure_phase(
-    vapor_pressure: float, system_pressure: float
-) -> Literal["liquid", "vapor"]:
-    """
-    Given the vapor pressure and system pressure, return the phase of the molecule.
-    Both pressures must be in the same unit.
-
-    Args:
-        vapor_pressure (float): The calculated vapor pressure of the pure component.
-        system_pressure (float): The actual system pressure.
-
-    """
-    assert isinstance(vapor_pressure, (int, float)), "vapor_pressure must be a number"
-    assert isinstance(system_pressure, (int, float)), "system_pressure must be a number"
-    assert vapor_pressure > 0, "vapor_pressure must be positive"
-    assert system_pressure > 0, "system_pressure must be positive"
-
-    return "liquid" if vapor_pressure < system_pressure else "vapor"
-
-
-def mixture_phase(
-    bubble_point: float,
-    dew_point: float,
-    system_pressure: float,
-) -> Literal["liquid", "vapor", "two-phase"]:
-    """
-    Given the bubble/dew point of the mixture and the system pressure,
-    return the phase of the mixture.
-    All pressures must be in the same unit.
-
-    Args:
-        bubble_point (float): The calculated bubble point of the mixture.
-        dew_point (float): The calculated dew point of the mixture.
-        system_pressure (float): The actual system pressure.
-    """
-    assert isinstance(bubble_point, (int, float)), "bubble_point must be a number"
-    assert isinstance(dew_point, (int, float)), "dew_point must be a number"
-    assert isinstance(system_pressure, (int, float)), "system_pressure must be a number"
-    assert bubble_point > 0, "bubble_point must be positive"
-    assert dew_point > 0, "dew_point must be positive"
-    assert system_pressure > 0, "system_pressure must be positive"
-    return (
-        "liquid"
-        if bubble_point < system_pressure
-        else ("two-phase" if dew_point <= system_pressure else "vapor")
-    )
-
-
-def pubchem_description(inchi: str) -> str:
-    """
-    Look for information on PubChem for the InChI.
-
-    Args:
-        inchi (str): The InChI of the molecule.
-    """
-    url = (
-        "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/inchi/description/json?inchi="
-        + quote(inchi, safe="")
-    )
-    try:
-        with urlopen(url) as ans:
-            ans = loads(ans.read().decode("utf8").strip())
-    except (TypeError, HTTPError, ValueError):
-        ans = "no data available on this molecule in PubChem."
-    return ans
 
 
 def init_pure_forms(post_data=None):

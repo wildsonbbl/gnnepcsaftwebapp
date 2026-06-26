@@ -44,10 +44,7 @@ def _start_django():
     #     [sys.argv[0], "runserver", f"127.0.0.1:{PORT}", "--noreload"]
     # )
 
-    run(
-        "webapp.asgi:application",
-        port=PORT,
-    )
+    run("webapp.asgi:application", port=PORT, log_config=None)
 
 
 if __name__ == "__main__":

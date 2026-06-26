@@ -206,12 +206,30 @@ LOGGING = {
         },
     },
     "loggers": {
-        # Root logger - currently logs only to file
+        # Root logger - captures unhandled errors and overall system logs
         "": {
             "level": LOG_LEVEL,
-            # You could add 'console' here if you want logs in both places:
-            # "handlers": ["file", "console"],
             "handlers": ["file"],
+        },
+        "gnnmodel": {
+            "level": LOG_LEVEL,
+            "handlers": ["file"],
+            "propagate": False,
+        },
+        "uvicorn": {
+            "level": LOG_LEVEL,
+            "handlers": ["file"],
+            "propagate": False,
+        },
+        "uvicorn.error": {
+            "level": LOG_LEVEL,
+            "handlers": ["file"],
+            "propagate": False,
+        },
+        "uvicorn.access": {
+            "level": LOG_LEVEL,
+            "handlers": ["file"],
+            "propagate": False,
         },
     },
 }

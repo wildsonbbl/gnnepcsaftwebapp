@@ -33,6 +33,7 @@ fi
 
 ## create package
 uv pip install -r requirements.txt
+uv pip install pywebview[qt]
 uv run python manage.py collectstatic --no-input
 uv run python manage.py migrate --no-input
 uv run pyinstaller --distpath ./app_pkg/dist --workpath ./app_pkg/build --noconfirm --clean ./gnnpcsaftwebapp.spec
@@ -79,6 +80,7 @@ Architecture: $arch
 Maintainer: Wildson B. B. Lima <wil_bbl@hotmail.com>
 Homepage: https://github.com/wildsonbbl/gnnpcsaftwebapp
 Installed-Size: $installed_size
+Depends:libgl1, libglib2.0-0, libsm6, libxrender1, libxext6, libegl1, libmtdev1, xvfb, libnss3
 Description: GNNPCSAFT desktop application
  Graph Neural Network + PC-SAFT desktop application for thermodynamic modeling.
 EOF

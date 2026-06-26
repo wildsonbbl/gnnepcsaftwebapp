@@ -328,14 +328,14 @@ class BinaryLLECheckForm(forms.Form):
     "Form to check liquid-liquid equilibrium."
 
     binary_lle_checkbox = forms.BooleanField(
-        label="Binary LLE (T-x-x)",
+        label="Binary LLE/VLE (T-x-x or T-x-y)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Binary LLE (T-x-x)",
+                "aria-label": "Binary LLE/VLE (T-x-x or T-x-y)",
             }
         ),
     )

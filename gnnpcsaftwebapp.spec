@@ -2,19 +2,19 @@
 from PyInstaller.utils.hooks import copy_metadata
 
 datas = [
-    ("./gnnpcsaftwebapp.db", "."),
     ("./gnnmodel/templates", "./gnnmodel/templates"),
     ("./productionfiles", "./productionfiles"),
+    ("./gnnmodel/data", "./gnnmodel/data"),
 ]
 datas += copy_metadata("django-bootstrap-v5")
 
 
 a = Analysis(
-    ["manage.py"],
+    ["gui.py"],
     pathex=[],
     binaries=[],
     datas=datas,
-    hiddenimports=["tiktoken_ext.openai_public", "tiktoken_ext", "linkify-it-py"],
+    hiddenimports=[],
     hookspath=["./hooks"],
     hooksconfig={},
     runtime_hooks=[],
@@ -34,12 +34,13 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=["electron/icon.ico"],
 )
 coll = COLLECT(
     exe,

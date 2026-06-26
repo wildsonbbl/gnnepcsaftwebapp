@@ -20,3 +20,4 @@ djlint
 pylint
 pylint-django
 pyinstaller
+pywebview

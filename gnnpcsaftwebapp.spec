@@ -18,7 +18,7 @@ a = Analysis(
     hookspath=["./hooks"],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["polars"],
+    excludes=[],
     noarchive=False,
     optimize=0,
 )

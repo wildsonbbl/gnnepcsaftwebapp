@@ -17,10 +17,13 @@
     </StandardDirectory>
     <StandardDirectory Id="DesktopFolder" />
 
+    <StandardDirectory Id="PersonalFolder" />
+
     <Feature Id="MainFeature" Title="gnnpcsaftwebapp" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcutComponent" />
       <ComponentRef Id="DesktopShortcutComponent" />
+      <ComponentRef Id="LogEnvironmentComponent" />
     </Feature>
   </Package>
 
@@ -28,6 +31,23 @@
     <ComponentGroup Id="AppFiles" Directory="INSTALLDIR">
       <Files Include="$(var.SourceDir)\**" />
     </ComponentGroup>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="PersonalFolder">
+      <Component Id="LogEnvironmentComponent" Guid="{4f7a5ee2-1d21-43ea-982e-9d29dea76d19}">
+        <Environment Id="LogPathEnv"
+          Name="GNNPCSAFTWEBAPP_LOG_PATH"
+          Value="[PersonalFolder]gnnpcsaftwebapp\logs"
+          Action="set"
+          Part="all"
+          System="no" />
+
+        <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="LogEnvSet"
+          Type="integer"
+          Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
   </Fragment>
 
   <Fragment>

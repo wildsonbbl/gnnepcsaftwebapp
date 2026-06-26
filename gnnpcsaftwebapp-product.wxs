@@ -35,18 +35,26 @@
 
   <Fragment>
     <DirectoryRef Id="PersonalFolder">
-      <Component Id="LogEnvironmentComponent" Guid="{4f7a5ee2-1d21-43ea-982e-9d29dea76d19}">
-        <Environment Id="LogPathEnv"
-          Name="GNNPCSAFTWEBAPP_LOG_PATH"
-          Value="[PersonalFolder]gnnpcsaftwebapp\logs"
-          Action="set"
-          Part="all"
-          System="no" />
+      <Directory Id="UserAppFolder" Name="gnnpcsaftwebapp">
+        <Directory Id="UserLogFolder" Name="logs">
 
-        <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="LogEnvSet"
-          Type="integer"
-          Value="1" KeyPath="yes" />
-      </Component>
+          <Component Id="LogEnvironmentComponent" Guid="{4f7a5ee2-1d21-43ea-982e-9d29dea76d19}">
+            <CreateFolder />
+
+            <Environment Id="LogPathEnv"
+              Name="GNNPCSAFTWEBAPP_LOG_PATH"
+              Value="[PersonalFolder]gnnpcsaftwebapp\logs"
+              Action="set"
+              Part="all"
+              System="no" />
+
+            <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="LogEnvSet"
+              Type="integer"
+              Value="1" KeyPath="yes" />
+          </Component>
+
+        </Directory>
+      </Directory>
     </DirectoryRef>
   </Fragment>
 

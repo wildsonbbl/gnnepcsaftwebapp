@@ -131,50 +131,10 @@
       {% else %}
         <div class="col-lg">
           <ul>
-            {% for error in form.query.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
+            {% for error in form.query.errors %}
+              <li class="alert alert-danger">{{ error }}</li>
+            {% endfor %}
           </ul>
-        </div>
-      {% endif %}
-    </div>
-    <div class="row my-3 mx-1 justify-content-center" id="3dmol">
-      {% if output %}
-        <div class="col-lg-6 d-flex border border-dark p-0">
-          <div id="molplot" class="molplot-style"></div>
-          <script src={% static "js-minified/3Dmol-min.js" %}></script>
-          <script src={% static "js/plotmol.js" %}></script>
-          <script>loadmol(`{{mol_data}}`);</script>
-          <div class="d-grid m-3 h-25">
-            <button class="btn btn-outline-secondary btn-sm rounded-circle"
-                    type="button"
-                    title="Stick only"
-                    onclick="v.setStyle({}, { stick: {color: 'spectrum',}} );v.render();">
-              <i class="fas fa-grip-lines-vertical"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle"
-                    type="button"
-                    title="Sphere only"
-                    onclick="v.setStyle({}, { sphere: {color: 'spectrum',}} );v.render();">
-              <i class="fas fa-circle"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle"
-                    type="button"
-                    title="Add Labels"
-                    onclick="addlabel();">
-              <i class="fas fa-font"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle"
-                    type="button"
-                    title="Reset"
-                    onclick="reset();">
-              <i class="fas fa-undo"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm rounded-circle"
-                    type="button"
-                    title="Recenter"
-                    onclick="v.zoomTo(1.2, 1000);">
-              <i class="fas fa-crosshairs"></i>
-            </button>
-          </div>
         </div>
       {% endif %}
     </div>

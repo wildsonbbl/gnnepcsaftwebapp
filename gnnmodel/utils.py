@@ -9,8 +9,8 @@ from urllib.request import HTTPError, urlopen
 
 import numpy as np
 import onnxruntime as ort
+import polars as pl
 from django.conf import settings
-from gnnepcsaft.data.rdkit_util import mw
 from gnnepcsaft.pcsaft.pcsaft_feos import (
     critical_points_feos,
     mix_den_feos,
@@ -44,7 +44,6 @@ from .forms import (
     TernaryLLECheckForm,
     VPCheckForm,
 )
-from .models import ThermoMLDenData, ThermoMLVPData
 
 # lazy import
 # import polars as pl
@@ -67,40 +66,6 @@ available_params = [
 
 file_dir = osp.dirname(__file__)
 dataset_dir = osp.join(file_dir, "data")
-
-
-def make_dataset() -> dict[str, tuple[List[List[float]], List[List[float]]]]:
-    "Make dict dataset for inference."
-    import polars as pl  # # pylint: disable = C0415
-
-    data = pl.read_parquet(osp.join(dataset_dir, "thermoml/raw/pure.parquet"))
-    inchis = data.unique("inchi1")["inchi1"].to_list()
-    _tml_data = {}
-    for inchi in inchis:
-        try:
-            molw = mw(inchi)
-        except (TypeError, ValueError) as e:
-            logger.debug("Error for InChI: %s \n\n %s", inchi, e)
-            continue
-        vp = (
-            data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 3)
-            .select("TK", "PPa", "phase", "tp", "m")
-            .sort("TK")
-            .to_numpy()
-            .tolist()
-        )
-        rho = np.copy(
-            data.filter(pl.col("inchi1") == inchi, pl.col("tp") == 1)
-            .select("TK", "PPa", "phase", "tp", "m")
-            .filter(pl.col("PPa") == 101325)
-            .sort("TK")
-            .to_numpy()
-        )
-
-        rho[:, -1] *= 1000 / molw  # convert to mol/ m³
-
-        _tml_data[inchi] = (rho.tolist(), vp)
-    return _tml_data
 
 
 # pylint: disable=R0914
@@ -144,23 +109,6 @@ def plotmol(inchi: str) -> str:
     # mol = Chem.RemoveHs(mol, implicitOnly=False)
     imgmol = Chem.MolToV3KMolBlock(mol)  # type: ignore
     return imgmol
-
-
-def thermo_update_database(app, schema_editor):  # pylint: disable=W0613
-    "fn to update database with plotden, plotvp"
-    from tqdm import tqdm  # pylint: disable=C0415
-
-    tml_data = make_dataset()
-
-    for inchi in tqdm(tml_data):
-        plotden, plotvp = tml_data[inchi]
-        if plotden:
-            new_comp = ThermoMLDenData(inchi=inchi, den=json.dumps(plotden))
-            new_comp.save()
-        if plotvp:
-            new_comp = ThermoMLVPData(inchi=inchi, vp=json.dumps(plotvp))
-            new_comp.save()
-    logger.info("Updated database with plotden, plotvp")
 
 
 def rhovp_data(
@@ -278,17 +226,34 @@ def get_pred(smiles: str) -> List[float]:
 def get_main_plots_data(inchi: str, parameters: List) -> Tuple[str, str, str]:
     "get main plot data"
 
-    alldata = ThermoMLVPData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        vp_data = np.asarray(json.loads(alldata[0].vp))
+    rho_data = pl.read_parquet(osp.join(dataset_dir, "rho_pure.parquet")).filter(
+        pl.col("inchi1") == inchi, pl.col("P_kPa").is_close(101.325)
+    )
+    vp_data = pl.read_parquet(osp.join(dataset_dir, "vp_pure.parquet")).filter(
+        pl.col("inchi1") == inchi
+    )
+    if vp_data.height > 0:
+        vp_data = (
+            vp_data.with_columns((pl.col("VP_kPa") * 1000).alias("P_Pa"))
+            .select("T_K", "P_Pa")
+            .sort("T_K")
+            .to_numpy()
+        )
         _, plotvp = plotdata(parameters, np.array([]), vp_data)
         plotvp = json.dumps(plotvp)
     else:
         plotvp = ""
 
-    alldata = ThermoMLDenData.objects.filter(inchi=inchi).all()  # pylint: disable=E1101
-    if len(alldata) > 0:
-        den_data = np.asarray(json.loads(alldata[0].den))
+    if rho_data.height > 0:
+        den_data = (
+            rho_data.with_columns(
+                (pl.col("P_kPa") * 1000).alias("P_Pa"),
+                (pl.col("rho") * 1000 / pl.col("molweight1")).alias("den"),
+            )
+            .select("T_K", "P_Pa", "den")
+            .sort("T_K")
+            .to_numpy()
+        )
         plotden, _ = plotdata(parameters, den_data, np.array([]))
         plotden = json.dumps(plotden)
     else:

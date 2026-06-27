@@ -88,7 +88,7 @@
             </tbody>
           </table>
           <p class="text-dark">* Not estimated</p>
-          {% if plotden or plotvp %}
+          {% if plot_exp %}
             <p>
               **
               <a href="https://doi.org/10.1002/jcc.26842"
@@ -97,22 +97,13 @@
             </p>
           {% endif %}
         </div>
-        {% if plotden %}
-          <div class="col-lg-4 my-2">
-            <div id="den_plot" alt="Density plot"></div>
-            <script>getplot("{{den_data|escapejs}}",0,"Liquid Density (mol / m³)","den_plot");</script>
-          </div>
-        {% endif %}
-        {% if plotvp %}
+        {% for data_json, xtitle, ytitle, title, id in pure_plots %}
           <div class="col-lg-4 my-2 ">
-            <div id="vp_plot" alt="Vapor pressure plot"></div>
-            <script>getplot("{{vp_data|escapejs}}",0,"Vapor pressure (Pa)","vp_plot");</script>
-          </div>
-        {% endif %}
-        {% for data_json, xlegendpos, ytitle, id in custom_plots %}
-          <div class="col-lg-4 my-2 ">
-            <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
-            <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+            <div id="{{ id }}" alt="{{ title }} plot"></div>
+            <script>
+              var data = JSON.parse("{{data_json|escapejs}}");
+              getplot("{{data_json|escapejs}}","{{xtitle}}","{{ytitle}}","{{title}}","{{id}}");
+            </script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}
@@ -124,8 +115,8 @@
           </div>
           <script>
             var phase_diagram_data = {{ phase_diagrams }};
-            get_phase_diagram(phase_diagram_data, 0, "Temperature (K)", 0, "t_rho_diagram");
-            get_phase_diagram(phase_diagram_data, 0, "Pressure (Pa)", 1, "p_rho_diagram");
+            get_phase_diagram(phase_diagram_data, "Temperature (K)", 0, "t_rho_diagram");
+            get_phase_diagram(phase_diagram_data, "Pressure (Pa)", 1, "p_rho_diagram");
           </script>
         {% endif %}
       {% else %}

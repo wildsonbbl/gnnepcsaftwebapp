@@ -73,15 +73,15 @@ def pure_surface_tension(
 def pure_phase_diagram(
     smiles: str,
     min_temp: float,
-) -> Tuple[List[float], List[float], List[float], List[float]]:
+) -> List[List[float]]:
     "Calculate pure-component phase diagram using PC-SAFT EOS"
     parameters = predict_pcsaft_parameters(smiles)
 
     output = phase_diagram_feos(parameters, [min_temp])
 
-    return (
+    return [
         output["temperature"],
         output.get("pressure", output.get("pressure vapor", [0])),
         output["density liquid"],
         output["density vapor"],
-    )
+    ]

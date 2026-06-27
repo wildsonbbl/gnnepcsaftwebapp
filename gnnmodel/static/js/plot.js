@@ -1,14 +1,14 @@
 // plots the GNN PC-SAFT model results
 // and the ThermoML archive data
 
-function get_layout(xlegendpos = 0, xtitle = "", ytitle = "", title = "") {
+function get_layout(xtitle = "", ytitle = "", title = "") {
   return {
     title: { text: title },
     font: {
       family: "Times New Roman",
     },
     legend: {
-      x: xlegendpos,
+      x: 0,
       y: 1,
       font: { family: "monospace", size: 10 },
     },
@@ -51,12 +51,12 @@ function get_layout(xlegendpos = 0, xtitle = "", ytitle = "", title = "") {
   };
 }
 
-function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNPCSAFT") {
+function getplot(data_json, xtitle, ytitle, title, id) {
   var alldata = JSON.parse(data_json);
 
   var trace1 = {
-    x: alldata["T"],
-    y: alldata["TML"],
+    x: alldata["TML"][0],
+    y: alldata["TML"][1],
     mode: "markers",
     type: "scatter",
     name: "ThermoML Archive**",
@@ -67,14 +67,14 @@ function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNPCSAFT") {
   };
 
   var trace2 = {
-    x: alldata["T"],
-    y: alldata["GNN"],
+    x: alldata["GNN"][0],
+    y: alldata["GNN"][1],
     mode: "lines",
     type: "scatter",
-    name: trace_name,
+    name: "GNN",
   };
 
-  var layout = get_layout(xlegendpos, "Temperature (K)", ytitle);
+  var layout = get_layout(xtitle, ytitle, title);
 
   var plot_data = [trace1, trace2];
 
@@ -84,7 +84,7 @@ function getplot(data_json, xlegendpos, ytitle, id, trace_name = "GNNPCSAFT") {
   });
 }
 
-function get_phase_diagram(phase_diagram_data, xlegendpos, ytitle, y_pos, id) {
+function get_phase_diagram(phase_diagram_data, ytitle, y_pos, id) {
   var trace1 = {
     y: phase_diagram_data[y_pos],
     x: phase_diagram_data[2],
@@ -100,7 +100,7 @@ function get_phase_diagram(phase_diagram_data, xlegendpos, ytitle, y_pos, id) {
     name: "Vapor",
   };
 
-  var layout = get_layout(xlegendpos, "Density (mol / m³)", ytitle);
+  var layout = get_layout("Density (mol / m³)", ytitle, "Phase Diagram");
 
   var plot_data = [trace1, trace2];
 
@@ -212,7 +212,7 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
   Plotly.newPlot(
     "binary_lle_phase_diagram",
     [trace1, trace2],
-    get_layout(0, "x<sub>1</sub>", "Temperature (K)", _Title),
+    get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
@@ -243,7 +243,7 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
   Plotly.newPlot(
     "vle_phase_diagram_txy",
     [trace1, trace2],
-    get_layout(0, "x<sub>1</sub>", "Temperature (K)", _Title),
+    get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],
@@ -267,7 +267,7 @@ function get_binary_vle_phase_diagram_xy(vle_phase_diagram_data) {
   Plotly.newPlot(
     "vle_phase_diagram_xy",
     [trace1],
-    get_layout(0, "x<sub>1</sub>", "y<sub>1</sub>", _Title),
+    get_layout("x<sub>1</sub>", "y<sub>1</sub>", _Title),
     {
       responsive: true,
       modeBarButtonsToRemove: ["select2d", "lasso2d"],

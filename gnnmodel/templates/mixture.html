@@ -79,28 +79,12 @@
       {% if output %}
         <script src={% static "js-minified/plotly-2.35.2.min.js" %} charset="utf-8"></script>
         <script src={% static "js/plot.js" %}></script>
-        {% for data_json, xlegendpos, ytitle, id in mixture_plots %}
+        {% for data_json, xtitle, ytitle, title, id in mixture_plots %}
           <div class="col-lg-4 mt-2 ">
-            <div id="{{ id }}_2" alt="{{ ytitle }} plot"></div>
-            <script>getplot("{{data_json|escapejs}}","{{xlegendpos}}","{{ytitle}}","{{id}}_2");</script>
+            <div id="{{ id }}" alt="{{ title }} plot"></div>
+            <script>getplot("{{data_json|escapejs}}","{{xtitle}}","{{ytitle}}","{{title}}","{{id}}");</script>
           </div>
         {% endfor %}
-        <div class="col-lg-4 mt-2 ">
-          <div id="vp_plots" alt="Bubble/Dew point plot"></div>
-          <script>
-            var vp_plots = {{ vp_plots|safe }};
-            getplot(vp_plots[0],0,"Pressure (Pa)","vp_plots", "Bubble curve");
-            var alldata = JSON.parse(vp_plots[1]);
-            var trace2 = {
-              x: alldata["T"],
-              y: alldata["GNN"],
-              mode: "lines",
-              type: "scatter",
-              name: "Dew curve",
-            };
-            Plotly.addTraces("vp_plots", trace2);
-          </script>
-        </div>
         {% if ternary_lle_phase_diagram_data %}
           <div class="col-lg-4 mt-2">
             <div id="ternary_lle_phase_diagram" alt="Ternary LLE phase diagram plot">

@@ -153,6 +153,11 @@ def pure_plots(
         and pressure is not None
     ):
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = pure_den(
                 smiles=smiles,
@@ -188,6 +193,11 @@ def pure_plots(
         and temp_max is not None
     ):
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = pure_vp(
                 smiles=smiles,
@@ -223,6 +233,11 @@ def pure_plots(
         and temp_max is not None
     ):
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = pure_h_lv(
                 smiles=smiles,
@@ -249,6 +264,11 @@ def pure_plots(
         and temp_max is not None
     ):
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = pure_s_lv(
                 smiles=smiles,
@@ -271,6 +291,11 @@ def pure_plots(
 
     if "st_plot" in selected_checkboxes and temp_min is not None:
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = pure_surface_tension(
                 smiles=smiles,
@@ -613,6 +638,11 @@ def mixture_plots(
 
     if temp_min is not None and temp_max is not None and pressure is not None:
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN",
+            "GNN",
+            "ThermoML Archive**",
+        ]
         try:
             plot_data["GNN"] = mix_den(
                 MixDenParams(
@@ -663,6 +693,11 @@ def mixture_plots(
 
     if temp_min is not None and temp_max is not None:
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN Bubble points",
+            "GNN Dew points",
+            "Exp. Bubble P. (ThermoML Archive**)",
+        ]
         try:
             plot_data["GNN"] = mix_vp(
                 MixVpParams(
@@ -701,6 +736,11 @@ def mixture_plots(
 
     if "tvlepx" in checkboxes and len(smiles_list) == 3:
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN Bubble points",
+            "GNN Dew points",
+            "Exp. Bubble P. (ThermoML Archive**)",
+        ]
         solvent_ratio = mole_fractions_list[1] / (
             mole_fractions_list[1] + mole_fractions_list[2]
         )
@@ -741,6 +781,11 @@ def mixture_plots(
 
     if "bvlepxy" in checkboxes and len(smiles_list) == 2 and temp_min is not None:
         plot_data = {}
+        plot_data["legends"] = [
+            "GNN Bubble points",
+            "GNN Dew points",
+            "Exp. Bubble P. (ThermoML Archive**)",
+        ]
         try:
             plot_data["GNN"] = mix_vle_pxy(
                 smiles_list=smiles_list,

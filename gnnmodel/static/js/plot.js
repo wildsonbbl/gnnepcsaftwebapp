@@ -59,7 +59,7 @@ function getplot(data_json, xtitle, ytitle, title, id) {
     y: alldata["TML"][1],
     mode: "markers",
     type: "scatter",
-    name: "ThermoML Archive**",
+    name: alldata["legends"][2],
     marker: {
       symbol: "x",
       color: "black",
@@ -71,7 +71,7 @@ function getplot(data_json, xtitle, ytitle, title, id) {
     y: alldata["GNN"][1],
     mode: "lines",
     type: "scatter",
-    name: "GNN",
+    name: alldata["legends"][0],
   };
 
   var layout = get_layout(xtitle, ytitle, title);
@@ -264,7 +264,7 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
     y: vle_phase_diagram_data["exp_T"],
     mode: "markers",
     type: "scatter",
-    name: "ThermoML Archive**",
+    name: "Exp. Bubble P. (ThermoML Archive**)",
     marker: {
       symbol: "x",
       color: "black",

@@ -197,28 +197,55 @@ class CustomPlotConfigForm(forms.Form):
     "Form to receive custom plot config."
 
     temp_min = forms.FloatField(
-        label="Minimum Temperature (K)",
-        min_value=100.0,
-        max_value=800.0,
+        label="",
+        min_value=0.0,
         required=False,
-        initial=300.0,
-        widget=forms.NumberInput(attrs={"class": "form-control"}),
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control m-1",
+                "aria-label": "Minimum Temperature (K)",
+                "placeholder": "Minimum Temperature (K)",
+            }
+        ),
     )
+
     temp_max = forms.FloatField(
-        label="Maximum Temperature (K)",
-        min_value=100.0,
-        max_value=800.0,
+        label="",
+        min_value=0.0,
         required=False,
-        initial=400.0,
-        widget=forms.NumberInput(attrs={"class": "form-control"}),
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control m-1",
+                "aria-label": "Maximum Temperature (K)",
+                "placeholder": "Maximum Temperature (K)",
+            }
+        ),
     )
+
     pressure = forms.FloatField(
-        label="Pressure (Pa)",
-        min_value=10_000.0,
-        max_value=10_000_000.0,
+        label="",
+        min_value=0.0,
         required=False,
-        initial=101325.0,
-        widget=forms.NumberInput(attrs={"class": "form-control"}),
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control m-1",
+                "aria-label": "Pressure (Pa)",
+                "placeholder": "Pressure (Pa)",
+            }
+        ),
+    )
+
+    npoints = forms.IntegerField(
+        label="",
+        min_value=2,
+        required=False,
+        widget=forms.NumberInput(
+            attrs={
+                "class": "form-control m-1",
+                "aria-label": "Number of data points",
+                "placeholder": "Number of data points",
+            }
+        ),
     )
 
 
@@ -277,14 +304,14 @@ class HlvCheckForm(forms.Form):
     "Form to check enthalpy of vaporization."
 
     h_lv_checkbox = forms.BooleanField(
-        label="Enthalpy of Vap (Hvap-T)",
+        label="Enthalpy of Vap. (H-T)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Enthalpy of Vap (Hvap-T)",
+                "aria-label": "Enthalpy of Vap H-T)",
             }
         ),
     )
@@ -294,14 +321,14 @@ class SlvCheckForm(forms.Form):
     "Form to check entropy of vaporization."
 
     s_lv_checkbox = forms.BooleanField(
-        label="Entropy of Vap. (Svap-T)",
+        label="Entropy of Vap. (S-T)",
         label_suffix="",
         required=False,
         initial=False,
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Entropy of Vap. (Svap-T)",
+                "aria-label": "Entropy of Vap. (S-T)",
             }
         ),
     )

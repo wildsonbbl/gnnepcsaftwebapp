@@ -27,11 +27,20 @@ from .forms import (
     VPCheckForm,
 )
 from .utils_data import (
+    retrieve_available_data_binary,
+    retrieve_available_data_pure,
+    retrieve_available_data_ternary,
     retrieve_bubble_pressure_data,
+    retrieve_lle_binary_data,
+    retrieve_lle_ternary_data,
     retrieve_rho_binary_data,
     retrieve_rho_pure_data,
     retrieve_rho_ternary_data,
     retrieve_st_pure_data,
+    retrieve_vle_binary_data,
+    retrieve_vle_pxy_binary_data,
+    retrieve_vle_ternary_data,
+    retrieve_vle_ternary_tx_fixed_data,
     retrieve_vp_pure_data,
 )
 from .utils_mix import (
@@ -131,7 +140,12 @@ def pure_plots(
 
     all_plots = []
 
-    if "den_plot" in selected_checkboxes:
+    if (
+        "den_plot" in selected_checkboxes
+        and temp_min is not None
+        and temp_max is not None
+        and pressure is not None
+    ):
         plot_data = {}
         try:
             plot_data["GNN"] = pure_den(
@@ -161,7 +175,11 @@ def pure_plots(
             )
         )
 
-    if "vp_plot" in selected_checkboxes:
+    if (
+        "vp_plot" in selected_checkboxes
+        and temp_min is not None
+        and temp_max is not None
+    ):
         plot_data = {}
         try:
             plot_data["GNN"] = pure_vp(
@@ -191,7 +209,11 @@ def pure_plots(
             )
         )
 
-    if "h_lv_plot" in selected_checkboxes:
+    if (
+        "h_lv_plot" in selected_checkboxes
+        and temp_min is not None
+        and temp_max is not None
+    ):
         plot_data = {}
         try:
             plot_data["GNN"] = pure_h_lv(
@@ -213,7 +235,11 @@ def pure_plots(
             )
         )
 
-    if "s_lv_plot" in selected_checkboxes:
+    if (
+        "s_lv_plot" in selected_checkboxes
+        and temp_min is not None
+        and temp_max is not None
+    ):
         plot_data = {}
         try:
             plot_data["GNN"] = pure_s_lv(
@@ -235,7 +261,7 @@ def pure_plots(
             )
         )
 
-    if "st_plot" in selected_checkboxes:
+    if "st_plot" in selected_checkboxes and temp_min is not None:
         plot_data = {}
         try:
             plot_data["GNN"] = pure_surface_tension(
@@ -324,6 +350,8 @@ def get_pure_plots_data(
     s_lv_checkbox_.full_clean()
     phase_diagram_checkbox_.full_clean()
     st_checkbox_.full_clean()
+    custom_plots = []
+    phase_diagrams = []
 
     selected_checkboxes = []
     if rho_checkbox_.cleaned_data["rho_checkbox"]:
@@ -337,7 +365,6 @@ def get_pure_plots_data(
     if st_checkbox_.cleaned_data["st_checkbox"]:
         selected_checkboxes.append("st_plot")
 
-    custom_plots = []
     try:
         custom_plots = pure_plots(
             smiles=smiles,
@@ -348,12 +375,13 @@ def get_pure_plots_data(
         )
     except RuntimeError as err:
         logger.debug(err)
-    phase_diagrams = []
+
     if phase_diagram_checkbox_.cleaned_data["phase_diagram_checkbox"]:
         try:
-            phase_diagrams = pure_phase_diagram(
-                smiles=smiles, min_temp=plot_config.cleaned_data["temp_min"]
-            )
+            if plot_config.cleaned_data["temp_min"] is not None:
+                phase_diagrams = pure_phase_diagram(
+                    smiles=smiles, min_temp=plot_config.cleaned_data["temp_min"]
+                )
         except RuntimeError as err:
             logger.debug(err)
     return phase_diagrams, custom_plots
@@ -380,6 +408,11 @@ def get_mixture_plots_data(
     ternary_lle_checkform.full_clean()
     binary_vle_checkform.full_clean()
     binary_lle_checkform.full_clean()
+    mixture_plot = []
+    ternary_lle_phase_diagram_data = ""
+    binary_lle_phase_diagram_data = ""
+    vle_phase_diagram_data = ""
+
     mixture_plot = mixture_plots(
         smiles_list=smiles_list,
         state_list=(
@@ -396,26 +429,33 @@ def get_mixture_plots_data(
             raise ValueError("Ternary LLE checkbox not selected.")
         if len(smiles_list) != 3:
             raise ValueError("LLE/VLE phase diagram only for ternary mixtures.")
+        if plot_config.cleaned_data["temp_min"] is None:
+            raise ValueError("Missing minimum temperature")
+        if plot_config.cleaned_data["pressure"] is None:
+            raise ValueError("Missing pressure")
 
-        ternary_lle_phase_diagram_data = mix_ternary_lle(
+        _ternary_lle_phase_diagram_data = mix_ternary_lle(
             smiles_list=smiles_list,
             kij_matrix=kij_matrix,
             temperature=plot_config.cleaned_data["temp_min"],
             pressure=plot_config.cleaned_data["pressure"],
             npoints=20,
         )
-        ternary_lle_phase_diagram_data = json.dumps(ternary_lle_phase_diagram_data)
+        ternary_lle_phase_diagram_data = json.dumps(_ternary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
-        ternary_lle_phase_diagram_data = ""
 
     try:
         if binary_lle_checkform.cleaned_data["binary_lle_checkbox"] is False:
             raise ValueError("Binary LLE checkbox not selected.")
         if len(smiles_list) != 2:
             raise ValueError("LLE phase diagram only for binary mixtures.")
+        if plot_config.cleaned_data["temp_min"] is None:
+            raise ValueError("Missing minimum temperature")
+        if plot_config.cleaned_data["pressure"] is None:
+            raise ValueError("Missing pressure")
 
-        binary_lle_phase_diagram_data = mix_lle(
+        _binary_lle_phase_diagram_data = mix_lle(
             MixLLEParams(
                 smiles_list=smiles_list,
                 mole_fractions=mole_fractions_list,
@@ -425,28 +465,28 @@ def get_mixture_plots_data(
                 npoints=10,
             )
         )
-        binary_lle_phase_diagram_data = json.dumps(binary_lle_phase_diagram_data)
+        binary_lle_phase_diagram_data = json.dumps(_binary_lle_phase_diagram_data)
 
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
-        binary_lle_phase_diagram_data = ""
 
     try:
         if binary_vle_checkform.cleaned_data["binary_vle_checkbox"] is False:
             raise ValueError("Binary VLE checkbox not selected.")
         if len(smiles_list) != 2:
             raise ValueError("VLE phase diagram only for binary mixtures.")
+        if plot_config.cleaned_data["pressure"] is None:
+            raise ValueError("Missing pressure")
 
-        vle_phase_diagram_data = mix_vle(
+        _vle_phase_diagram_data = mix_vle(
             smiles_list=smiles_list,
             kij_matrix=kij_matrix,
             pressure=plot_config.cleaned_data["pressure"],
             npoints=20,
         )
-        vle_phase_diagram_data = json.dumps(vle_phase_diagram_data)
+        vle_phase_diagram_data = json.dumps(_vle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
-        vle_phase_diagram_data = ""
 
     return (
         mixture_plot,
@@ -465,91 +505,93 @@ def mixture_plots(
     mole_fractions_list, temp_min, temp_max, pressure = state_list
     all_plots = []
 
-    plot_data = {}
-    try:
-        plot_data["GNN"] = mix_den(
-            MixDenParams(
-                smiles_list=smiles_list,
-                mole_fractions=mole_fractions_list,
-                kij_matrix=kij_matrix,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                pressure=pressure,
-                npoints=20,
+    if temp_min is not None and temp_max is not None and pressure is not None:
+        plot_data = {}
+        try:
+            plot_data["GNN"] = mix_den(
+                MixDenParams(
+                    smiles_list=smiles_list,
+                    mole_fractions=mole_fractions_list,
+                    kij_matrix=kij_matrix,
+                    min_temp=temp_min,
+                    max_temp=temp_max,
+                    pressure=pressure,
+                    npoints=20,
+                )
+            )
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+        try:
+            plot_data["TML"] = ([], [])
+            if len(smiles_list) == 2:
+                exp_data = retrieve_rho_binary_data(
+                    smiles_list=smiles_list,
+                    pressure=pressure / 1000,
+                    x1=mole_fractions_list[0],
+                )
+                if exp_data is not None:
+                    plot_data["TML"] = exp_data.T.tolist()
+
+            elif len(smiles_list) == 3:
+                exp_data = retrieve_rho_ternary_data(
+                    smiles_list=smiles_list,
+                    pressure=pressure / 1000,
+                    x1=mole_fractions_list[0],
+                    x2=mole_fractions_list[1],
+                )
+                if exp_data is not None:
+                    plot_data["TML"] = exp_data.T.tolist()
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+
+        all_plots.append(
+            (
+                json.dumps(plot_data),
+                "Temperature (K)",
+                "Liquid Density (mol / m³)",
+                f"Density at {pressure} Pa",
+                "mix_den_plot",
             )
         )
-    except (AssertionError, RuntimeError) as e:
-        logger.debug(e)
-    try:
-        plot_data["TML"] = ([], [])
-        if len(smiles_list) == 2:
-            exp_data = retrieve_rho_binary_data(
-                smiles_list=smiles_list,
-                pressure=pressure / 1000,
-                x1=mole_fractions_list[0],
+
+    if temp_min is not None and temp_max is not None:
+        plot_data = {}
+        try:
+            plot_data["GNN"] = mix_vp(
+                MixVpParams(
+                    smiles_list=smiles_list,
+                    mole_fractions=mole_fractions_list,
+                    kij_matrix=kij_matrix,
+                    min_temp=temp_min,
+                    max_temp=temp_max,
+                    npoints=20,
+                )
             )
-            if exp_data is not None:
-                plot_data["TML"] = exp_data.T.tolist()
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+        try:
+            plot_data["TML"] = ([], [])
+            if len(smiles_list) == 2:
+                exp_data = retrieve_bubble_pressure_data(
+                    smiles_list=smiles_list,
+                    x1=mole_fractions_list[0],
+                )
+                if exp_data is not None:
+                    exp_data[:, 1] *= 1000
+                    plot_data["TML"] = exp_data.T.tolist()
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
 
-        elif len(smiles_list) == 3:
-            exp_data = retrieve_rho_ternary_data(
-                smiles_list=smiles_list,
-                pressure=pressure / 1000,
-                x1=mole_fractions_list[0],
-                x2=mole_fractions_list[1],
-            )
-            if exp_data is not None:
-                plot_data["TML"] = exp_data.T.tolist()
-
-    except (AssertionError, RuntimeError) as e:
-        logger.debug(e)
-
-    all_plots.append(
-        (
-            json.dumps(plot_data),
-            "Temperature (K)",
-            "Liquid Density (mol / m³)",
-            f"Density at {pressure} Pa",
-            "mix_den_plot",
-        )
-    )
-
-    plot_data = {}
-    try:
-        plot_data["GNN"] = mix_vp(
-            MixVpParams(
-                smiles_list=smiles_list,
-                mole_fractions=mole_fractions_list,
-                kij_matrix=kij_matrix,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                npoints=20,
+        all_plots.append(
+            (
+                json.dumps(plot_data),
+                "Temperature (K)",
+                "Pressure (Pa)",
+                "VLE",
+                "mix_vp_plot",
             )
         )
-    except (AssertionError, RuntimeError) as e:
-        logger.debug(e)
-    try:
-        plot_data["TML"] = ([], [])
-        if len(smiles_list) == 2:
-            exp_data = retrieve_bubble_pressure_data(
-                smiles_list=smiles_list,
-                x1=mole_fractions_list[0],
-            )
-            if exp_data is not None:
-                exp_data[:, 1] *= 1000
-                plot_data["TML"] = exp_data.T.tolist()
-    except (AssertionError, RuntimeError) as e:
-        logger.debug(e)
-
-    all_plots.append(
-        (
-            json.dumps(plot_data),
-            "Temperature (K)",
-            "Pressure (Pa)",
-            "VLE",
-            "mix_vp_plot",
-        )
-    )
 
     return all_plots
 

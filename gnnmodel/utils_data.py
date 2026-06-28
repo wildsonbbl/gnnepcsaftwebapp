@@ -514,7 +514,7 @@ def retrieve_vle_pxy_binary_data(
             df, i1, i2, "mole_fraction_c1p2", "mole_fraction_c2p2"
         ).filter(pl.col("T_K").is_close(temperature, abs_tol=tol_t))
         if filtered.height > 0:
-            return filtered.select("P_kPa", "x_c1").to_numpy()
+            return filtered.select("x_c1", "P_kPa").to_numpy()
 
     return None
 

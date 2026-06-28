@@ -739,6 +739,39 @@ def mixture_plots(
             )
         )
 
+    if "bvlepxy" in checkboxes and len(smiles_list) == 2 and temp_min is not None:
+        plot_data = {}
+        try:
+            plot_data["GNN"] = mix_vle_pxy(
+                smiles_list=smiles_list,
+                kij_matrix=kij_matrix,
+                temperature=temp_min,
+                npoints=npoints,
+            )
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+        try:
+            plot_data["TML"] = ([], [])
+            exp_data = retrieve_vle_pxy_binary_data(
+                smiles_list=smiles_list,
+                temperature=temp_min,
+            )
+            if exp_data is not None:
+                exp_data[:, 1] *= 1000
+                plot_data["TML"] = exp_data.T.tolist()
+        except (AssertionError, RuntimeError, ValueError) as e:
+            logger.debug(e)
+
+        all_plots.append(
+            (
+                json.dumps(plot_data),
+                "x1",
+                "Pressure (Pa)",
+                f"VLE P-x-y. T={temp_min} K.",
+                "mix_bvlepxy_plot",
+            )
+        )
+
     return all_plots
 
 

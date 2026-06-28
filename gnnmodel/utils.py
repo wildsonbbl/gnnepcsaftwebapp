@@ -448,6 +448,47 @@ def get_mixture_plots_data(
             pressure=plot_config.cleaned_data["pressure"],
             npoints=plot_config.cleaned_data["npoints"] or 10,
         )
+        _ternary_lle_phase_diagram_data["exp_x0"] = []
+        _ternary_lle_phase_diagram_data["exp_x1"] = []
+        _ternary_lle_phase_diagram_data["exp_x2"] = []
+        try:
+            exp_data = retrieve_lle_ternary_data(
+                smiles_list=smiles_list,
+                pressure=plot_config.cleaned_data["pressure"] / 1000,
+                temperature=plot_config.cleaned_data["temp_min"],
+            )
+            if exp_data is not None:
+                _ternary_lle_phase_diagram_data["exp_x0"].extend(
+                    exp_data[:, 0].tolist()
+                )
+                _ternary_lle_phase_diagram_data["exp_x1"].extend(
+                    exp_data[:, 1].tolist()
+                )
+                _ternary_lle_phase_diagram_data["exp_x2"].extend(
+                    (1 - exp_data[:, 0] - exp_data[:, 1]).tolist()
+                )
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+        try:
+            exp_data = retrieve_vle_ternary_data(
+                smiles_list=smiles_list,
+                pressure=plot_config.cleaned_data["pressure"] / 1000,
+                temperature=plot_config.cleaned_data["temp_min"],
+            )
+            if exp_data is not None:
+                _ternary_lle_phase_diagram_data["exp_x0"].extend(
+                    exp_data[:, 0].tolist()
+                )
+                _ternary_lle_phase_diagram_data["exp_x1"].extend(
+                    exp_data[:, 1].tolist()
+                )
+                _ternary_lle_phase_diagram_data["exp_x2"].extend(
+                    (1 - exp_data[:, 0] - exp_data[:, 1]).tolist()
+                )
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
         ternary_lle_phase_diagram_data = json.dumps(_ternary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
@@ -472,6 +513,30 @@ def get_mixture_plots_data(
                 npoints=plot_config.cleaned_data["npoints"] or 10,
             )
         )
+        _binary_lle_phase_diagram_data["exp_T"] = []
+        _binary_lle_phase_diagram_data["exp_x0"] = []
+        try:
+            exp_data = retrieve_lle_binary_data(
+                smiles_list=smiles_list,
+                pressure=plot_config.cleaned_data["pressure"] / 1000,
+            )
+            if exp_data is not None:
+                _binary_lle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())
+                _binary_lle_phase_diagram_data["exp_x0"].extend(exp_data[:, 1].tolist())
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
+        try:
+            exp_data = retrieve_vle_binary_data(
+                smiles_list=smiles_list,
+                pressure=plot_config.cleaned_data["pressure"] / 1000,
+            )
+            if exp_data is not None:
+                _binary_lle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())
+                _binary_lle_phase_diagram_data["exp_x0"].extend(exp_data[:, 1].tolist())
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
         binary_lle_phase_diagram_data = json.dumps(_binary_lle_phase_diagram_data)
 
     except (ValueError, RuntimeError) as err:
@@ -491,6 +556,19 @@ def get_mixture_plots_data(
             pressure=plot_config.cleaned_data["pressure"],
             npoints=plot_config.cleaned_data["npoints"] or 10,
         )
+        _vle_phase_diagram_data["exp_T"] = []
+        _vle_phase_diagram_data["exp_x0"] = []
+        try:
+            exp_data = retrieve_vle_binary_data(
+                smiles_list=smiles_list,
+                pressure=plot_config.cleaned_data["pressure"] / 1000,
+            )
+            if exp_data is not None:
+                _vle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())
+                _vle_phase_diagram_data["exp_x0"].extend(exp_data[:, 1].tolist())
+
+        except (AssertionError, RuntimeError) as e:
+            logger.debug(e)
         vle_phase_diagram_data = json.dumps(_vle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)

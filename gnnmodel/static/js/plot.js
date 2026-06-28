@@ -136,9 +136,21 @@ function get_ternary_lle_phase_diagram(ternary_lle_phase_diagram_data) {
     type: "scatterternary",
     name: "Phase 2",
   };
+  var trace3 = {
+    a: ternary_lle_phase_diagram_data["exp_x0"],
+    b: ternary_lle_phase_diagram_data["exp_x1"],
+    c: ternary_lle_phase_diagram_data["exp_x2"],
+    mode: "markers",
+    type: "scatterternary",
+    name: "ThermoML Archive**",
+    marker: {
+      symbol: "x",
+      color: "black",
+    },
+  };
   Plotly.newPlot(
     "ternary_lle_phase_diagram",
-    [trace1, trace2],
+    [trace1, trace2, trace3],
     {
       title: _ternaryTitle,
       font: {
@@ -200,6 +212,18 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
     name: "Phase 2",
   };
 
+  var trace3 = {
+    x: binary_lle_phase_diagram_data["exp_x0"],
+    y: binary_lle_phase_diagram_data["exp_T"],
+    mode: "markers",
+    type: "scatter",
+    name: "ThermoML Archive**",
+    marker: {
+      symbol: "x",
+      color: "black",
+    },
+  };
+
   var pressure_el = document.getElementById("id_pressure");
   var temp_min_el = document.getElementById("id_temp_min");
   var pressure = pressure_el
@@ -211,7 +235,7 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
   var _Title = "LLE/VLE at " + pressure + " Pa, starting at " + temp_min + " K";
   Plotly.newPlot(
     "binary_lle_phase_diagram",
-    [trace1, trace2],
+    [trace1, trace2, trace3],
     get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
@@ -235,6 +259,17 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
     type: "scatter",
     name: "Vapor phase",
   };
+  var trace3 = {
+    x: vle_phase_diagram_data["exp_x0"],
+    y: vle_phase_diagram_data["exp_T"],
+    mode: "markers",
+    type: "scatter",
+    name: "ThermoML Archive**",
+    marker: {
+      symbol: "x",
+      color: "black",
+    },
+  };
   var pressure_el = document.getElementById("id_pressure");
   var pressure = pressure_el
     ? (pressure_el.value || pressure_el.textContent || "").trim()
@@ -242,7 +277,7 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
   var _Title = "VLE at " + pressure + " Pa";
   Plotly.newPlot(
     "vle_phase_diagram_txy",
-    [trace1, trace2],
+    [trace1, trace2, trace3],
     get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,

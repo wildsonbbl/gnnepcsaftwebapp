@@ -656,7 +656,7 @@ def mixture_plots(
                 json.dumps(plot_data),
                 "Temperature (K)",
                 "Liquid Density (mol / m³)",
-                f"Density at {pressure} Pa",
+                f"Density at {pressure} Pa and mole fractions={mole_fractions_list}",
                 "mix_den_plot",
             )
         )
@@ -694,7 +694,7 @@ def mixture_plots(
                 json.dumps(plot_data),
                 "Temperature (K)",
                 "Pressure (Pa)",
-                "VLE",
+                f"VLE at mole fractions={mole_fractions_list}",
                 "mix_vp_plot",
             )
         )
@@ -734,7 +734,7 @@ def mixture_plots(
                 json.dumps(plot_data),
                 "x1",
                 "Pressure (Pa)",
-                f"Ternary VLE P-x1. T={temp_min} K. x2/(x2+x3)={solvent_ratio:.3f}.",
+                f"VLE P-x1 at T={temp_min} K and x2/(x2+x3)={solvent_ratio:.3f}",
                 "mix_tvlepx_plot",
             )
         )
@@ -767,7 +767,7 @@ def mixture_plots(
                 json.dumps(plot_data),
                 "x1",
                 "Pressure (Pa)",
-                f"VLE P-x-y. T={temp_min} K.",
+                f"VLE P-x-y at T={temp_min} K",
                 "mix_bvlepxy_plot",
             )
         )

@@ -125,6 +125,10 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         data: str = self.cleaned_data["text_area"]
 
         lines = data.split("\n")
+        if len(lines) < 3:
+            raise ValidationError(
+                _("Provide at least two 'SMILES/InChI Mole Fraction' and one kij value")
+            )
         kij = lines.pop()
         kij = kij.strip().split(" ")
         if len(kij) != (len(lines) ** 2 - len(lines)) / 2:

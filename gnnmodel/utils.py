@@ -377,6 +377,7 @@ def get_pure_plots_data(
             temp_max=plot_config.cleaned_data["temp_max"],
             pressure=plot_config.cleaned_data["pressure"],
             selected_checkboxes=selected_checkboxes,
+            npoints=plot_config.cleaned_data["npoints"] or 10,
         )
     except RuntimeError as err:
         logger.debug(err)
@@ -427,6 +428,7 @@ def get_mixture_plots_data(
             plot_config.cleaned_data["pressure"],
         ),
         kij_matrix=kij_matrix,
+        npoints=plot_config.cleaned_data["npoints"] or 10,
     )
 
     try:
@@ -444,7 +446,7 @@ def get_mixture_plots_data(
             kij_matrix=kij_matrix,
             temperature=plot_config.cleaned_data["temp_min"],
             pressure=plot_config.cleaned_data["pressure"],
-            npoints=20,
+            npoints=plot_config.cleaned_data["npoints"] or 10,
         )
         ternary_lle_phase_diagram_data = json.dumps(_ternary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
@@ -467,7 +469,7 @@ def get_mixture_plots_data(
                 kij_matrix=kij_matrix,
                 temperature=plot_config.cleaned_data["temp_min"],
                 pressure=plot_config.cleaned_data["pressure"],
-                npoints=10,
+                npoints=plot_config.cleaned_data["npoints"] or 10,
             )
         )
         binary_lle_phase_diagram_data = json.dumps(_binary_lle_phase_diagram_data)
@@ -487,7 +489,7 @@ def get_mixture_plots_data(
             smiles_list=smiles_list,
             kij_matrix=kij_matrix,
             pressure=plot_config.cleaned_data["pressure"],
-            npoints=20,
+            npoints=plot_config.cleaned_data["npoints"] or 10,
         )
         vle_phase_diagram_data = json.dumps(_vle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
@@ -505,6 +507,7 @@ def mixture_plots(
     smiles_list: List[str],
     state_list: Tuple[List[float], float, float, float],
     kij_matrix: List[List[float]],
+    npoints: int = 20,
 ) -> List[Tuple[str, str, str, str, str]]:
     "get mixture plots data"
     mole_fractions_list, temp_min, temp_max, pressure = state_list
@@ -521,7 +524,7 @@ def mixture_plots(
                     min_temp=temp_min,
                     max_temp=temp_max,
                     pressure=pressure,
-                    npoints=20,
+                    npoints=npoints,
                 )
             )
         except (AssertionError, RuntimeError) as e:
@@ -570,7 +573,7 @@ def mixture_plots(
                     kij_matrix=kij_matrix,
                     min_temp=temp_min,
                     max_temp=temp_max,
-                    npoints=20,
+                    npoints=npoints,
                 )
             )
         except (AssertionError, RuntimeError) as e:

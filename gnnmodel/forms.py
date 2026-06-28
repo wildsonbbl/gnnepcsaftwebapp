@@ -355,6 +355,23 @@ class TernaryLLECheckForm(forms.Form):
     )
 
 
+class TernaryVLEpxCheckForm(forms.Form):
+    "Form to check VLE equilibrium."
+
+    ternary_vlepx_checkbox = forms.BooleanField(
+        label="Ternary VLE P-x1 (T and x2/x3 fixed)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Ternary VLE P-x1 (T and x2/x3 fixed)",
+            }
+        ),
+    )
+
+
 class BinaryLLECheckForm(forms.Form):
     "Form to check liquid-liquid equilibrium."
 
@@ -384,6 +401,23 @@ class BinaryVLECheckForm(forms.Form):
             attrs={
                 "class": "form-check-input",
                 "aria-label": "Binary VLE (T-x-y + x-y)",
+            }
+        ),
+    )
+
+
+class BinaryVLEpxyCheckForm(forms.Form):
+    "Form to check vapor-liquid equilibrium."
+
+    binary_vlepxy_checkbox = forms.BooleanField(
+        label="Binary VLE (P-x-y)",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Binary VLE (P-x-y)",
             }
         ),
     )

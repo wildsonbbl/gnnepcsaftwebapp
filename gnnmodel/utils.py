@@ -109,7 +109,7 @@ def pure_plots(
     pressure: float,
     selected_checkboxes: Optional[List[str]] = None,
     npoints: int = 10,
-) -> Union[List[tuple[str, str, str, str, str]], List]:
+) -> Tuple[Union[List[tuple[str, str, str, str, str]], List], bool]:
     """
     Pure plots.
 
@@ -137,6 +137,7 @@ def pure_plots(
             "s_lv_plot",
             "st_plot",
         ]
+    plot_exp = False
 
     all_plots = []
 
@@ -161,6 +162,7 @@ def pure_plots(
             exp_data = retrieve_rho_pure_data(smiles=smiles, pressure=pressure / 1000)
             if exp_data is not None:
                 plot_data["TML"] = exp_data.T.tolist()
+                plot_exp = True
             else:
                 plot_data["TML"] = ([], [])
         except (AssertionError, RuntimeError) as e:
@@ -195,6 +197,7 @@ def pure_plots(
             if exp_data is not None:
                 exp_data[:, 1] *= 1000
                 plot_data["TML"] = exp_data.T.tolist()
+                plot_exp = True
             else:
                 plot_data["TML"] = ([], [])
         except (AssertionError, RuntimeError) as e:
@@ -275,6 +278,7 @@ def pure_plots(
             if exp_data is not None:
                 exp_data[:, 1] *= 1000
                 plot_data["TML"] = exp_data.T.tolist()
+                plot_exp = True
             else:
                 plot_data["TML"] = ([], [])
         except (AssertionError, RuntimeError) as e:
@@ -289,7 +293,7 @@ def pure_plots(
             )
         )
 
-    return all_plots
+    return all_plots, plot_exp
 
 
 def get_pred(smiles: str) -> List[float]:
@@ -332,7 +336,7 @@ def get_pure_plots_data(
         PhaseDiagramCheckForm,
         STCheckForm,
     ],
-) -> Tuple[List[List[float]], List]:
+) -> Tuple[List[List[float]], List, bool]:
     "get custom plots data for pure component"
 
     (
@@ -352,6 +356,7 @@ def get_pure_plots_data(
     st_checkbox_.full_clean()
     custom_plots = []
     phase_diagrams = []
+    plot_exp = False
 
     selected_checkboxes = []
     if rho_checkbox_.cleaned_data["rho_checkbox"]:
@@ -366,7 +371,7 @@ def get_pure_plots_data(
         selected_checkboxes.append("st_plot")
 
     try:
-        custom_plots = pure_plots(
+        custom_plots, plot_exp = pure_plots(
             smiles=smiles,
             temp_min=plot_config.cleaned_data["temp_min"],
             temp_max=plot_config.cleaned_data["temp_max"],
@@ -384,7 +389,7 @@ def get_pure_plots_data(
                 )
         except RuntimeError as err:
             logger.debug(err)
-    return phase_diagrams, custom_plots
+    return phase_diagrams, custom_plots, plot_exp
 
 
 def get_mixture_plots_data(
@@ -655,11 +660,12 @@ def process_pure_post(
     smiles, inchi = form.cleaned_data["query"]
     pred = get_pred(smiles)
     output = True
+    plot_exp = False
 
     plot_checkbox.full_clean()
     phase_diagrams, custom_plots = [], []
     if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
-        phase_diagrams, custom_plots = get_pure_plots_data(
+        phase_diagrams, custom_plots, plot_exp = get_pure_plots_data(
             smiles=smiles,
             plot_config=plot_config,
             checkboxes=(
@@ -678,6 +684,7 @@ def process_pure_post(
         "output": output,
         "pure_plots": custom_plots,
         "phase_diagrams": phase_diagrams,
+        "plot_exp": plot_exp,
     }
 
 
@@ -710,6 +717,7 @@ def build_pure_context(forms, post_data=None):
         "predicted_para": [(None, None)],
         "mol_identifiers": [(None, None)],
         "output": False,
+        "plot_exp": False,
         "pure_plots": [],
         "phase_diagrams": [],
     }
@@ -726,6 +734,7 @@ def build_pure_context(forms, post_data=None):
                     ("SMILES", post_data["smiles"]),
                 ],
                 "output": post_data["output"],
+                "plot_exp": post_data["plot_exp"],
                 "pure_plots": post_data["pure_plots"],
                 "phase_diagrams": post_data["phase_diagrams"],
             }

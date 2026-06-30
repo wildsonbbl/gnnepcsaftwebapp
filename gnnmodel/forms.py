@@ -253,23 +253,6 @@ class CustomPlotConfigForm(forms.Form):
     )
 
 
-class CustomPlotCheckForm(forms.Form):
-    "Form to check custom plot."
-
-    custom_plot_checkbox = forms.BooleanField(
-        label="Custom Plot",
-        label_suffix="",
-        required=False,
-        initial=False,
-        widget=forms.CheckboxInput(
-            attrs={
-                "class": "form-check-input",
-                "aria-label": "Custom Plot",
-            }
-        ),
-    )
-
-
 class RhoCheckForm(forms.Form):
     "Form to check density."
 

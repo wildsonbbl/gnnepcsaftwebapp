@@ -15,7 +15,6 @@ from .forms import (
     BinaryLLECheckForm,
     BinaryVLECheckForm,
     BinaryVLEpxyCheckForm,
-    CustomPlotCheckForm,
     CustomPlotConfigForm,
     HlvCheckForm,
     InChIorSMILESareaInputforMixture,
@@ -345,7 +344,6 @@ def get_forms(request):
     return (
         InChIorSMILESinput(request.POST),
         CustomPlotConfigForm(request.POST),
-        CustomPlotCheckForm(request.POST),
         RhoCheckForm(request.POST),
         VPCheckForm(request.POST),
         HlvCheckForm(request.POST),
@@ -826,7 +824,6 @@ def init_pure_forms(post_data=None):
         return (
             InChIorSMILESinput(post_data),
             CustomPlotConfigForm(post_data),
-            CustomPlotCheckForm(post_data),
             RhoCheckForm(post_data),
             VPCheckForm(post_data),
             HlvCheckForm(post_data),
@@ -837,7 +834,6 @@ def init_pure_forms(post_data=None):
     return (
         InChIorSMILESinput(),
         CustomPlotConfigForm(),
-        CustomPlotCheckForm(),
         RhoCheckForm(),
         VPCheckForm(),
         HlvCheckForm(),
@@ -851,7 +847,6 @@ def process_pure_post(
     forms: Tuple[
         InChIorSMILESinput,
         CustomPlotConfigForm,
-        CustomPlotCheckForm,
         RhoCheckForm,
         VPCheckForm,
         HlvCheckForm,
@@ -864,7 +859,6 @@ def process_pure_post(
     (
         form,
         plot_config,
-        plot_checkbox,
         rho_checkbox,
         vp_checkbox,
         h_lv_checkbox,
@@ -881,21 +875,19 @@ def process_pure_post(
     output = True
     plot_exp = False
 
-    plot_checkbox.full_clean()
     phase_diagrams, custom_plots = [], []
-    if plot_checkbox.cleaned_data["custom_plot_checkbox"]:
-        phase_diagrams, custom_plots, plot_exp = get_pure_plots_data(
-            smiles=smiles,
-            plot_config=plot_config,
-            checkboxes=(
-                rho_checkbox,
-                vp_checkbox,
-                h_lv_checkbox,
-                s_lv_checkbox,
-                phase_diagram_checkbox,
-                st_checkbox,
-            ),
-        )
+    phase_diagrams, custom_plots, plot_exp = get_pure_plots_data(
+        smiles=smiles,
+        plot_config=plot_config,
+        checkboxes=(
+            rho_checkbox,
+            vp_checkbox,
+            h_lv_checkbox,
+            s_lv_checkbox,
+            phase_diagram_checkbox,
+            st_checkbox,
+        ),
+    )
     return {
         "smiles": smiles,
         "inchi": inchi,
@@ -912,7 +904,6 @@ def build_pure_context(forms, post_data=None):
     (
         form,
         plot_config,
-        plot_checkbox,
         rho_checkbox,
         vp_checkbox,
         h_lv_checkbox,
@@ -925,7 +916,6 @@ def build_pure_context(forms, post_data=None):
         "form": form,
         "plot_config": plot_config,
         "plot_checkboxes": [
-            plot_checkbox,
             rho_checkbox,
             vp_checkbox,
             h_lv_checkbox,

@@ -931,7 +931,6 @@ def build_pure_context(forms, post_data=None):
         "plot_exp": False,
         "pure_plots": [],
         "phase_diagrams": [],
-        "available_exp_data": False,
     }
 
     if post_data:
@@ -949,7 +948,6 @@ def build_pure_context(forms, post_data=None):
                 "plot_exp": post_data["plot_exp"],
                 "pure_plots": post_data["pure_plots"],
                 "phase_diagrams": post_data["phase_diagrams"],
-                "available_exp_data": True,
                 **post_data["available_exp_data"],
             }
         )
@@ -1004,7 +1002,7 @@ def process_mixture_post(
     mole_fractions_list = []
     mixture_plots_ = ([], "", "", "")
     output = False
-    available_exp_data = ""
+    available_exp_data = {}
 
     if form.is_valid():
         _, smiles_list, mole_fractions_list, kij = form.cleaned_data["text_area"]
@@ -1076,7 +1074,7 @@ def build_mixture_context(post_data=None):
             "vle_phase_diagram_data": post_data["mixture_plots"][2],
             "ternary_lle_phase_diagram_data": post_data["mixture_plots"][3],
             "output": post_data["output"],
-            "available_exp_data": post_data["available_exp_data"],
+            **post_data["available_exp_data"],
         }
     return {
         "form": InChIorSMILESareaInputforMixture(),
@@ -1093,5 +1091,4 @@ def build_mixture_context(post_data=None):
         "vle_phase_diagram_data": "",
         "ternary_lle_phase_diagram_data": "",
         "output": False,
-        "available_exp_data": "",
     }

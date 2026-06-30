@@ -32,6 +32,34 @@
                 {% endfor %}
                 <div class="form-control my-1">{{ plot_config }}</div>
               </div>
+              {% if available_exp_data %}
+                <button class="form-control my-1 btn-outline-secondary"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#available_exp_data"
+                        aria-expanded="true"
+                        aria-controls="available_exp_data">Available experimental data</button>
+                <div class="collapse" id="available_exp_data">
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#rho_exp_data"
+                          aria-expanded="true"
+                          aria-controls="rho_exp_data">Density experimental data</button>
+                  <div class="collapse" id="rho_exp_data">
+                    {% for pkpa, count in rho_range %}
+                      <button class="form-control my-1 btn-outline-primary pressure-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% if rho_range is None %}
+                      <button class="form-control my-1 btn-outline-primary" type="button">rho 0 points</button>
+                    {% endif %}
+                  </div>
+                  <button class="form-control my-1 btn-outline-secondary" type="button">Vapor Pressure: {{ vp_range }} points</button>
+                  <button class="form-control my-1 btn-outline-secondary" type="button">Surface Tension: {{ st_range }} points</button>
+                </div>
+              {% endif %}
             </div>
           </div>
         </form>
@@ -130,4 +158,26 @@
       {% endif %}
     </div>
   </div>
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Seleciona todos os botões de pressão e o input hidden do Django
+    const pressureButtons = document.querySelectorAll('.pressure-btn');
+    const pressureInput = document.getElementById('id_pressure');
+
+    if (pressureInput) {
+      pressureButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          // Obtém o valor de pressão guardado no atributo data-pressure
+          const pressureValue = this.getAttribute('data-pressure');
+          
+          // Define o valor no input hidden
+          pressureInput.value = pressureValue;
+
+          // Opcional: Dispara o evento 'change' caso outros scripts dependam da atualização deste campo
+          pressureInput.dispatchEvent(new Event('change'));
+        });
+      });
+    }
+  });
+  </script>
 {% endblock content %}

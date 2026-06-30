@@ -874,6 +874,7 @@ def process_pure_post(
     pred = get_pred(smiles)
     output = True
     plot_exp = False
+    available_exp_data = retrieve_available_data_pure(smiles=smiles)
 
     phase_diagrams, custom_plots = [], []
     phase_diagrams, custom_plots, plot_exp = get_pure_plots_data(
@@ -896,6 +897,7 @@ def process_pure_post(
         "pure_plots": custom_plots,
         "phase_diagrams": phase_diagrams,
         "plot_exp": plot_exp,
+        "available_exp_data": available_exp_data,
     }
 
 
@@ -929,6 +931,7 @@ def build_pure_context(forms, post_data=None):
         "plot_exp": False,
         "pure_plots": [],
         "phase_diagrams": [],
+        "available_exp_data": False,
     }
 
     if post_data:
@@ -946,6 +949,8 @@ def build_pure_context(forms, post_data=None):
                 "plot_exp": post_data["plot_exp"],
                 "pure_plots": post_data["pure_plots"],
                 "phase_diagrams": post_data["phase_diagrams"],
+                "available_exp_data": True,
+                **post_data["available_exp_data"],
             }
         )
     return data
@@ -999,6 +1004,7 @@ def process_mixture_post(
     mole_fractions_list = []
     mixture_plots_ = ([], "", "", "")
     output = False
+    available_exp_data = ""
 
     if form.is_valid():
         _, smiles_list, mole_fractions_list, kij = form.cleaned_data["text_area"]
@@ -1028,6 +1034,10 @@ def process_mixture_post(
             ),
             kij_matrix=kij_matrix,
         )
+        available_exp_data = [
+            retrieve_available_data_binary(smiles_list=smiles_list),
+            retrieve_available_data_ternary(smiles_list=smiles_list),
+        ]
         output = True
 
     return {
@@ -1042,6 +1052,7 @@ def process_mixture_post(
         "mole_fractions_list": mole_fractions_list,
         "mixture_plots": mixture_plots_,
         "output": output,
+        "available_exp_data": available_exp_data,
     }
 
 
@@ -1065,6 +1076,7 @@ def build_mixture_context(post_data=None):
             "vle_phase_diagram_data": post_data["mixture_plots"][2],
             "ternary_lle_phase_diagram_data": post_data["mixture_plots"][3],
             "output": post_data["output"],
+            "available_exp_data": post_data["available_exp_data"],
         }
     return {
         "form": InChIorSMILESareaInputforMixture(),
@@ -1081,4 +1093,5 @@ def build_mixture_context(post_data=None):
         "vle_phase_diagram_data": "",
         "ternary_lle_phase_diagram_data": "",
         "output": False,
+        "available_exp_data": "",
     }

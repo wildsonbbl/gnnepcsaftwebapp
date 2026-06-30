@@ -1,7 +1,7 @@
 "Experimental data utilities"
 
 import os.path as osp
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import polars as pl
 from gnnepcsaft_mcp_server.utils import smilestoinchi
@@ -351,19 +351,7 @@ def retrieve_st_pure_data(smiles: str) -> Optional[NDArray[float64]]:
 
 def retrieve_available_data_pure(
     smiles: str,
-) -> Tuple[
-    Optional[NDArray[float64]],
-    Tuple[
-        Optional[NDArray[float64]],
-        Optional[NDArray[float64]],
-        int,
-    ],
-    Tuple[
-        Optional[NDArray[float64]],
-        Optional[NDArray[float64]],
-        int,
-    ],
-]:
+) -> Dict[str, Optional[Union[List[float], int]]]:
     "retrieve available pure data for smiles"
 
     rho_pure = pl.read_parquet(osp.join(application_path, "_data", "rho_pure.parquet"))
@@ -374,35 +362,33 @@ def retrieve_available_data_pure(
 
     rho_filtered = rho_pure.filter(pl.col("inchi1") == inchi)
     if rho_filtered.height > 0:
-        pure_data = (
-            rho_filtered.select("T_K", "P_kPa")
+        rho_range = (
+            rho_filtered.select("P_kPa")
             .group_by(pl.col("P_kPa"))
             .agg(
-                pl.col("T_K").min().alias("T_min"),
-                pl.col("T_K").max().alias("T_max"),
                 pl.len().alias("count"),
             )
             .sort(pl.col("P_kPa"))
             .to_numpy()
+            .tolist()
         )
     else:
-        pure_data = None
+        rho_range = None
 
     vp_filtered = vp_pure.filter(pl.col("inchi1") == inchi)
     if vp_filtered.height > 0:
-        vp_data = vp_filtered.select("T_K").to_numpy()
-        vp_range = (vp_data.min(), vp_data.max(), vp_filtered.height)
+        vp_range = vp_filtered.height
     else:
-        vp_range = (None, None, 0)
+        vp_range = 0
 
     st_filtered = st_pure.filter(pl.col("inchi1") == inchi)
     if st_filtered.height > 0:
-        st_data = st_filtered.select("T_K").to_numpy()
-        st_range = (st_data.min(), st_data.max(), st_filtered.height)
-    else:
-        st_range = (None, None, 0)
 
-    return pure_data, vp_range, st_range
+        st_range = st_filtered.height
+    else:
+        st_range = 0
+
+    return {"rho_range": rho_range, "vp_range": vp_range, "st_range": st_range}
 
 
 def retrieve_rho_binary_data(

@@ -171,7 +171,7 @@
           const pressureValue = this.getAttribute('data-pressure');
           
           // Define o valor no input hidden
-          pressureInput.value = pressureValue;
+          pressureInput.value = pressureValue*1000;
 
           // Opcional: Dispara o evento 'change' caso outros scripts dependam da atualização deste campo
           pressureInput.dispatchEvent(new Event('change'));

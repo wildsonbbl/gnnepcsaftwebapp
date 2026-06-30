@@ -6,6 +6,7 @@ function get_layout(xtitle = "", ytitle = "", title = "") {
     title: { text: title },
     font: {
       family: "Times New Roman",
+      size: 10,
     },
     legend: {
       x: 0,

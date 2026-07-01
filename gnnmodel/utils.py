@@ -692,8 +692,8 @@ def mixture_plots(
     if temp_min is not None and temp_max is not None:
         plot_data = {}
         plot_data["legends"] = [
-            "GNN Bubble points",
-            "GNN Dew points",
+            "GNN Bubble P.",
+            "GNN Dew P.",
             "Exp. Bubble P. (ThermoML Archive**)",
         ]
         try:
@@ -735,8 +735,8 @@ def mixture_plots(
     if "tvlepx" in checkboxes and len(smiles_list) == 3:
         plot_data = {}
         plot_data["legends"] = [
-            "GNN Bubble points",
-            "GNN Dew points",
+            "GNN Bubble P.",
+            "GNN Dew P.",
             "Exp. Bubble P. (ThermoML Archive**)",
         ]
         solvent_ratio = mole_fractions_list[1] / (
@@ -780,8 +780,8 @@ def mixture_plots(
     if "bvlepxy" in checkboxes and len(smiles_list) == 2 and temp_min is not None:
         plot_data = {}
         plot_data["legends"] = [
-            "GNN Bubble points",
-            "GNN Dew points",
+            "GNN Bubble P.",
+            "GNN Dew P.",
             "Exp. Bubble P. (ThermoML Archive**)",
         ]
         try:
@@ -1032,10 +1032,12 @@ def process_mixture_post(
             ),
             kij_matrix=kij_matrix,
         )
-        available_exp_data = [
-            retrieve_available_data_binary(smiles_list=smiles_list),
-            retrieve_available_data_ternary(smiles_list=smiles_list),
-        ]
+        if len(smiles_list) == 2:
+            available_exp_data = retrieve_available_data_binary(smiles_list=smiles_list)
+        elif len(smiles_list) == 3:
+            available_exp_data = retrieve_available_data_ternary(
+                smiles_list=smiles_list
+            )
         output = True
 
     return {

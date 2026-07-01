@@ -32,6 +32,91 @@
               <input type="submit"
                      value="Analyse SMILES/InChI Mixture"
                      class="form-control btn-outline-primary" />
+              {% if output %}
+                <button class="form-control my-1 btn-outline-secondary"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#available_exp_data"
+                        aria-expanded="true"
+                        aria-controls="available_exp_data">Available experimental data</button>
+                <div class="collapse" id="available_exp_data">
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#rho_exp_data"
+                          aria-expanded="true"
+                          aria-controls="rho_exp_data">Density experimental data</button>
+                  <div class="collapse" id="rho_exp_data">
+                    {% for pkpa, x1, count in rho_px_data_b %}
+                      <button class="form-control my-1 btn-outline-primary rho-px-data-b-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}"
+                              data-x="{{ x1 }}">P (kPa) = {{ pkpa }} - x1 = {{ x1 }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for pkpa, x1,x2, count in rho_px_data_t %}
+                      <button class="form-control my-1 btn-outline-primary rho-px-data-t-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}"
+                              data-x1="{{ x1 }}"
+                              data-x2="{{ x2 }}">P (kPa) = {{ pkpa }} - x = [{{ x1 }}, {{ x2 }}] - {{ count }} points</button>
+                    {% endfor %}
+                  </div>
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#lle_exp_data"
+                          aria-expanded="true"
+                          aria-controls="lle_exp_data">LLE experimental data</button>
+                  <div class="collapse" id="lle_exp_data">
+                    {% for pkpa, count in lle_p_data_b %}
+                      <button class="form-control my-1 btn-outline-primary lle-p-data-b-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for pkpa, tk, count in lle_pt_data_t %}
+                      <button class="form-control my-1 btn-outline-primary lle-data-t-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}"
+                              data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
+                    {% endfor %}
+                  </div>
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#vle_exp_data"
+                          aria-expanded="true"
+                          aria-controls="vle_exp_data">VLE experimental data</button>
+                  <div class="collapse" id="vle_exp_data">
+                    {% for pkpa, count in vle_p_data_b %}
+                      <button class="form-control my-1 btn-outline-primary vle-p-data-b-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for tk, count in vle_t_data_b %}
+                      <button class="form-control my-1 btn-outline-primary vle-t-data-b-btn"
+                              type="button"
+                              data-tk="{{ tk }}">T (K) = {{ tk }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for x, count in vle_x_data_b %}
+                      <button class="form-control my-1 btn-outline-primary vle-x-data-b-btn"
+                              type="button"
+                              data-x="{{ x }}">x1 = {{ x }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for pkpa, tk, count in vle_pt_data_t %}
+                      <button class="form-control my-1 btn-outline-primary vle-pt-data-t-btn"
+                              type="button"
+                              data-pressure="{{ pkpa }}"
+                              data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
+                    {% endfor %}
+                    {% for tk, ratio, count in vle_tx_data_t %}
+                      <button class="form-control my-1 btn-outline-primary vle-tx-data-t-btn"
+                              type="button"
+                              data-tk="{{ tk }}"
+                              data-ratio="{{ ratio }}">T (K) = {{ tk }} - x2/(x2+x3) = {{ ratio }} - {{ count }} points</button>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
             </div>
           </div>
         </form>
@@ -54,14 +139,18 @@
               <thead>
                 <tr>
                   <th>Mole Fractions</th>
-                  {% for paraname in available_params %}<th>{{ paraname }}</th>{% endfor %}
+                  {% for paraname in available_params %}
+                    <th>{{ paraname }}</th>
+                  {% endfor %}
                 </tr>
               </thead>
               <tbody>
                 {% for parameters, mole_fractions in parameters_molefractions_list %}
                   <tr>
                     <td>{{ mole_fractions }}</td>
-                    {% for parameter in parameters %}<td>{{ parameter }}</td>{% endfor %}
+                    {% for parameter in parameters %}
+                      <td>{{ parameter }}</td>
+                    {% endfor %}
                   </tr>
                 {% endfor %}
               </tbody>
@@ -72,7 +161,9 @@
       {% else %}
         <div class="col-lg">
           <ul>
-            {% for error in form.text_area.errors %}<li class="alert alert-danger">{{ error }}</li>{% endfor %}
+            {% for error in form.text_area.errors %}
+              <li class="alert alert-danger">{{ error }}</li>
+            {% endfor %}
           </ul>
         </div>
       {% endif %}

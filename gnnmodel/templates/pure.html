@@ -40,21 +40,21 @@
                         aria-expanded="true"
                         aria-controls="available_exp_data">Available experimental data</button>
                 <div class="collapse" id="available_exp_data">
-                  <button class="form-control my-1 btn-outline-secondary"
-                          type="button"
-                          data-bs-toggle="collapse"
-                          data-bs-target="#rho_exp_data"
-                          aria-expanded="true"
-                          aria-controls="rho_exp_data">Density experimental data</button>
-                  <div class="collapse" id="rho_exp_data">
-                    {% for pkpa, count in rho_range %}
-                      <button class="form-control my-1 btn-outline-primary pressure-btn"
-                              type="button"
-                              data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
-                    {% endfor %}
-                    {% if rho_range is None %}
-                      <button class="form-control my-1 btn-outline-primary" type="button">Density: 0 points</button>
-                    {% endif %}
+                  <div class="dropdown">
+                    <button class="form-control my-1 btn-outline-secondary dropdown-toggle"
+                            type="button"
+                            id="rho_exp_data"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false">Density experimental data</button>
+                    <ul class="dropdown-menu" aria-labelledby="rho_exp_data">
+                      {% for pkpa, count in rho_range %}
+                        <li>
+                          <button class="form-control my-1 btn-outline-primary dropdown-item pressure-btn"
+                                  type="button"
+                                  data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                        </li>
+                      {% endfor %}
+                    </ul>
                   </div>
                   <button class="form-control my-1 btn-outline-secondary" type="button">Vapor Pressure: {{ vp_range }} points</button>
                   <button class="form-control my-1 btn-outline-secondary" type="button">Surface Tension: {{ st_range }} points</button>

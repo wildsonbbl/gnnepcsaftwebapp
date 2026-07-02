@@ -80,7 +80,7 @@
                       {% endfor %}
                       {% for pkpa, tk, count in lle_pt_data_t %}
                         <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item lle-data-t-btn"
+                          <button class="form-control my-1 btn-outline-primary dropdown-item lle-pt-data-t-btn"
                                   type="button"
                                   data-pressure="{{ pkpa }}"
                                   data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
@@ -233,4 +233,131 @@
       {% endif %}
     </div>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Get form input fields
+      const pressureInput = document.getElementById('id_pressure');
+      const tempMinInput = document.getElementById('id_temp_min');
+      const tempMaxInput = document.getElementById('id_temp_max');
+
+      // Get all experimental data buttons
+      const rhoBinaryBtns = document.querySelectorAll('.rho-px-data-b-btn');
+      const rhoTernaryBtns = document.querySelectorAll('.rho-px-data-t-btn');
+      const lleBinaryPBtns = document.querySelectorAll('.lle-p-data-b-btn');
+      const lleTernaryBtns = document.querySelectorAll('.lle-pt-data-t-btn');
+      const vlePBtns = document.querySelectorAll('.vle-p-data-b-btn');
+      const vleTBtns = document.querySelectorAll('.vle-t-data-b-btn');
+      const vleXBtns = document.querySelectorAll('.vle-x-data-b-btn');
+      const vlePTBtns = document.querySelectorAll('.vle-pt-data-t-btn');
+      const vleTXBtns = document.querySelectorAll('.vle-tx-data-t-btn');
+
+      // Helper function to fill form fields and update button styling
+      function fillFormAndHighlight(button, pressureValue, tempValue) {
+        // Fill form fields
+        if (pressureValue !== null && pressureInput) {
+          pressureInput.value = pressureValue * 1000; // Convert kPa to Pa
+          pressureInput.dispatchEvent(new Event('change'));
+        }
+
+        if (tempValue !== null && tempMinInput) {
+          tempMinInput.value = tempValue;
+          tempMinInput.dispatchEvent(new Event('change'));
+        }
+
+        // Update button styling to show selection
+        button.classList.add('btn-success');
+        button.classList.remove('btn-outline-primary');
+      }
+
+      // Helper function to reset button styling
+      function resetButtonStyle(button) {
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-primary');
+      }
+
+      // Handler for density binary buttons (rho-px-data-b-btn)
+      rhoBinaryBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          fillFormAndHighlight(this, pressure, null);
+        });
+      });
+
+      // Handler for density ternary buttons (rho-px-data-t-btn)
+      rhoTernaryBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          fillFormAndHighlight(this, pressure, null);
+        });
+      });
+
+      // Handler for LLE binary pressure buttons (lle-p-data-b-btn)
+      lleBinaryPBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          fillFormAndHighlight(this, pressure, null);
+        });
+      });
+
+      // Handler for LLE ternary buttons (lle-pt-data-t-btn)
+      lleTernaryBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          const temp = parseFloat(this.getAttribute('data-tk'));
+          fillFormAndHighlight(this, pressure, temp);
+        });
+      });
+
+      // Handler for VLE pressure buttons (vle-p-data-b-btn)
+      vlePBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          fillFormAndHighlight(this, pressure, null);
+        });
+      });
+
+      // Handler for VLE temperature buttons (vle-t-data-b-btn)
+      vleTBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const temp = parseFloat(this.getAttribute('data-tk'));
+          fillFormAndHighlight(this, null, temp);
+        });
+      });
+
+      // Handler for VLE composition buttons (vle-x-data-b-btn)
+      vleXBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Composition doesn't directly map to form fields, just highlight
+          this.classList.add('btn-success');
+          this.classList.remove('btn-outline-primary');
+        });
+      });
+
+      // Handler for VLE ternary P-T buttons (vle-pt-data-t-btn)
+      vlePTBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const pressure = parseFloat(this.getAttribute('data-pressure'));
+          const temp = parseFloat(this.getAttribute('data-tk'));
+          fillFormAndHighlight(this, pressure, temp);
+        });
+      });
+
+      // Handler for VLE ternary T-x buttons (vle-tx-data-t-btn)
+      vleTXBtns.forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          const temp = parseFloat(this.getAttribute('data-tk'));
+          fillFormAndHighlight(this, null, temp);
+        });
+      });
+    });
+  </script>
 {% endblock content %}

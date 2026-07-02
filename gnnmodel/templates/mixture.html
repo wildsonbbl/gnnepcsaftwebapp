@@ -239,6 +239,7 @@
       const pressureInput = document.getElementById('id_pressure');
       const tempMinInput = document.getElementById('id_temp_min');
       const tempMaxInput = document.getElementById('id_temp_max');
+      const textAreaInput = document.getElementById('id_text_area');
 
       // Get all experimental data buttons
       const rhoBinaryBtns = document.querySelectorAll('.rho-px-data-b-btn');
@@ -252,7 +253,7 @@
       const vleTXBtns = document.querySelectorAll('.vle-tx-data-t-btn');
 
       // Helper function to fill form fields and update button styling
-      function fillFormAndHighlight(button, pressureValue, tempValue) {
+      function fillFormAndHighlight(button, pressureValue, tempValue, moleFractions = null) {
         // Fill form fields
         if (pressureValue !== null && pressureInput) {
           pressureInput.value = pressureValue * 1000; // Convert kPa to Pa
@@ -262,6 +263,33 @@
         if (tempValue !== null && tempMinInput) {
           tempMinInput.value = tempValue;
           tempMinInput.dispatchEvent(new Event('change'));
+        }
+
+        // Update the textarea directly so the submitted form contains the selected fractions.
+        if (moleFractions !== null && textAreaInput) {
+          const lines = textAreaInput.value.split('\n');
+          const componentLines = lines.slice(0, Math.max(0, lines.length - 1));
+
+          if (componentLines.length === moleFractions.length) {
+            const updatedLines = componentLines.map((line, index) => {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) {
+                return line;
+              }
+
+              const parts = trimmedLine.split(/\s+/);
+              if (parts.length < 2) {
+                return line;
+              }
+
+              parts[parts.length - 1] = moleFractions[index].toFixed(4);
+              return parts.join(' ');
+            });
+
+            textAreaInput.value = [...updatedLines, lines[lines.length - 1]].join('\n');
+            textAreaInput.dispatchEvent(new Event('input'));
+            textAreaInput.dispatchEvent(new Event('change'));
+          }
         }
 
         // Update button styling to show selection
@@ -280,7 +308,8 @@
         button.addEventListener('click', function(e) {
           e.preventDefault();
           const pressure = parseFloat(this.getAttribute('data-pressure'));
-          fillFormAndHighlight(this, pressure, null);
+          const x = parseFloat(this.getAttribute('data-x'));
+          fillFormAndHighlight(this, pressure, null, [x, 1.0-x]);
         });
       });
 
@@ -289,7 +318,9 @@
         button.addEventListener('click', function(e) {
           e.preventDefault();
           const pressure = parseFloat(this.getAttribute('data-pressure'));
-          fillFormAndHighlight(this, pressure, null);
+          const x1 = parseFloat(this.getAttribute('data-x1'));
+          const x2 = parseFloat(this.getAttribute('data-x2'));
+          fillFormAndHighlight(this, pressure, null, [x1, x2, 1.0 - x1 - x2]);
         });
       });
 
@@ -334,7 +365,8 @@
       vleXBtns.forEach(button => {
         button.addEventListener('click', function(e) {
           e.preventDefault();
-          // Composition doesn't directly map to form fields, just highlight
+          const x = parseFloat(this.getAttribute('data-x'));
+          fillFormAndHighlight(this, null, null, [x, 1.0 - x]);
           this.classList.add('btn-success');
           this.classList.remove('btn-outline-primary');
         });
@@ -355,7 +387,8 @@
         button.addEventListener('click', function(e) {
           e.preventDefault();
           const temp = parseFloat(this.getAttribute('data-tk'));
-          fillFormAndHighlight(this, null, temp);
+          const ratio = parseFloat(this.getAttribute('data-ratio'));
+          fillFormAndHighlight(this, null, temp, [0.0, 1.0*ratio, 1.0*(1.0-ratio)]);
         });
       });
     });

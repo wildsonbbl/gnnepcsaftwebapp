@@ -19,11 +19,9 @@
             <div class="col-sm-4">
               <div class="form-control my-2">
                 {{ plot_config }}
-                <div class="form-check form-switch">{{ binary_vle_checkform }}</div>
-                <div class="form-check form-switch">{{ binary_lle_checkform }}</div>
-                <div class="form-check form-switch">{{ binary_vlepxy_checkform }}</div>
-                <div class="form-check form-switch">{{ ternary_lle_checkform }}</div>
-                <div class="form-check form-switch">{{ ternary_vlepx_checkform }}</div>
+                {% for checkbox in plot_checkboxes %}
+                  {% if checkbox %}<div class="form-check form-switch">{{ checkbox }}</div>{% endif %}
+                {% endfor %}
               </div>
             </div>
           </div>

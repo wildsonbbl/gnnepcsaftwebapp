@@ -431,6 +431,8 @@ def get_mixture_plots_data(
         BinaryLLECheckForm,
         BinaryVLEpxyCheckForm,
         TernaryVLEpxCheckForm,
+        RhoCheckForm,
+        VPCheckForm,
     ],
     kij_matrix: List[List[float]],
 ) -> Tuple[List[Tuple[str, str, str, str, str]], str, str, str]:
@@ -443,9 +445,13 @@ def get_mixture_plots_data(
         binary_lle_checkform,
         binary_vlepxy_checkform,
         ternary_vlepx_checkform,
+        rho_checkform,
+        vp_checkform,
     ) = config
 
     plot_config.full_clean()
+    rho_checkform.full_clean()
+    vp_checkform.full_clean()
     ternary_lle_checkform.full_clean()
     binary_vle_checkform.full_clean()
     binary_lle_checkform.full_clean()
@@ -460,6 +466,10 @@ def get_mixture_plots_data(
         checkboxes.append("tvlepx")
     if binary_vlepxy_checkform.cleaned_data["binary_vlepxy_checkbox"]:
         checkboxes.append("bvlepxy")
+    if rho_checkform.cleaned_data["rho_checkbox"]:
+        checkboxes.append("rho")
+    if vp_checkform.cleaned_data["vp_checkbox"]:
+        checkboxes.append("vp")
 
     mixture_plot = mixture_plots(
         smiles_list=smiles_list,
@@ -634,7 +644,12 @@ def mixture_plots(
     mole_fractions_list, temp_min, temp_max, pressure = state_list
     all_plots = []
 
-    if temp_min is not None and temp_max is not None and pressure is not None:
+    if (
+        temp_min is not None
+        and temp_max is not None
+        and pressure is not None
+        and "rho" in checkboxes
+    ):
         plot_data = {}
         plot_data["legends"] = [
             "GNN",
@@ -689,7 +704,7 @@ def mixture_plots(
             )
         )
 
-    if temp_min is not None and temp_max is not None:
+    if temp_min is not None and temp_max is not None and "vp" in checkboxes:
         plot_data = {}
         plot_data["legends"] = [
             "GNN Bubble P.",
@@ -960,6 +975,8 @@ def init_mixture_forms(post_data=None):
         return (
             InChIorSMILESareaInputforMixture(post_data),
             CustomPlotConfigForm(post_data),
+            RhoCheckForm(post_data),
+            VPCheckForm(post_data),
             BinaryVLECheckForm(post_data),
             BinaryLLECheckForm(post_data),
             TernaryLLECheckForm(post_data),
@@ -969,6 +986,8 @@ def init_mixture_forms(post_data=None):
     return (
         InChIorSMILESareaInputforMixture(),
         CustomPlotConfigForm(),
+        RhoCheckForm(),
+        VPCheckForm(),
         BinaryVLECheckForm(),
         BinaryLLECheckForm(),
         TernaryLLECheckForm(),
@@ -981,6 +1000,8 @@ def process_mixture_post(
     forms: Tuple[
         InChIorSMILESareaInputforMixture,
         CustomPlotConfigForm,
+        RhoCheckForm,
+        VPCheckForm,
         BinaryVLECheckForm,
         BinaryLLECheckForm,
         TernaryLLECheckForm,
@@ -992,6 +1013,8 @@ def process_mixture_post(
     (
         form,
         plot_config,
+        rho_checkform,
+        vp_checkform,
         binary_vle_checkform,
         binary_lle_checkform,
         ternary_lle_checkform,
@@ -1029,6 +1052,8 @@ def process_mixture_post(
                 binary_lle_checkform,
                 binary_vlepxy_checkform,
                 ternary_vlepx_checkform,
+                rho_checkform,
+                vp_checkform,
             ),
             kij_matrix=kij_matrix,
         )
@@ -1042,12 +1067,16 @@ def process_mixture_post(
 
     return {
         "form": form,
-        "binary_vle_checkform": binary_vle_checkform,
-        "binary_lle_checkform": binary_lle_checkform,
-        "ternary_lle_checkform": ternary_lle_checkform,
-        "binary_vlepxy_checkform": binary_vlepxy_checkform,
-        "ternary_vlepx_checkform": ternary_vlepx_checkform,
         "plot_config": plot_config,
+        "plot_checkboxes": [
+            rho_checkform,
+            vp_checkform,
+            binary_vle_checkform,
+            binary_vlepxy_checkform,
+            binary_lle_checkform,
+            ternary_lle_checkform,
+            ternary_vlepx_checkform,
+        ],
         "para_pred_list": para_pred_list,
         "mole_fractions_list": mole_fractions_list,
         "mixture_plots": mixture_plots_,
@@ -1062,11 +1091,7 @@ def build_mixture_context(post_data=None):
         return {
             "form": post_data["form"],
             "plot_config": post_data["plot_config"],
-            "binary_vle_checkform": post_data["binary_vle_checkform"],
-            "binary_lle_checkform": post_data["binary_lle_checkform"],
-            "ternary_lle_checkform": post_data["ternary_lle_checkform"],
-            "binary_vlepxy_checkform": post_data["binary_vlepxy_checkform"],
-            "ternary_vlepx_checkform": post_data["ternary_vlepx_checkform"],
+            "plot_checkboxes": post_data["plot_checkboxes"],
             "available_params": available_params,
             "parameters_molefractions_list": list(
                 zip(post_data["para_pred_list"], post_data["mole_fractions_list"])
@@ -1081,11 +1106,15 @@ def build_mixture_context(post_data=None):
     return {
         "form": InChIorSMILESareaInputforMixture(),
         "plot_config": CustomPlotConfigForm(),
-        "binary_vle_checkform": BinaryVLECheckForm(),
-        "binary_lle_checkform": BinaryLLECheckForm(),
-        "ternary_lle_checkform": TernaryLLECheckForm(),
-        "binary_vlepxy_checkform": BinaryVLEpxyCheckForm(),
-        "ternary_vlepx_checkform": TernaryVLEpxCheckForm(),
+        "plot_checkboxes": [
+            RhoCheckForm(),
+            VPCheckForm(),
+            BinaryVLECheckForm(),
+            BinaryVLEpxyCheckForm(),
+            BinaryLLECheckForm(),
+            TernaryLLECheckForm(),
+            TernaryVLEpxCheckForm(),
+        ],
         "available_params": available_params,
         "parameters_molefractions_list": [],
         "mixture_plots": [],

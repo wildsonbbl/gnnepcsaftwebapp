@@ -1,6 +1,5 @@
 """Module for django tests."""
 
-import os
 from unittest.mock import patch
 
 from django.http import QueryDict
@@ -34,16 +33,6 @@ class ViewsTestCase(TestCase):
             1,
             1,
         ]
-        # Store the original API key if it exists
-        self.original_api_key = os.environ.get("GOOGLE_API_KEY")
-
-    def tearDown(self):
-        """Clean up after tests."""
-        # Restore the original API key if it existed
-        if self.original_api_key:
-            os.environ["GOOGLE_API_KEY"] = self.original_api_key
-        elif "GOOGLE_API_KEY" in os.environ:
-            del os.environ["GOOGLE_API_KEY"]
 
     @patch("gnnmodel.views.build_pure_context")
     @patch("gnnmodel.views.process_pure_post")

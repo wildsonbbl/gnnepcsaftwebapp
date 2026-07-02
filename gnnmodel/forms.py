@@ -14,11 +14,12 @@ class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
     query = forms.CharField(
+        label="",
         strip=True,
         required=True,
         widget=forms.TextInput(
             attrs={
-                "class": "form-control",
+                "class": "form-control m-1",
                 "aria-label": "Type/Paste InChI or SMILES",
                 "placeholder": "Type/Paste InChI or SMILES",
             }

@@ -91,7 +91,7 @@ def _build_binary_bubble_data(
             return (
                 filtered.group_by("x_approx")
                 .agg(pl.len().alias("count"))
-                .filter(pl.col("count") > 1)
+                .filter(pl.col("count") > 1, pl.col("x_approx").is_not_nan())
                 .sort("x_approx")
                 .to_numpy()
                 .tolist()
@@ -273,7 +273,7 @@ def _build_ternary_vle_data(
     vle_tx_data = (
         filtered.group_by(["T_K", "solvent_ratio"])
         .agg(pl.len().alias("count"))
-        .filter(pl.col("count") > 1)
+        .filter(pl.col("count") > 1, pl.col("solvent_ratio").is_not_nan())
         .sort(["T_K", "solvent_ratio"])
         .to_numpy()
         .tolist()

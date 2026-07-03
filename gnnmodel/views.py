@@ -7,16 +7,15 @@ from django.http import HttpResponse
 from django.shortcuts import render
 
 from .forms import InChIorSMILESareaInput
-from .utils import (
-    available_params,
+from .page_utils import (
     build_mixture_context,
     build_pure_context,
-    get_pred,
     init_mixture_forms,
     init_pure_forms,
     process_mixture_post,
     process_pure_post,
 )
+from .utils import available_params, get_pred
 
 file_dir = osp.dirname(__file__)
 

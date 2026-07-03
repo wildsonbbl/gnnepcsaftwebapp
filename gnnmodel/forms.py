@@ -10,6 +10,73 @@ from gnnepcsaft.data.ogb_utils import smiles2graph
 from gnnepcsaft.data.rdkit_util import assoc_number, inchitosmiles, smilestoinchi
 
 
+def _convert_query_to_identifiers(query: str, error_message: str) -> tuple[str, str]:
+    """Convert a SMILES/InChI query into canonical SMILES and InChI."""
+
+    try:
+        if re.search("^InChI=", query):
+            smiles = inchitosmiles(query, False, False)
+            inchi = smilestoinchi(smiles, False, False)
+        else:
+            inchi = smilestoinchi(query, False, False)
+            smiles = inchitosmiles(inchi, False, False)
+        smiles2graph(smiles)
+        assoc_number(inchi)
+    except ValueError as e:
+        raise ValidationError(_(error_message)) from e
+    return smiles, inchi
+
+
+def _parse_kij_values(kij_line: str, component_count: int) -> list[float]:
+    """Parse the last line of the mixture textarea as kij values."""
+
+    kij_values = kij_line.strip().split()
+    expected_kij_count = (component_count**2 - component_count) / 2
+    if len(kij_values) != expected_kij_count:
+        raise ValidationError(
+            _(
+                f"Number of Kij values ({len(kij_values)}) must "
+                f"be equal to {int(expected_kij_count)}."
+            )
+        )
+
+    try:
+        kij_values = [float(value) for value in kij_values]
+    except ValueError as e:
+        raise ValidationError(
+            _("All Kij values in last line must be valid numbers.")
+        ) from e
+
+    for kij_value in kij_values:
+        if kij_value < -1.0 or kij_value > 1.0:
+            raise ValidationError(_("Kij values must be between -1 and 1."))
+
+    return kij_values
+
+
+def _parse_mixture_line(full_line: str) -> tuple[str, str, float]:
+    """Parse a single mixture textarea line."""
+
+    try:
+        query, mole_fraction = full_line.strip().split(" ", maxsplit=1)
+    except ValueError as e:
+        raise ValidationError(_(f"Missing mole fraction for line: {full_line}")) from e
+
+    smiles, inchi = _convert_query_to_identifiers(
+        query,
+        f'Invalid InChI/SMILES: "{query}" in line "{full_line}"',
+    )
+
+    try:
+        mole_fraction_value = float(mole_fraction.strip())
+    except ValueError as e:
+        raise ValidationError(
+            _(f'Invalid Mole Fraction: "{mole_fraction}" in line "{full_line}"')
+        ) from e
+
+    return inchi, smiles, mole_fraction_value
+
+
 class InChIorSMILESinput(forms.Form):
     "Form to receive InChI/SMILES from user."
 
@@ -29,27 +96,7 @@ class InChIorSMILESinput(forms.Form):
     def clean_query(self):
         "check valid input and output SMILES."
         data = self.cleaned_data["query"]
-
-        inchi_check = re.search("^InChI=", data)
-
-        if inchi_check:
-            try:
-                smiles = inchitosmiles(data, False, False)
-                inchi = smilestoinchi(smiles, False, False)
-                smiles2graph(smiles)
-                assoc_number(inchi)
-            except ValueError as e:
-                raise ValidationError(_("Invalid InChI/SMILES.")) from e
-        else:
-            try:
-                inchi = smilestoinchi(data, False, False)
-                smiles = inchitosmiles(inchi, False, False)
-                smiles2graph(smiles)
-                assoc_number(inchi)
-            except ValueError as e:
-                raise ValidationError(_("Invalid InChI/SMILES.")) from e
-
-        return smiles, inchi
+        return _convert_query_to_identifiers(data, "Invalid InChI/SMILES.")
 
 
 class InChIorSMILESareaInput(forms.Form):
@@ -78,28 +125,11 @@ class InChIorSMILESareaInput(forms.Form):
             raise ValidationError(_("Maximum 10 substances allowed for web app."))
         inchi_list, smiles_list = [], []
         for line in lines:
-            line = line.strip()
-            inchi_check = re.search("^InChI=", line)
-            if inchi_check:
-                try:
-                    smiles = inchitosmiles(line, False, False)
-                    inchi = smilestoinchi(smiles, False, False)
-                    smiles2graph(smiles)
-                    assoc_number(inchi)
-                    smiles_list.append(smiles)
-                    inchi_list.append(inchi)
-                except ValueError as e:
-                    raise ValidationError(_(f"Invalid InChI/SMILES: {line}")) from e
-            else:
-                try:
-                    inchi = smilestoinchi(line, False, False)
-                    smiles = inchitosmiles(inchi, False, False)
-                    smiles2graph(smiles)
-                    assoc_number(inchi)
-                    smiles_list.append(smiles)
-                    inchi_list.append(inchi)
-                except ValueError as e:
-                    raise ValidationError(_(f"Invalid InChI/SMILES: {line}")) from e
+            smiles, inchi = _convert_query_to_identifiers(
+                line.strip(), f"Invalid InChI/SMILES: {line.strip()}"
+            )
+            smiles_list.append(smiles)
+            inchi_list.append(inchi)
         return inchi_list, smiles_list
 
 
@@ -130,71 +160,17 @@ class InChIorSMILESareaInputforMixture(forms.Form):
             raise ValidationError(
                 _("Provide at least two 'SMILES/InChI Mole Fraction' and one kij value")
             )
-        kij = lines.pop()
-        kij = kij.strip().split(" ")
-        if len(kij) != (len(lines) ** 2 - len(lines)) / 2:
-            raise ValidationError(
-                _(
-                    f"Number of Kij values ({len(kij)}) must "
-                    f"be equal to {int((len(lines) ** 2 - len(lines)) / 2)}."
-                )
-            )
-        # check if all kij are float
-        try:
-            kij = [float(i) for i in kij]
-        except ValueError as e:
-            raise ValidationError(
-                _("All Kij values in last line must be valid numbers.")
-            ) from e
-        for k in kij:
-            if k < -1.0 or k > 1.0:
-                raise ValidationError(_("Kij values must be between -1 and 1."))
+        kij = _parse_kij_values(lines.pop(), len(lines))
 
         if settings.PLATFORM == "webapp" and len(lines) > 10:
             raise ValidationError(_("Maximum 10 components allowed for web app."))
         inchi_list, smiles_list = [], []
         mole_fraction_list = []
         for full_line in lines:
-            try:
-                query, mole_fraction = full_line.strip().split(" ", maxsplit=1)
-                query = query.strip()
-                mole_fraction = mole_fraction.strip()
-            except ValueError as e:
-                raise ValidationError(
-                    _(f"Missing mole fraction for line: {full_line}")
-                ) from e
-
-            inchi_check = re.search("^InChI=", query)
-            if inchi_check:
-                try:
-                    smiles = inchitosmiles(query, False, False)
-                    inchi = smilestoinchi(smiles, False, False)
-                    smiles2graph(smiles)
-                    assoc_number(inchi)
-                    smiles_list.append(smiles)
-                    inchi_list.append(inchi)
-                except ValueError as e:
-                    raise ValidationError(
-                        _(f'Invalid InChI/SMILES: "{query}" in line "{full_line}"')
-                    ) from e
-            else:
-                try:
-                    inchi = smilestoinchi(query, False, False)
-                    smiles = inchitosmiles(inchi, False, False)
-                    smiles2graph(smiles)
-                    assoc_number(inchi)
-                    smiles_list.append(smiles)
-                    inchi_list.append(inchi)
-                except ValueError as e:
-                    raise ValidationError(
-                        _(f'Invalid InChI/SMILES: "{query}" in line "{full_line}"')
-                    ) from e
-            try:
-                mole_fraction_list.append(float(mole_fraction))
-            except ValueError as e:
-                raise ValidationError(
-                    _(f'Invalid Mole Fraction: "{mole_fraction}" in line "{full_line}"')
-                ) from e
+            inchi, smiles, mole_fraction = _parse_mixture_line(full_line)
+            smiles_list.append(smiles)
+            inchi_list.append(inchi)
+            mole_fraction_list.append(mole_fraction)
         return inchi_list, smiles_list, mole_fraction_list, kij
 
 

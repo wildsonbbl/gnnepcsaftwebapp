@@ -201,16 +201,7 @@ def process_mixture_post(forms: MixtureForms):
         mixture_plots_ = get_mixture_plots_data(
             smiles_list=smiles_list,
             mole_fractions_list=mole_fractions_list,
-            config=(
-                forms.plot_config,
-                forms.ternary_lle_checkform,
-                forms.binary_vle_checkform,
-                forms.binary_lle_checkform,
-                forms.binary_vlepxy_checkform,
-                forms.ternary_vlepx_checkform,
-                forms.rho_checkform,
-                forms.vp_checkform,
-            ),
+            forms=forms,
             kij_matrix=kij_matrix,
         )
         available_exp_data = _available_mixture_exp_data(smiles_list)

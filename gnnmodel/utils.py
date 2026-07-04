@@ -11,18 +11,14 @@ from rdkit.Chem import AllChem as Chem
 
 from . import logger
 from .forms import (
-    BinaryLLECheckForm,
-    BinaryVLECheckForm,
-    BinaryVLEpxyCheckForm,
     CustomPlotConfigForm,
     HlvCheckForm,
     InChIorSMILESinput,
+    MixtureForms,
     PhaseDiagramCheckForm,
     RhoCheckForm,
     SlvCheckForm,
     STCheckForm,
-    TernaryLLECheckForm,
-    TernaryVLEpxCheckForm,
     VPCheckForm,
 )
 from .utils_data import (
@@ -442,82 +438,62 @@ def get_pure_plots_data(
 def get_mixture_plots_data(
     smiles_list: List[str],
     mole_fractions_list: List[float],
-    config: Tuple[
-        CustomPlotConfigForm,
-        TernaryLLECheckForm,
-        BinaryVLECheckForm,
-        BinaryLLECheckForm,
-        BinaryVLEpxyCheckForm,
-        TernaryVLEpxCheckForm,
-        RhoCheckForm,
-        VPCheckForm,
-    ],
+    forms: MixtureForms,
     kij_matrix: List[List[float]],
 ) -> Tuple[List[Tuple[str, str, str, str, str]], str, str, str]:
     "get mixture plots data"
 
-    (
-        plot_config,
-        ternary_lle_checkform,
-        binary_vle_checkform,
-        binary_lle_checkform,
-        binary_vlepxy_checkform,
-        ternary_vlepx_checkform,
-        rho_checkform,
-        vp_checkform,
-    ) = config
-
-    plot_config.full_clean()
-    rho_checkform.full_clean()
-    vp_checkform.full_clean()
-    ternary_lle_checkform.full_clean()
-    binary_vle_checkform.full_clean()
-    binary_lle_checkform.full_clean()
-    binary_vlepxy_checkform.full_clean()
-    ternary_vlepx_checkform.full_clean()
+    forms.plot_config.full_clean()
+    forms.rho_checkform.full_clean()
+    forms.vp_checkform.full_clean()
+    forms.ternary_lle_checkform.full_clean()
+    forms.binary_vle_checkform.full_clean()
+    forms.binary_lle_checkform.full_clean()
+    forms.binary_vlepxy_checkform.full_clean()
+    forms.ternary_vlepx_checkform.full_clean()
     mixture_plot = []
     ternary_lle_phase_diagram_data = ""
     binary_lle_phase_diagram_data = ""
     vle_phase_diagram_data = ""
     checkboxes = []
-    if ternary_vlepx_checkform.cleaned_data["ternary_vlepx_checkbox"]:
+    if forms.ternary_vlepx_checkform.cleaned_data["ternary_vlepx_checkbox"]:
         checkboxes.append("tvlepx")
-    if binary_vlepxy_checkform.cleaned_data["binary_vlepxy_checkbox"]:
+    if forms.binary_vlepxy_checkform.cleaned_data["binary_vlepxy_checkbox"]:
         checkboxes.append("bvlepxy")
-    if rho_checkform.cleaned_data["rho_checkbox"]:
+    if forms.rho_checkform.cleaned_data["rho_checkbox"]:
         checkboxes.append("rho")
-    if vp_checkform.cleaned_data["vp_checkbox"]:
+    if forms.vp_checkform.cleaned_data["vp_checkbox"]:
         checkboxes.append("vp")
 
     mixture_plot = mixture_plots(
         smiles_list=smiles_list,
         state_list=(
             mole_fractions_list,
-            plot_config.cleaned_data["temp_min"],
-            plot_config.cleaned_data["temp_max"],
-            plot_config.cleaned_data["pressure"],
+            forms.plot_config.cleaned_data["temp_min"],
+            forms.plot_config.cleaned_data["temp_max"],
+            forms.plot_config.cleaned_data["pressure"],
         ),
         kij_matrix=kij_matrix,
         checkboxes=checkboxes,
-        npoints=plot_config.cleaned_data["npoints"] or 10,
+        npoints=forms.plot_config.cleaned_data["npoints"] or 10,
     )
 
     try:
-        if ternary_lle_checkform.cleaned_data["ternary_lle_checkbox"] is False:
+        if forms.ternary_lle_checkform.cleaned_data["ternary_lle_checkbox"] is False:
             raise ValueError("Ternary LLE checkbox not selected.")
         if len(smiles_list) != 3:
             raise ValueError("LLE/VLE phase diagram only for ternary mixtures.")
-        if plot_config.cleaned_data["temp_min"] is None:
+        if forms.plot_config.cleaned_data["temp_min"] is None:
             raise ValueError("Missing minimum temperature")
-        if plot_config.cleaned_data["pressure"] is None:
+        if forms.plot_config.cleaned_data["pressure"] is None:
             raise ValueError("Missing pressure")
 
         _ternary_lle_phase_diagram_data = mix_ternary_lle(
             smiles_list=smiles_list,
             kij_matrix=kij_matrix,
-            temperature=plot_config.cleaned_data["temp_min"],
-            pressure=plot_config.cleaned_data["pressure"],
-            npoints=plot_config.cleaned_data["npoints"] or 10,
+            temperature=forms.plot_config.cleaned_data["temp_min"],
+            pressure=forms.plot_config.cleaned_data["pressure"],
+            npoints=forms.plot_config.cleaned_data["npoints"] or 10,
         )
         _ternary_lle_phase_diagram_data["exp_x0"] = []
         _ternary_lle_phase_diagram_data["exp_x1"] = []
@@ -525,8 +501,8 @@ def get_mixture_plots_data(
         try:
             exp_data = retrieve_lle_ternary_data(
                 smiles_list=smiles_list,
-                pressure=plot_config.cleaned_data["pressure"] / 1000,
-                temperature=plot_config.cleaned_data["temp_min"],
+                pressure=forms.plot_config.cleaned_data["pressure"] / 1000,
+                temperature=forms.plot_config.cleaned_data["temp_min"],
             )
             if exp_data is not None:
                 _ternary_lle_phase_diagram_data["exp_x0"].extend(
@@ -544,8 +520,8 @@ def get_mixture_plots_data(
         try:
             exp_data = retrieve_vle_ternary_data(
                 smiles_list=smiles_list,
-                pressure=plot_config.cleaned_data["pressure"] / 1000,
-                temperature=plot_config.cleaned_data["temp_min"],
+                pressure=forms.plot_config.cleaned_data["pressure"] / 1000,
+                temperature=forms.plot_config.cleaned_data["temp_min"],
             )
             if exp_data is not None:
                 _ternary_lle_phase_diagram_data["exp_x0"].extend(
@@ -565,13 +541,13 @@ def get_mixture_plots_data(
         logger.debug(err)
 
     try:
-        if binary_lle_checkform.cleaned_data["binary_lle_checkbox"] is False:
+        if forms.binary_lle_checkform.cleaned_data["binary_lle_checkbox"] is False:
             raise ValueError("Binary LLE checkbox not selected.")
         if len(smiles_list) != 2:
             raise ValueError("LLE phase diagram only for binary mixtures.")
-        if plot_config.cleaned_data["temp_min"] is None:
+        if forms.plot_config.cleaned_data["temp_min"] is None:
             raise ValueError("Missing minimum temperature")
-        if plot_config.cleaned_data["pressure"] is None:
+        if forms.plot_config.cleaned_data["pressure"] is None:
             raise ValueError("Missing pressure")
 
         _binary_lle_phase_diagram_data = mix_lle(
@@ -579,9 +555,9 @@ def get_mixture_plots_data(
                 smiles_list=smiles_list,
                 mole_fractions=mole_fractions_list,
                 kij_matrix=kij_matrix,
-                temperature=plot_config.cleaned_data["temp_min"],
-                pressure=plot_config.cleaned_data["pressure"],
-                npoints=plot_config.cleaned_data["npoints"] or 10,
+                temperature=forms.plot_config.cleaned_data["temp_min"],
+                pressure=forms.plot_config.cleaned_data["pressure"],
+                npoints=forms.plot_config.cleaned_data["npoints"] or 10,
             )
         )
         _binary_lle_phase_diagram_data["exp_T"] = []
@@ -589,7 +565,7 @@ def get_mixture_plots_data(
         try:
             exp_data = retrieve_lle_binary_data(
                 smiles_list=smiles_list,
-                pressure=plot_config.cleaned_data["pressure"] / 1000,
+                pressure=forms.plot_config.cleaned_data["pressure"] / 1000,
             )
             if exp_data is not None:
                 _binary_lle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())
@@ -600,7 +576,7 @@ def get_mixture_plots_data(
         try:
             exp_data = retrieve_vle_binary_data(
                 smiles_list=smiles_list,
-                pressure=plot_config.cleaned_data["pressure"] / 1000,
+                pressure=forms.plot_config.cleaned_data["pressure"] / 1000,
             )
             if exp_data is not None:
                 _binary_lle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())
@@ -613,25 +589,25 @@ def get_mixture_plots_data(
         logger.debug(err)
 
     try:
-        if binary_vle_checkform.cleaned_data["binary_vle_checkbox"] is False:
+        if forms.binary_vle_checkform.cleaned_data["binary_vle_checkbox"] is False:
             raise ValueError("Binary VLE checkbox not selected.")
         if len(smiles_list) != 2:
             raise ValueError("VLE phase diagram only for binary mixtures.")
-        if plot_config.cleaned_data["pressure"] is None:
+        if forms.plot_config.cleaned_data["pressure"] is None:
             raise ValueError("Missing pressure")
 
         _vle_phase_diagram_data = mix_vle(
             smiles_list=smiles_list,
             kij_matrix=kij_matrix,
-            pressure=plot_config.cleaned_data["pressure"],
-            npoints=plot_config.cleaned_data["npoints"] or 10,
+            pressure=forms.plot_config.cleaned_data["pressure"],
+            npoints=forms.plot_config.cleaned_data["npoints"] or 10,
         )
         _vle_phase_diagram_data["exp_T"] = []
         _vle_phase_diagram_data["exp_x0"] = []
         try:
             exp_data = retrieve_vle_binary_data(
                 smiles_list=smiles_list,
-                pressure=plot_config.cleaned_data["pressure"] / 1000,
+                pressure=forms.plot_config.cleaned_data["pressure"] / 1000,
             )
             if exp_data is not None:
                 _vle_phase_diagram_data["exp_T"].extend(exp_data[:, 0].tolist())

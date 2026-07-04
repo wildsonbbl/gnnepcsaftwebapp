@@ -1,6 +1,7 @@
 "Django forms."
 
 import re
+from typing import NamedTuple
 
 from django import forms
 from django.conf import settings
@@ -415,3 +416,30 @@ class STCheckForm(forms.Form):
             }
         ),
     )
+
+
+class PureForms(NamedTuple):
+    """Container for pure-page forms."""
+
+    form: InChIorSMILESinput
+    plot_config: CustomPlotConfigForm
+    rho_checkbox: RhoCheckForm
+    vp_checkbox: VPCheckForm
+    h_lv_checkbox: HlvCheckForm
+    s_lv_checkbox: SlvCheckForm
+    phase_diagram_checkbox: PhaseDiagramCheckForm
+    st_checkbox: STCheckForm
+
+
+class MixtureForms(NamedTuple):
+    """Container for mixture-page forms."""
+
+    form: InChIorSMILESareaInputforMixture
+    plot_config: CustomPlotConfigForm
+    rho_checkform: RhoCheckForm
+    vp_checkform: VPCheckForm
+    binary_vle_checkform: BinaryVLECheckForm
+    binary_lle_checkform: BinaryLLECheckForm
+    ternary_lle_checkform: TernaryLLECheckForm
+    binary_vlepxy_checkform: BinaryVLEpxyCheckForm
+    ternary_vlepx_checkform: TernaryVLEpxCheckForm

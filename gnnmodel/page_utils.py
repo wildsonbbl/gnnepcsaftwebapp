@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, NamedTuple, Optional
+from typing import Any, Dict, Optional
 
 from .forms import (
     BinaryLLECheckForm,
@@ -12,7 +12,9 @@ from .forms import (
     HlvCheckForm,
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
+    MixtureForms,
     PhaseDiagramCheckForm,
+    PureForms,
     RhoCheckForm,
     SlvCheckForm,
     STCheckForm,
@@ -31,33 +33,6 @@ from .utils_data import (
     retrieve_available_data_pure,
     retrieve_available_data_ternary,
 )
-
-
-class PureForms(NamedTuple):
-    """Container for pure-page forms."""
-
-    form: InChIorSMILESinput
-    plot_config: CustomPlotConfigForm
-    rho_checkbox: RhoCheckForm
-    vp_checkbox: VPCheckForm
-    h_lv_checkbox: HlvCheckForm
-    s_lv_checkbox: SlvCheckForm
-    phase_diagram_checkbox: PhaseDiagramCheckForm
-    st_checkbox: STCheckForm
-
-
-class MixtureForms(NamedTuple):
-    """Container for mixture-page forms."""
-
-    form: InChIorSMILESareaInputforMixture
-    plot_config: CustomPlotConfigForm
-    rho_checkform: RhoCheckForm
-    vp_checkform: VPCheckForm
-    binary_vle_checkform: BinaryVLECheckForm
-    binary_lle_checkform: BinaryLLECheckForm
-    ternary_lle_checkform: TernaryLLECheckForm
-    binary_vlepxy_checkform: BinaryVLEpxyCheckForm
-    ternary_vlepx_checkform: TernaryVLEpxCheckForm
 
 
 def init_pure_forms(post_data=None):

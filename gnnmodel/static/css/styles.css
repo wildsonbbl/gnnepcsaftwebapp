@@ -68,7 +68,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 .sidebar-app .nav-link.active,
 .sidebar-app .nav-link:hover {

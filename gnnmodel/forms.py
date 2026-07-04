@@ -324,6 +324,9 @@ class TernaryVLEpxCheckForm(forms.Form):
         label_suffix="",
         required=False,
         initial=False,
+        help_text="<p class='form-text'>- More volatile component must "
+        "be listed first in P-x1 calculation<br>"
+        "- Solvent ratio must be between 0 and 1</p>",
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
@@ -341,6 +344,8 @@ class BinaryLLECheckForm(forms.Form):
         label_suffix="",
         required=False,
         initial=False,
+        help_text="<p class='form-text'>- Mole fractions and minimum temperature are used "
+        "as starting value for calculations</p>",
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
@@ -375,6 +380,8 @@ class BinaryVLEpxyCheckForm(forms.Form):
         label_suffix="",
         required=False,
         initial=False,
+        help_text="<p class='form-text'>- More volatile component must "
+        "be listed first in P-x-y calculation </p>",
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",

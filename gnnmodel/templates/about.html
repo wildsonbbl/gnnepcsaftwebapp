@@ -14,6 +14,19 @@
             GNNPCSAFT combines the use of Graph Neural Networks to estimate pure-component parameters for the PC-SAFT equation of state, making parameter estimation faster and more accessible.
           </p>
         </div>
+        {% if update_available %}
+          <div class="alert alert-warning mx-auto mb-4">
+            <strong>Update available:</strong> version {{ latest_release_tag|default:latest_release_name }} is available while you are on {{ current_version }}.
+            <div class="mt-2">
+              <a href="{{ latest_release_url }}"
+                 target="_blank"
+                 rel="noopener"
+                 class="btn btn-sm btn-dark">
+                <i class="fas fa-download"></i> Download the update
+              </a>
+            </div>
+          </div>
+        {% endif %}
         <div class="mb-4">
           <span class="badge bg-primary mb-2">Open Source</span>
           <span class="badge bg-success mb-2">AI-Powered</span>

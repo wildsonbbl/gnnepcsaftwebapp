@@ -6,6 +6,8 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.shortcuts import render
 
+from webapp._version import __version__
+
 from .forms import InChIorSMILESareaInput
 from .page_utils import (
     build_mixture_context,
@@ -15,6 +17,7 @@ from .page_utils import (
     process_mixture_post,
     process_pure_post,
 )
+from .update_check import fetch_latest_release, is_newer_version
 from .utils import available_params, get_pred
 
 file_dir = osp.dirname(__file__)
@@ -72,7 +75,33 @@ def mixture(request):
 
 def about(request):
     "handle request for about page"
-    return render(request, "about.html")
+    update_context = {
+        "current_version": __version__,
+        "update_available": False,
+        "latest_release_name": "",
+        "latest_release_tag": "",
+        "latest_release_url": "",
+    }
+
+    try:
+        latest_release = fetch_latest_release()
+    except (
+        OSError,
+        ValueError,
+    ):  # pragma: no cover - network failures are intentionally ignored
+        latest_release = None
+
+    if latest_release and is_newer_version(latest_release.tag_name, __version__):
+        update_context.update(
+            {
+                "update_available": True,
+                "latest_release_name": latest_release.name or latest_release.tag_name,
+                "latest_release_tag": latest_release.tag_name,
+                "latest_release_url": latest_release.html_url,
+            }
+        )
+
+    return render(request, "about.html", update_context)
 
 
 def service_worker(request):  # pylint: disable=unused-argument

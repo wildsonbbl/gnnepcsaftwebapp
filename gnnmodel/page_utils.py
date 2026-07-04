@@ -68,18 +68,7 @@ def process_pure_post(forms: PureForms) -> Optional[Dict[str, Any]]:
         return None
 
     smiles, inchi = forms.form.cleaned_data["query"]
-    phase_diagrams, custom_plots = get_pure_plots_data(
-        smiles=smiles,
-        plot_config=forms.plot_config,
-        checkboxes=(
-            forms.rho_checkbox,
-            forms.vp_checkbox,
-            forms.h_lv_checkbox,
-            forms.s_lv_checkbox,
-            forms.phase_diagram_checkbox,
-            forms.st_checkbox,
-        ),
-    )
+    phase_diagrams, custom_plots = get_pure_plots_data(smiles=smiles, forms=forms)
 
     return {
         "smiles": smiles,

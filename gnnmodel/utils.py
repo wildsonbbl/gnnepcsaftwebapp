@@ -10,17 +10,7 @@ from gnnepcsaft_mcp_server.utils import predict_pcsaft_parameters
 from rdkit.Chem import AllChem as Chem
 
 from . import logger
-from .forms import (
-    CustomPlotConfigForm,
-    HlvCheckForm,
-    InChIorSMILESinput,
-    MixtureForms,
-    PhaseDiagramCheckForm,
-    RhoCheckForm,
-    SlvCheckForm,
-    STCheckForm,
-    VPCheckForm,
-)
+from .forms import MixtureForms, PureForms
 from .utils_data import (
     retrieve_bubble_pressure_data,
     retrieve_lle_binary_data,
@@ -354,81 +344,50 @@ def get_pred(smiles: str) -> List[float]:
     return pred
 
 
-def get_forms(request):
-    "get forms"
-    return (
-        InChIorSMILESinput(request.POST),
-        CustomPlotConfigForm(request.POST),
-        RhoCheckForm(request.POST),
-        VPCheckForm(request.POST),
-        HlvCheckForm(request.POST),
-        SlvCheckForm(request.POST),
-        PhaseDiagramCheckForm(request.POST),
-        STCheckForm(request.POST),
-    )
-
-
 def get_pure_plots_data(
-    smiles: str,
-    plot_config: CustomPlotConfigForm,
-    checkboxes: tuple[
-        RhoCheckForm,
-        VPCheckForm,
-        HlvCheckForm,
-        SlvCheckForm,
-        PhaseDiagramCheckForm,
-        STCheckForm,
-    ],
+    smiles: str, forms: PureForms
 ) -> Tuple[List[List[float]], List]:
     "get custom plots data for pure component"
 
-    (
-        rho_checkbox_,
-        vp_checkbox_,
-        h_lv_checkbox_,
-        s_lv_checkbox_,
-        phase_diagram_checkbox_,
-        st_checkbox_,
-    ) = checkboxes
-    plot_config.full_clean()
-    rho_checkbox_.full_clean()
-    vp_checkbox_.full_clean()
-    h_lv_checkbox_.full_clean()
-    s_lv_checkbox_.full_clean()
-    phase_diagram_checkbox_.full_clean()
-    st_checkbox_.full_clean()
+    forms.plot_config.full_clean()
+    forms.rho_checkbox.full_clean()
+    forms.vp_checkbox.full_clean()
+    forms.h_lv_checkbox.full_clean()
+    forms.s_lv_checkbox.full_clean()
+    forms.phase_diagram_checkbox.full_clean()
+    forms.st_checkbox.full_clean()
     custom_plots = []
     phase_diagrams = []
 
     selected_checkboxes = []
-    if rho_checkbox_.cleaned_data["rho_checkbox"]:
+    if forms.rho_checkbox.cleaned_data["rho_checkbox"]:
         selected_checkboxes.append("den_plot")
-    if vp_checkbox_.cleaned_data["vp_checkbox"]:
+    if forms.vp_checkbox.cleaned_data["vp_checkbox"]:
         selected_checkboxes.append("vp_plot")
-    if h_lv_checkbox_.cleaned_data["h_lv_checkbox"]:
+    if forms.h_lv_checkbox.cleaned_data["h_lv_checkbox"]:
         selected_checkboxes.append("h_lv_plot")
-    if s_lv_checkbox_.cleaned_data["s_lv_checkbox"]:
+    if forms.s_lv_checkbox.cleaned_data["s_lv_checkbox"]:
         selected_checkboxes.append("s_lv_plot")
-    if st_checkbox_.cleaned_data["st_checkbox"]:
+    if forms.st_checkbox.cleaned_data["st_checkbox"]:
         selected_checkboxes.append("st_plot")
 
     try:
         custom_plots = pure_plots(
             smiles=smiles,
-            temp_min=plot_config.cleaned_data["temp_min"],
-            temp_max=plot_config.cleaned_data["temp_max"],
-            pressure=plot_config.cleaned_data["pressure"],
+            temp_min=forms.plot_config.cleaned_data["temp_min"],
+            temp_max=forms.plot_config.cleaned_data["temp_max"],
+            pressure=forms.plot_config.cleaned_data["pressure"],
             selected_checkboxes=selected_checkboxes,
-            npoints=plot_config.cleaned_data["npoints"] or 10,
+            npoints=forms.plot_config.cleaned_data["npoints"] or 10,
         )
     except RuntimeError as err:
         logger.debug(err)
 
-    if phase_diagram_checkbox_.cleaned_data["phase_diagram_checkbox"]:
+    if forms.phase_diagram_checkbox.cleaned_data["phase_diagram_checkbox"]:
         try:
-            if plot_config.cleaned_data["temp_min"] is not None:
+            if forms.plot_config.cleaned_data["temp_min"] is not None:
                 phase_diagrams = pure_phase_diagram(
-                    smiles=smiles, min_temp=plot_config.cleaned_data["temp_min"]
+                    smiles=smiles, min_temp=forms.plot_config.cleaned_data["temp_min"]
                 )
         except RuntimeError as err:
             logger.debug(err)

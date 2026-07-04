@@ -622,7 +622,7 @@ def pure_plots(
                 json.dumps(plot_data),
                 "Temperature (K)",
                 "Density (mol / m³)",
-                f"Density at {pressure} Pa for {smiles}",
+                f"Density at P={pressure} Pa",
                 "den_plot",
             )
         )
@@ -828,7 +828,7 @@ def mixture_plots(
                 json.dumps(plot_data),
                 "Temperature (K)",
                 "Liquid Density (mol / m³)",
-                f"Density at {pressure} Pa and mole fractions={mole_fractions_list}",
+                f"Density at P={pressure} Pa and mole fractions={mole_fractions_list}",
                 "mix_den_plot",
             )
         )

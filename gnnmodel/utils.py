@@ -101,6 +101,131 @@ def plotmol(inchi: str) -> str:
     return imgmol
 
 
+def _get_vp_data(smiles, temp_min, temp_max, npoints):
+    plot_data = {}
+    plot_data["legends"] = [
+        "GNN",
+        "GNN",
+        "ThermoML Archive**",
+    ]
+    try:
+        plot_data["GNN"] = pure_vp(
+            smiles=smiles,
+            min_temp=temp_min,
+            max_temp=temp_max,
+            npoints=npoints,
+        )
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    try:
+        exp_data = retrieve_vp_pure_data(smiles=smiles)
+        if exp_data is not None:
+            exp_data[:, 1] *= 1000
+            plot_data["TML"] = exp_data.T.tolist()
+
+        else:
+            plot_data["TML"] = ([], [])
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    return plot_data
+
+
+def _get_h_lv_data(smiles, temp_min, temp_max, npoints):
+    plot_data = {}
+    plot_data["legends"] = [
+        "GNN",
+        "GNN",
+        "ThermoML Archive**",
+    ]
+    try:
+        plot_data["GNN"] = pure_h_lv(
+            smiles=smiles,
+            min_temp=temp_min,
+            max_temp=temp_max,
+            npoints=npoints,
+        )
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    plot_data["TML"] = ([], [])
+    return plot_data
+
+
+def _get_s_lv_data(smiles, temp_min, temp_max, npoints):
+    plot_data = {}
+    plot_data["legends"] = [
+        "GNN",
+        "GNN",
+        "ThermoML Archive**",
+    ]
+    try:
+        plot_data["GNN"] = pure_s_lv(
+            smiles=smiles,
+            min_temp=temp_min,
+            max_temp=temp_max,
+            npoints=npoints,
+        )
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    plot_data["TML"] = ([], [])
+    return plot_data
+
+
+def _get_st_data(smiles, temp_min):
+    plot_data = {}
+    plot_data["legends"] = [
+        "GNN",
+        "GNN",
+        "ThermoML Archive**",
+    ]
+    try:
+        plot_data["GNN"] = pure_surface_tension(
+            smiles=smiles,
+            min_temp=temp_min,
+        )
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    try:
+        exp_data = retrieve_st_pure_data(smiles=smiles)
+        if exp_data is not None:
+            exp_data[:, 1] *= 1000
+            plot_data["TML"] = exp_data.T.tolist()
+
+        else:
+            plot_data["TML"] = ([], [])
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    return plot_data
+
+
+def _get_rho_data(smiles, temp_min, temp_max, pressure, npoints):
+    plot_data = {}
+    plot_data["legends"] = [
+        "GNN",
+        "GNN",
+        "ThermoML Archive**",
+    ]
+    try:
+        plot_data["GNN"] = pure_den(
+            smiles=smiles,
+            min_temp=temp_min,
+            max_temp=temp_max,
+            pressure=pressure,
+            npoints=npoints,
+        )
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    try:
+        exp_data = retrieve_rho_pure_data(smiles=smiles, pressure=pressure / 1000)
+        if exp_data is not None:
+            plot_data["TML"] = exp_data.T.tolist()
+
+        else:
+            plot_data["TML"] = ([], [])
+    except (AssertionError, RuntimeError) as e:
+        logger.debug(e)
+    return plot_data
+
+
 def pure_plots(
     smiles: str,
     temp_min: float,
@@ -145,31 +270,7 @@ def pure_plots(
         and temp_max is not None
         and pressure is not None
     ):
-        plot_data = {}
-        plot_data["legends"] = [
-            "GNN",
-            "GNN",
-            "ThermoML Archive**",
-        ]
-        try:
-            plot_data["GNN"] = pure_den(
-                smiles=smiles,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                pressure=pressure,
-                npoints=npoints,
-            )
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
-        try:
-            exp_data = retrieve_rho_pure_data(smiles=smiles, pressure=pressure / 1000)
-            if exp_data is not None:
-                plot_data["TML"] = exp_data.T.tolist()
-                plot_exp = True
-            else:
-                plot_data["TML"] = ([], [])
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
+        plot_data = _get_rho_data(smiles, temp_min, temp_max, pressure, npoints)
         all_plots.append(
             (
                 json.dumps(plot_data),
@@ -185,31 +286,7 @@ def pure_plots(
         and temp_min is not None
         and temp_max is not None
     ):
-        plot_data = {}
-        plot_data["legends"] = [
-            "GNN",
-            "GNN",
-            "ThermoML Archive**",
-        ]
-        try:
-            plot_data["GNN"] = pure_vp(
-                smiles=smiles,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                npoints=npoints,
-            )
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
-        try:
-            exp_data = retrieve_vp_pure_data(smiles=smiles)
-            if exp_data is not None:
-                exp_data[:, 1] *= 1000
-                plot_data["TML"] = exp_data.T.tolist()
-                plot_exp = True
-            else:
-                plot_data["TML"] = ([], [])
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
+        plot_data = _get_vp_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
                 json.dumps(plot_data),
@@ -225,22 +302,7 @@ def pure_plots(
         and temp_min is not None
         and temp_max is not None
     ):
-        plot_data = {}
-        plot_data["legends"] = [
-            "GNN",
-            "GNN",
-            "ThermoML Archive**",
-        ]
-        try:
-            plot_data["GNN"] = pure_h_lv(
-                smiles=smiles,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                npoints=npoints,
-            )
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
-        plot_data["TML"] = ([], [])
+        plot_data = _get_h_lv_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
                 json.dumps(plot_data),
@@ -256,22 +318,7 @@ def pure_plots(
         and temp_min is not None
         and temp_max is not None
     ):
-        plot_data = {}
-        plot_data["legends"] = [
-            "GNN",
-            "GNN",
-            "ThermoML Archive**",
-        ]
-        try:
-            plot_data["GNN"] = pure_s_lv(
-                smiles=smiles,
-                min_temp=temp_min,
-                max_temp=temp_max,
-                npoints=npoints,
-            )
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
-        plot_data["TML"] = ([], [])
+        plot_data = _get_s_lv_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
                 json.dumps(plot_data),
@@ -283,29 +330,7 @@ def pure_plots(
         )
 
     if "st_plot" in selected_checkboxes and temp_min is not None:
-        plot_data = {}
-        plot_data["legends"] = [
-            "GNN",
-            "GNN",
-            "ThermoML Archive**",
-        ]
-        try:
-            plot_data["GNN"] = pure_surface_tension(
-                smiles=smiles,
-                min_temp=temp_min,
-            )
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
-        try:
-            exp_data = retrieve_st_pure_data(smiles=smiles)
-            if exp_data is not None:
-                exp_data[:, 1] *= 1000
-                plot_data["TML"] = exp_data.T.tolist()
-                plot_exp = True
-            else:
-                plot_data["TML"] = ([], [])
-        except (AssertionError, RuntimeError) as e:
-            logger.debug(e)
+        plot_data = _get_st_data(smiles, temp_min)
         all_plots.append(
             (
                 json.dumps(plot_data),

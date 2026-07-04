@@ -189,6 +189,7 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "about.html")
 
+    @patch("gnnmodel.views.__version__", new="8.0.2")
     @patch("gnnmodel.views.is_newer_version")
     @patch("gnnmodel.views.fetch_latest_release")
     def test_about_update_available(

@@ -68,7 +68,7 @@ def process_pure_post(forms: PureForms) -> Optional[Dict[str, Any]]:
         return None
 
     smiles, inchi = forms.form.cleaned_data["query"]
-    phase_diagrams, custom_plots, plot_exp = get_pure_plots_data(
+    phase_diagrams, custom_plots = get_pure_plots_data(
         smiles=smiles,
         plot_config=forms.plot_config,
         checkboxes=(
@@ -88,7 +88,6 @@ def process_pure_post(forms: PureForms) -> Optional[Dict[str, Any]]:
         "output": True,
         "pure_plots": custom_plots,
         "phase_diagrams": phase_diagrams,
-        "plot_exp": plot_exp,
         "available_exp_data": retrieve_available_data_pure(smiles=smiles),
     }
 
@@ -110,7 +109,6 @@ def build_pure_context(forms: PureForms, post_data=None):
         "predicted_para": [(None, None)],
         "mol_identifiers": [(None, None)],
         "output": False,
-        "plot_exp": False,
         "pure_plots": [],
         "phase_diagrams": [],
     }
@@ -127,7 +125,6 @@ def build_pure_context(forms: PureForms, post_data=None):
                     ("SMILES", post_data["smiles"]),
                 ],
                 "output": post_data["output"],
-                "plot_exp": post_data["plot_exp"],
                 "pure_plots": post_data["pure_plots"],
                 "phase_diagrams": post_data["phase_diagrams"],
                 **post_data["available_exp_data"],

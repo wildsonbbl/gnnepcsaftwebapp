@@ -108,7 +108,7 @@ def pure_plots(
     pressure: float,
     selected_checkboxes: Optional[List[str]] = None,
     npoints: int = 10,
-) -> Tuple[Union[List[tuple[str, str, str, str, str]], List], bool]:
+) -> Union[List[tuple[str, str, str, str, str]], List]:
     """
     Pure plots.
 
@@ -136,7 +136,6 @@ def pure_plots(
             "s_lv_plot",
             "st_plot",
         ]
-    plot_exp = False
 
     all_plots = []
 
@@ -317,7 +316,7 @@ def pure_plots(
             )
         )
 
-    return all_plots, plot_exp
+    return all_plots
 
 
 def get_pred(smiles: str) -> List[float]:
@@ -359,7 +358,7 @@ def get_pure_plots_data(
         PhaseDiagramCheckForm,
         STCheckForm,
     ],
-) -> Tuple[List[List[float]], List, bool]:
+) -> Tuple[List[List[float]], List]:
     "get custom plots data for pure component"
 
     (
@@ -379,7 +378,6 @@ def get_pure_plots_data(
     st_checkbox_.full_clean()
     custom_plots = []
     phase_diagrams = []
-    plot_exp = False
 
     selected_checkboxes = []
     if rho_checkbox_.cleaned_data["rho_checkbox"]:
@@ -394,7 +392,7 @@ def get_pure_plots_data(
         selected_checkboxes.append("st_plot")
 
     try:
-        custom_plots, plot_exp = pure_plots(
+        custom_plots = pure_plots(
             smiles=smiles,
             temp_min=plot_config.cleaned_data["temp_min"],
             temp_max=plot_config.cleaned_data["temp_max"],
@@ -413,7 +411,7 @@ def get_pure_plots_data(
                 )
         except RuntimeError as err:
             logger.debug(err)
-    return phase_diagrams, custom_plots, plot_exp
+    return phase_diagrams, custom_plots
 
 
 def get_mixture_plots_data(

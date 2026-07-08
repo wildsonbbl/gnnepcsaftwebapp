@@ -129,11 +129,12 @@ def _build_kij_matrix(
         [0.0 for _ in range(len(smiles_list))] for _ in range(len(smiles_list))
     ]
     k_idx = 0
-    for i in range(len(smiles_list)):
-        for j in range(i + 1, len(smiles_list)):
-            kij_matrix[i][j] = kij_values[k_idx]
-            kij_matrix[j][i] = kij_values[k_idx]
-            k_idx += 1
+    if kij_values:
+        for i in range(len(smiles_list)):
+            for j in range(i + 1, len(smiles_list)):
+                kij_matrix[i][j] = kij_values[k_idx]
+                kij_matrix[j][i] = kij_values[k_idx]
+                k_idx += 1
     return kij_matrix
 
 
@@ -182,7 +183,9 @@ def process_mixture_post(forms: MixtureForms):
     available_exp_data = {}
 
     if forms.form.is_valid():
-        _, smiles_list, mole_fractions_list, kij = forms.form.cleaned_data["text_area"]
+        _, smiles_list = forms.form.cleaned_data["smiles_inchi_list"]
+        mole_fractions_list = forms.form.cleaned_data["mole_fractions"]
+        kij = forms.form.cleaned_data["kijs"]
         kij_matrix = _build_kij_matrix(smiles_list, kij)
         para_pred_list = [
             [round(para, 5) for para in get_pred(smiles)] for smiles in smiles_list

@@ -44,9 +44,7 @@ def _parse_kij_values(kij_line: str, component_count: int) -> list[float]:
     try:
         kij_values = [float(value) for value in kij_values]
     except ValueError as e:
-        raise ValidationError(
-            _("All Kij values in last line must be valid numbers.")
-        ) from e
+        raise ValidationError(_("All Kij values must be valid numbers.")) from e
 
     for kij_value in kij_values:
         if kij_value < -1.0 or kij_value > 1.0:
@@ -55,27 +53,30 @@ def _parse_kij_values(kij_line: str, component_count: int) -> list[float]:
     return kij_values
 
 
-def _parse_mixture_line(full_line: str) -> tuple[str, str, float]:
-    """Parse a single mixture textarea line."""
+def _parse_mole_fractions(raw_input: str, component_count: int) -> list[float]:
 
-    try:
-        query, mole_fraction = full_line.strip().split(" ", maxsplit=1)
-    except ValueError as e:
-        raise ValidationError(_(f"Missing mole fraction for line: {full_line}")) from e
+    mole_fractions = raw_input.strip().split()
+    mole_fractions_list = []
 
-    smiles, inchi = _convert_query_to_identifiers(
-        query,
-        f'Invalid InChI/SMILES: "{query}" in line "{full_line}"',
-    )
-
-    try:
-        mole_fraction_value = float(mole_fraction.strip())
-    except ValueError as e:
+    if component_count != len(mole_fractions):
         raise ValidationError(
-            _(f'Invalid Mole Fraction: "{mole_fraction}" in line "{full_line}"')
-        ) from e
+            _(
+                f"Number of mole fractions ({len(mole_fractions)}) must"
+                f" match number of components ({component_count})"
+            )
+        )
 
-    return inchi, smiles, mole_fraction_value
+    for mole_fraction in mole_fractions:
+        try:
+            mole_fractions_list.append(float(mole_fraction))
+        except ValueError as e:
+            raise ValidationError(_(f'Invalid Mole Fraction: "{mole_fraction}"')) from e
+
+    total = sum(mole_fractions_list)
+    if abs(total - 1.0) > 0.01:
+        raise ValidationError(_(f"Mole fractions must sum to ~1.0, got {total:.3f}"))
+
+    return mole_fractions_list
 
 
 class InChIorSMILESinput(forms.Form):
@@ -137,42 +138,83 @@ class InChIorSMILESareaInput(forms.Form):
 class InChIorSMILESareaInputforMixture(forms.Form):
     "Form to receive InChI/SMILES + mole fractions from user."
 
-    text_area = forms.CharField(
-        label="Type/Paste a list of InChI/SMILES | mole fractions",
+    smiles_inchi_list = forms.CharField(
+        label="",
         strip=True,
         required=True,
-        widget=forms.Textarea(
+        widget=forms.TextInput(
             attrs={
                 "class": "form-control my-2",
-                "aria-label": "Type/Paste InChI or SMILES",
-                "placeholder": "One 'InChI/SMILES Mole Fraction' per line,"
-                " example:\n\nCCO 0.33\nCC 0.33\nInChI=1S/C3H8/c1-3-2/h3H2,1-2H3 0.33\n"
-                "k12 k13 k23\n\n(Note: last line is kij values)",
+                "aria-label": "Type/Paste a list of InChI/SMILES",
+                "placeholder": "SMILES/InChI separated by empty space (e.g., 'O=C=O O ...')",
             }
         ),
     )
 
-    def clean_text_area(self):
+    mole_fractions = forms.CharField(
+        label="",
+        strip=True,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control my-2",
+                "aria-label": "Type/Paste a list of mole fractions",
+                "placeholder": 'Mole Fractions separated by empty space (e.g., "0.3 0.2 ...")',
+            }
+        ),
+    )
+
+    kijs = forms.CharField(
+        label="",
+        strip=True,
+        required=False,
+        widget=forms.TextInput(
+            attrs={
+                "class": "form-control my-2",
+                "aria-label": "Type/Paste a list of kij values",
+                "placeholder": "kij values separated by empty space (e.g., k12 k13 k23 ...)",
+            }
+        ),
+    )
+
+    def clean_smiles_inchi_list(self):
         "check valid input and output SMILES."
-        data: str = self.cleaned_data["text_area"]
+        raw_input: str = self.data["smiles_inchi_list"]
 
-        lines = data.split("\n")
-        if len(lines) < 3:
-            raise ValidationError(
-                _("Provide at least two 'SMILES/InChI Mole Fraction' and one kij value")
-            )
-        kij = _parse_kij_values(lines.pop(), len(lines))
+        smiles_inchi_list = raw_input.split(" ")
+        if len(smiles_inchi_list) < 2:
+            raise ValidationError(_("Provide at least two 'SMILES/InChI'"))
 
-        if settings.PLATFORM == "webapp" and len(lines) > 10:
+        if settings.PLATFORM == "webapp" and len(smiles_inchi_list) > 10:
             raise ValidationError(_("Maximum 10 components allowed for web app."))
         inchi_list, smiles_list = [], []
-        mole_fraction_list = []
-        for full_line in lines:
-            inchi, smiles, mole_fraction = _parse_mixture_line(full_line)
+
+        for smiles_or_inchi in smiles_inchi_list:
+            smiles, inchi = _convert_query_to_identifiers(
+                smiles_or_inchi,
+                f'Invalid InChI/SMILES: "{smiles_or_inchi}"',
+            )
             smiles_list.append(smiles)
             inchi_list.append(inchi)
-            mole_fraction_list.append(mole_fraction)
-        return inchi_list, smiles_list, mole_fraction_list, kij
+        return inchi_list, smiles_list
+
+    def clean_mole_fractions(self):
+        "clean mole fractions"
+        _inchi_list, smiles_list = self.clean_smiles_inchi_list()
+
+        raw_input: str = self.cleaned_data["mole_fractions"]
+
+        if raw_input:
+            return _parse_mole_fractions(raw_input, len(smiles_list))
+        return [1.0 / len(smiles_list) for _ in smiles_list]
+
+    def clean_kijs(self):
+        "clean kij values"
+        _inchi_list, smiles_list = self.clean_smiles_inchi_list()
+        raw_input: str = self.cleaned_data["kijs"]
+        if raw_input:
+            return _parse_kij_values(raw_input, len(smiles_list))
+        return []
 
 
 class CustomPlotConfigForm(forms.Form):

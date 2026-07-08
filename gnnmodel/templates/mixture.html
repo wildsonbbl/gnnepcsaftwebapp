@@ -15,7 +15,11 @@
         <form action="" method="post" id="submitQueryPred">
           {% csrf_token %}
           <div class="row justify-content-center">
-            <div class="col-sm-6">{{ form.text_area }}</div>
+            <div class="col-sm-6">
+              {{ form.smiles_inchi_list }}
+              {{ form.mole_fractions }}
+              {{ form.kijs }}
+            </div>
             <div class="col-sm-4">
               <div class="form-control my-2">
                 {{ plot_config }}
@@ -182,9 +186,19 @@
       {% else %}
         <div class="col-lg">
           <ul>
-            {% for error in form.text_area.errors %}
-              <li class="alert alert-danger">{{ error }}</li>
-            {% endfor %}
+            {% if form.smiles_inchi_list.errors %}
+              {% for error in form.smiles_inchi_list.errors %}
+                <li class="alert alert-danger">{{ error }}</li>
+              {% endfor %}
+            {% elif form.mole_fractions.errors %}
+              {% for error in form.mole_fractions.errors %}
+                <li class="alert alert-danger">{{ error }}</li>
+              {% endfor %}
+            {% elif form.kijs.errors %}
+              {% for error in form.kijs.errors %}
+                <li class="alert alert-danger">{{ error }}</li>
+              {% endfor %}
+            {% endif %}
           </ul>
         </div>
       {% endif %}
@@ -243,7 +257,7 @@
       const pressureInput = document.getElementById('id_pressure');
       const tempMinInput = document.getElementById('id_temp_min');
       const tempMaxInput = document.getElementById('id_temp_max');
-      const textAreaInput = document.getElementById('id_text_area');
+      const mole_fractionsInput = document.getElementById('id_mole_fractions');
 
       // Get all experimental data buttons
       const rhoBinaryBtns = document.querySelectorAll('.rho-px-data-b-btn');
@@ -269,31 +283,16 @@
           tempMinInput.dispatchEvent(new Event('change'));
         }
 
-        // Update the textarea directly so the submitted form contains the selected fractions.
-        if (moleFractions !== null && textAreaInput) {
-          const lines = textAreaInput.value.split('\n');
-          const componentLines = lines.slice(0, Math.max(0, lines.length - 1));
+        if (moleFractions !== null && mole_fractionsInput) {
 
-          if (componentLines.length === moleFractions.length) {
-            const updatedLines = componentLines.map((line, index) => {
-              const trimmedLine = line.trim();
-              if (!trimmedLine) {
-                return line;
-              }
-
-              const parts = trimmedLine.split(/\s+/);
-              if (parts.length < 2) {
-                return line;
-              }
-
-              parts[parts.length - 1] = moleFractions[index].toFixed(4);
-              return parts.join(' ');
-            });
-
-            textAreaInput.value = [...updatedLines, lines[lines.length - 1]].join('\n');
-            textAreaInput.dispatchEvent(new Event('input'));
-            textAreaInput.dispatchEvent(new Event('change'));
-          }
+          const updatedmolefractions = moleFractions.map(
+            (mf) => {
+              return mf.toFixed(4)
+            }
+          ) 
+          mole_fractionsInput.value = updatedmolefractions.join(' ');
+            mole_fractionsInput.dispatchEvent(new Event('input'));
+            mole_fractionsInput.dispatchEvent(new Event('change'));
         }
 
         // Update button styling to show selection

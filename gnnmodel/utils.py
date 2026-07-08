@@ -563,6 +563,7 @@ def _full_clean_forms(forms: MixtureForms):
     forms.binary_lle_checkform.full_clean()
     forms.binary_vlepxy_checkform.full_clean()
     forms.ternary_vlepx_checkform.full_clean()
+    forms.kij_checkform.full_clean()
 
 
 def _get_mix_checkboxes(forms: MixtureForms) -> List[str]:

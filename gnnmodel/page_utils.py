@@ -12,6 +12,7 @@ from .forms import (
     HlvCheckForm,
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
+    KijCheckForm,
     MixtureForms,
     PhaseDiagramCheckForm,
     PureForms,
@@ -32,7 +33,9 @@ from .utils_data import (
     retrieve_available_data_binary,
     retrieve_available_data_pure,
     retrieve_available_data_ternary,
+    retrieve_vle_for_kij,
 )
+from .utils_mix import optimize_binary_kij_for_vle
 
 
 def init_pure_forms(post_data=None):
@@ -160,6 +163,7 @@ def init_mixture_forms(post_data=None):
             TernaryLLECheckForm(post_data),
             BinaryVLEpxyCheckForm(post_data),
             TernaryVLEpxCheckForm(post_data),
+            KijCheckForm(post_data),
         )
     return MixtureForms(
         InChIorSMILESareaInputforMixture(),
@@ -171,6 +175,7 @@ def init_mixture_forms(post_data=None):
         TernaryLLECheckForm(),
         BinaryVLEpxyCheckForm(),
         TernaryVLEpxCheckForm(),
+        KijCheckForm(),
     )
 
 
@@ -181,11 +186,24 @@ def process_mixture_post(forms: MixtureForms):
     mole_fractions_list = []
     mixture_plots_ = ([], "", "", "")
     available_exp_data = {}
+    kij_value = None
 
     if forms.form.is_valid():
         _, smiles_list = forms.form.cleaned_data["smiles_inchi_list"]
         mole_fractions_list = forms.form.cleaned_data["mole_fractions"]
         kij = forms.form.cleaned_data["kijs"]
+        forms.kij_checkform.full_clean()
+        if forms.kij_checkform.cleaned_data["kij_checkbox"]:
+            vle = retrieve_vle_for_kij(smiles_list=smiles_list)
+            if vle is not None:
+                forms.plot_config.full_clean()
+                kij_value = optimize_binary_kij_for_vle(
+                    smiles_list=smiles_list,
+                    initial_kij=kij[0] if kij else 0.05,
+                    vle=vle,
+                    npoints=forms.plot_config.cleaned_data["npoints"] or 5,
+                )
+                kij = [kij_value]
         kij_matrix = _build_kij_matrix(smiles_list, kij)
         para_pred_list = [
             [round(para, 5) for para in get_pred(smiles)] for smiles in smiles_list
@@ -209,11 +227,13 @@ def process_mixture_post(forms: MixtureForms):
             forms.binary_lle_checkform,
             forms.ternary_lle_checkform,
             forms.ternary_vlepx_checkform,
+            forms.kij_checkform,
         ],
         "para_pred_list": para_pred_list,
         "mole_fractions_list": mole_fractions_list,
         "mixture_plots": mixture_plots_,
         "output": bool(para_pred_list),
+        "kij_value": kij_value,
         "available_exp_data": available_exp_data,
     }
 
@@ -235,6 +255,7 @@ def build_mixture_context(post_data=None):
             "vle_phase_diagram_data": post_data["mixture_plots"][2],
             "ternary_lle_phase_diagram_data": post_data["mixture_plots"][3],
             "output": post_data["output"],
+            "kij_value": post_data["kij_value"],
             **post_data["available_exp_data"],
         }
 
@@ -257,4 +278,5 @@ def build_mixture_context(post_data=None):
         "vle_phase_diagram_data": "",
         "ternary_lle_phase_diagram_data": "",
         "output": False,
+        "kij_value": None,
     }

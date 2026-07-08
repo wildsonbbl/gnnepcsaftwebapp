@@ -478,6 +478,28 @@ def retrieve_vle_pxy_binary_data(
     return None
 
 
+def retrieve_vle_for_kij(smiles_list: list) -> Optional[NDArray[float64]]:
+    """
+    retrieve binary VLE data to optimize kij.
+    """
+    if len(smiles_list) != 2:
+        return None
+
+    i1, i2 = smilestoinchi(smiles_list[0]), smilestoinchi(smiles_list[1])
+
+    path_vle = osp.join(application_path, "_data", "vle_binary.parquet")
+    path_vp = osp.join(application_path, "_data", "vp_binary.parquet")
+    df = _read_parquet_if_exists([path_vle, path_vp])
+    if df is not None:
+        filtered = _filter_binary_pair(
+            df, i1, i2, "mole_fraction_c1p2", "mole_fraction_c2p2"
+        ).filter(pl.col("x_c1").is_not_nan())
+        if filtered.height > 0:
+            return filtered.select("x_c1", "P_kPa", "T_K").to_numpy()
+
+    return None
+
+
 def retrieve_lle_binary_data(
     smiles_list: list, pressure: float
 ) -> Optional[NDArray[float64]]:

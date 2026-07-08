@@ -467,6 +467,23 @@ class STCheckForm(forms.Form):
     )
 
 
+class KijCheckForm(forms.Form):
+    "Form to check estimate kij"
+
+    kij_checkbox = forms.BooleanField(
+        label="Estimate kij value for binary mixture",
+        label_suffix="",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Estimate kij value for binary mixture",
+            }
+        ),
+    )
+
+
 class PureForms(NamedTuple):
     """Container for pure-page forms."""
 
@@ -492,3 +509,4 @@ class MixtureForms(NamedTuple):
     ternary_lle_checkform: TernaryLLECheckForm
     binary_vlepxy_checkform: BinaryVLEpxyCheckForm
     ternary_vlepx_checkform: TernaryVLEpxCheckForm
+    kij_checkform: KijCheckForm

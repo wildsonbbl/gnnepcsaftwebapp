@@ -6,16 +6,24 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from gnnepcsaft.pcsaft.pcsaft_feos import (
     critical_points_feos,
+    is_stable_feos,
     mix_den_feos,
     mix_lle_diagram_feos,
     mix_lle_feos,
+    mix_tp_flash_feos,
     mix_vle_diagram_feos,
     mix_vp_feos,
     pure_vp_feos,
 )
 from gnnepcsaft_mcp_server.utils import predict_pcsaft_parameters
+from joblib import Parallel, delayed
+from numpy import float64
+from numpy.typing import NDArray
+from scipy.optimize import least_squares
 
 from . import logger
+
+EPS = 1e-6
 
 
 @dataclass
@@ -668,3 +676,137 @@ def mix_ternary_vle_tx_fixed(
     series = _build_ternary_vle_series(x1_grid, params.solvent_ratio, context)
 
     return series.x1_values, series.bubble_pressures, series.dew_pressures
+
+
+def _pred_x1_worker(
+    t: float, p: float, k_12: float, params: List[List[float]], feed_x1s: np.ndarray
+) -> float:
+    """Predict liquid-phase mole fraction of component 1 for one state point.
+
+    Must be at module level for pickle compatibility on Windows.
+
+    Args:
+        t (float): Temperature in Kelvin.
+        p (float): Pressure in kPa.
+        k_12 (float): Binary interaction parameter.
+        params (List[List[float]]): PC-SAFT parameters for the binary mixture.
+        feed_x1s (np.ndarray): Candidate feed mole fractions for component 1.
+
+    Returns:
+        out (float): Predicted mole fraction of component 1 in the denser phase.
+            Returns np.nan when no converged flash result is found.
+    """
+    for feed_x1 in feed_x1s:
+        try:
+            # Check stability.
+            if not is_stable_feos(
+                parameters=params,
+                state=[t, p * 1e3, feed_x1, 1 - feed_x1],
+                kij_matrix=[[0.0, k_12], [k_12, 0.0]],
+                epsilon_ab=None,
+                density_initialization=None,
+            ):
+                flash = mix_tp_flash_feos(
+                    parameters=params,
+                    state=[t, p * 1e3, feed_x1, 1 - feed_x1],
+                    kij_matrix=[[0.0, k_12], [k_12, 0.0]],
+                    epsilon_ab=None,
+                )
+                # Return the composition of the denser phase (usually liquid)
+                if flash.liquid.density > flash.vapor.density:
+                    return float(flash.liquid.molefracs[0])
+                return float(flash.vapor.molefracs[0])
+        except RuntimeError:
+            continue
+    return np.nan
+
+
+def _loss_fn(
+    k_12_arr: np.ndarray,
+    params: List[List[float]],
+    x1: np.ndarray,
+    temperature: np.ndarray,
+    pressure: np.ndarray,
+    parallel: Parallel,
+    feed_x1s: np.ndarray,
+) -> np.ndarray:
+    """Compute residual vector used in least-squares optimization.
+
+    Args:
+        k_12_arr (np.ndarray): Array containing a single optimization variable (k_12).
+        params (List[List[float]]): PC-SAFT parameters for the binary mixture.
+        x1 (np.ndarray): Experimental mole fractions of component 1.
+        temperature (np.ndarray): Temperatures in Kelvin.
+        pressure (np.ndarray): Pressures in kPa.
+        parallel (Parallel): Active joblib parallel pool.
+        feed_x1s (np.ndarray): Candidate feed mole fractions for flash calculations.
+
+    Returns:
+        out (np.ndarray): Residual vector defined as log(predicted/experimental).
+            Failed flash evaluations are penalized with a large residual.
+    """
+    k_12 = k_12_arr[0]
+
+    # Run predictions in parallel using the active pool
+    pred_x1 = np.asarray(
+        parallel(
+            delayed(_pred_x1_worker)(T, P, k_12, params, feed_x1s)
+            for T, P in zip(temperature, pressure)
+        )
+    )
+
+    # Calculate residuals: log(pred) - log(exp) = log(pred/exp)
+    residuals = np.log((pred_x1 + EPS) / (x1 + EPS))
+
+    # Handle NaNs (failed flash) by assigning a large penalty
+    nan_mask = np.isnan(residuals)
+    residuals[nan_mask] = 10.0
+
+    return residuals
+
+
+def optimize_binary_kij_for_vle(
+    smiles_list: List[str],
+    initial_kij: float,
+    vle: NDArray[float64],
+    npoints: int,
+) -> float:
+    """
+    Optimize the kij interaction parameters for a binary mixture to match target VLE pressures.
+
+    Args:
+        smiles_list: List of SMILES strings for the components.
+        initial_kij: Initial guess for the kij interaction parameter.
+        vle: Array of target VLE pressures.
+        npoints: Number of points to use for the optimization.
+    """
+
+    parameters = [predict_pcsaft_parameters(smiles) for smiles in smiles_list]
+    feed_x1s = np.linspace(1e-5, 0.99, npoints, dtype=np.float64)
+
+    with Parallel(n_jobs=-1) as parallel:
+        x1s = vle[:, 0]
+        pressures = vle[:, 1]
+        temperatures = vle[:, 2]
+        try:
+            # Optimize
+            res = least_squares(
+                fun=_loss_fn,
+                x0=[initial_kij],
+                kwargs={
+                    "params": parameters,
+                    "x1": x1s,
+                    "temperature": temperatures,
+                    "pressure": pressures,
+                    "parallel": parallel,
+                    "feed_x1s": feed_x1s,
+                },
+                jac="2-point",
+                method="lm",
+                ftol=1e-8,
+                xtol=1e-8,
+            )
+            return res.x[0].item()
+
+        except RuntimeError:
+            return 0.0

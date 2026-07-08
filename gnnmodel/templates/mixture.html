@@ -251,6 +251,17 @@
       {% endif %}
     </div>
   </div>
+  {% if kij_value %}
+    <script>
+      const kij_input = document.getElementById('id_kijs');
+      if (kij_input) {
+        kij_input.value = {{kij_value}}.toFixed(4);
+        kij_input.dispatchEvent(new Event('input'));
+        kij_input.dispatchEvent(new Event('change'));
+
+      }
+    </script>
+  {% endif %}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Get form input fields
@@ -291,8 +302,8 @@
             }
           ) 
           mole_fractionsInput.value = updatedmolefractions.join(' ');
-            mole_fractionsInput.dispatchEvent(new Event('input'));
-            mole_fractionsInput.dispatchEvent(new Event('change'));
+          mole_fractionsInput.dispatchEvent(new Event('input'));
+          mole_fractionsInput.dispatchEvent(new Event('change'));
         }
 
         // Update button styling to show selection

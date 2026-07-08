@@ -103,14 +103,14 @@ def _get_vp_data(smiles: str, temp_min: float, temp_max: float, npoints: int):
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
+        plot_data["TML"] = ([], [])
         exp_data = retrieve_vp_pure_data(smiles=smiles)
         if exp_data is not None:
             exp_data[:, 1] *= 1000
             plot_data["TML"] = exp_data.T.tolist()
 
-        else:
-            plot_data["TML"] = ([], [])
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
     return plot_data
@@ -132,6 +132,7 @@ def _get_h_lv_data(smiles: str, temp_min: float, temp_max: float, npoints: int):
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     plot_data["TML"] = ([], [])
     return plot_data
 
@@ -152,6 +153,7 @@ def _get_s_lv_data(smiles: str, temp_min: float, temp_max: float, npoints: int):
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     plot_data["TML"] = ([], [])
     return plot_data
 
@@ -170,14 +172,14 @@ def _get_st_data(smiles: str, temp_min: float):
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
+        plot_data["TML"] = ([], [])
         exp_data = retrieve_st_pure_data(smiles=smiles)
         if exp_data is not None:
             exp_data[:, 1] *= 1000
             plot_data["TML"] = exp_data.T.tolist()
 
-        else:
-            plot_data["TML"] = ([], [])
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
     return plot_data
@@ -202,13 +204,13 @@ def _get_rho_data(
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
+        plot_data["TML"] = ([], [])
         exp_data = retrieve_rho_pure_data(smiles=smiles, pressure=pressure / 1000)
         if exp_data is not None:
             plot_data["TML"] = exp_data.T.tolist()
 
-        else:
-            plot_data["TML"] = ([], [])
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
     return plot_data
@@ -232,6 +234,7 @@ def _get_mix_vle_b_data(
         )
     except (AssertionError, RuntimeError, ValueError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
         plot_data["TML"] = ([], [])
         exp_data = retrieve_vle_pxy_binary_data(
@@ -274,6 +277,7 @@ def _get_mix_vle_t_data(
         )
     except (AssertionError, RuntimeError, ValueError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
         plot_data["TML"] = ([], [])
         exp_data = retrieve_vle_ternary_tx_fixed_data(
@@ -316,6 +320,7 @@ def _get_mix_vp_data(
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
         plot_data["TML"] = ([], [])
         if len(smiles_list) == 2:
@@ -360,6 +365,7 @@ def _get_mix_rho_data(
         )
     except (AssertionError, RuntimeError) as e:
         logger.debug(e)
+        plot_data["GNN"] = ([], [])
     try:
         plot_data["TML"] = ([], [])
         if len(smiles_list) == 2:

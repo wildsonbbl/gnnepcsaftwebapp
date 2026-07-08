@@ -17,7 +17,7 @@
     </StandardDirectory>
     <StandardDirectory Id="DesktopFolder" />
 
-    <StandardDirectory Id="PersonalFolder" />
+    <StandardDirectory Id="LocalAppDataFolder" />
 
     <Feature Id="MainFeature" Title="gnnpcsaftwebapp" Level="1">
       <ComponentGroupRef Id="AppFiles" />
@@ -34,16 +34,17 @@
   </Fragment>
 
   <Fragment>
-    <DirectoryRef Id="PersonalFolder">
+
+    <DirectoryRef Id="LocalAppDataFolder">
       <Directory Id="UserAppFolder" Name="gnnpcsaftwebapp">
         <Directory Id="UserLogFolder" Name="logs">
 
-          <Component Id="LogEnvironmentComponent" Guid="{4f7a5ee2-1d21-43ea-982e-9d29dea76d19}">
+          <Component Id="LogEnvironmentComponent" Guid="{c91b5c46-be5e-4c75-9c5c-7d9a8e0f5df1}">
             <CreateFolder />
 
             <Environment Id="LogPathEnv"
               Name="GNNPCSAFTWEBAPP_LOG_PATH"
-              Value="[PersonalFolder]gnnpcsaftwebapp\logs"
+              Value="[LocalAppDataFolder]gnnpcsaftwebapp\logs"
               Action="set"
               Part="all"
               System="no" />

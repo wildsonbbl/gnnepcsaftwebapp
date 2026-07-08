@@ -206,7 +206,7 @@ class InChIorSMILESareaInputforMixture(forms.Form):
 
         if raw_input:
             return _parse_mole_fractions(raw_input, len(smiles_list))
-        return [1.0 / len(smiles_list) for _ in smiles_list]
+        return [round(1.0 / len(smiles_list), 4) for _ in smiles_list]
 
     def clean_kijs(self):
         "clean kij values"

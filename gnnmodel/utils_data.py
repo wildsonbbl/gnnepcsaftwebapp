@@ -52,6 +52,7 @@ def _filter_binary_pair(
             pl.col("T_K").round(1).alias("T_approx"),
         )
         .unique()
+        .filter(pl.col("x_c1").is_not_nan())
     )
 
 
@@ -493,7 +494,7 @@ def retrieve_vle_for_kij(smiles_list: list) -> Optional[NDArray[float64]]:
     if df is not None:
         filtered = _filter_binary_pair(
             df, i1, i2, "mole_fraction_c1p2", "mole_fraction_c2p2"
-        ).filter(pl.col("x_c1").is_not_nan())
+        )
         if filtered.height > 0:
             return filtered.select("x_c1", "P_kPa", "T_K").to_numpy()
 

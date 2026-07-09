@@ -2,13 +2,16 @@
 
 import multiprocessing
 
+multiprocessing.freeze_support()
+
+# pylint: disable = W0611,C0411,C0413
+
 # gui.py
 import os
 import socket
 import sys
 import threading
 
-# pylint: disable = W0611,C0411
 import bootstrap5
 import feos
 import webview

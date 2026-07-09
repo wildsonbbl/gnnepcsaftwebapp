@@ -140,7 +140,6 @@ class ViewsTestCase(TestCase):
         }
 
         form_data = {
-            "text_area": f"{self.valid_inchi} 0.5\n{self.valid_inchi} 0.5",
             "temp_min": "298.15",
             "temp_max": "350.0",
             "pressure": "101325.0",

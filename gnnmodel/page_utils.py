@@ -270,6 +270,7 @@ def build_mixture_context(post_data=None):
             BinaryLLECheckForm(),
             TernaryLLECheckForm(),
             TernaryVLEpxCheckForm(),
+            KijCheckForm(),
         ],
         "available_params": available_params,
         "parameters_molefractions_list": [],

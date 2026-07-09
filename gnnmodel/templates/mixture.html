@@ -251,17 +251,6 @@
       {% endif %}
     </div>
   </div>
-  {% if kij_value %}
-    <script>
-      const kij_input = document.getElementById('id_kijs');
-      if (kij_input) {
-        kij_input.value = {{kij_value}}.toFixed(4);
-        kij_input.dispatchEvent(new Event('input'));
-        kij_input.dispatchEvent(new Event('change'));
-
-      }
-    </script>
-  {% endif %}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Get form input fields
@@ -269,6 +258,16 @@
       const tempMinInput = document.getElementById('id_temp_min');
       const tempMaxInput = document.getElementById('id_temp_max');
       const mole_fractionsInput = document.getElementById('id_mole_fractions');
+      const kij_input = document.getElementById('id_kijs');
+
+      {% if kij_value %}
+      if (kij_input) {
+        kij_input.value = {{kij_value}}.toFixed(4);
+        kij_input.dispatchEvent(new Event('input'));
+        kij_input.dispatchEvent(new Event('change'));
+
+      }
+      {% endif %}
 
       // Get all experimental data buttons
       const rhoBinaryBtns = document.querySelectorAll('.rho-px-data-b-btn');
@@ -295,7 +294,6 @@
         }
 
         if (moleFractions !== null && mole_fractionsInput) {
-
           const updatedmolefractions = moleFractions.map(
             (mf) => {
               return mf.toFixed(4)

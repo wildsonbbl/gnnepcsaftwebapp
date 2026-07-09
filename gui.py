@@ -1,5 +1,7 @@
 "pywebview gui"
 
+import multiprocessing
+
 # gui.py
 import os
 import socket
@@ -48,6 +50,7 @@ def _start_django():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     # 2. Start Django in a background thread
     django_thread = threading.Thread(target=_start_django, daemon=True)
     django_thread.start()

@@ -784,7 +784,7 @@ def optimize_binary_kij_for_vle(
     parameters = [predict_pcsaft_parameters(smiles) for smiles in smiles_list]
     feed_x1s = np.linspace(1e-5, 0.99, npoints, dtype=np.float64)
 
-    with Parallel(n_jobs=-1) as parallel:
+    with Parallel(n_jobs=-1, backend="multiprocessing") as parallel:
         x1s = vle[:, 0]
         pressures = vle[:, 1]
         temperatures = vle[:, 2]

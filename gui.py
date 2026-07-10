@@ -54,5 +54,11 @@ if __name__ == "__main__":
     django_thread.start()
 
     # 3. Launch the pywebview window pointing to localhost
-    webview.create_window("GNNPCSAFT", f"http://localhost:{PORT}")
+    webview.create_window(
+        "GNNPCSAFT",
+        f"http://localhost:{PORT}",
+        width=1280,
+        height=600,
+        maximized=True,
+    )
     webview.start()

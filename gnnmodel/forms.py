@@ -181,7 +181,7 @@ class InChIorSMILESareaInputforMixture(forms.Form):
         "check valid input and output SMILES."
         raw_input: str = self.data["smiles_inchi_list"]
 
-        smiles_inchi_list = raw_input.split(" ")
+        smiles_inchi_list = raw_input.strip().split()
         if len(smiles_inchi_list) < 2:
             raise ValidationError(_("Provide at least two 'SMILES/InChI'"))
 

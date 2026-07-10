@@ -21,5 +21,4 @@ pylint
 pylint-django
 pyinstaller
 pywebview
-joblib
 scipy

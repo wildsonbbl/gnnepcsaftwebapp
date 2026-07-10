@@ -201,7 +201,6 @@ def process_mixture_post(forms: MixtureForms):
                     smiles_list=smiles_list,
                     initial_kij=kij[0] if kij else 0.05,
                     vle=vle,
-                    npoints=forms.plot_config.cleaned_data["npoints"] or 5,
                 )
                 kij = [kij_value]
         kij_matrix = _build_kij_matrix(smiles_list, kij)

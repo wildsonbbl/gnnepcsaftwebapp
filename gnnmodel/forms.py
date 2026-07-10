@@ -475,6 +475,7 @@ class KijCheckForm(forms.Form):
         label_suffix="",
         required=False,
         initial=False,
+        help_text="<p class='form-text'>- All available VLE exp. data used in optimization</p>",
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",

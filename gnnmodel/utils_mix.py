@@ -596,7 +596,7 @@ def mix_lle(
         )
     except RuntimeError as exc:
         logger.debug(
-            "mix_lle: Runtime Error at temperature=%.4f, pressure=%.4f, molefractions=%.4f: %s",
+            "mix_lle: Runtime Error at temperature=%.4f, pressure=%.4f, molefractions=%s: %s",
             params.temperature,
             params.pressure,
             params.mole_fractions,
@@ -607,7 +607,7 @@ def mix_lle(
         if exception_type == "PanicException":
             logger.warning(
                 "mix_lle: PanicException at temperature=%.4f, "
-                "pressure=%.4f, molefractions=%.4f: %s",
+                "pressure=%.4f, molefractions=%s: %s",
                 params.temperature,
                 params.pressure,
                 params.mole_fractions,
@@ -615,7 +615,7 @@ def mix_lle(
             )
         else:
             logger.exception(
-                "mix_lle: unexpected %s at temperature=%.4f, pressure=%.4f, molefractions=%.4f",
+                "mix_lle: unexpected %s at temperature=%.4f, pressure=%.4f, molefractions=%s",
                 exception_type,
                 params.temperature,
                 params.pressure,
@@ -656,7 +656,7 @@ def _get_ternary_lle_data(
                 if exception_type == "PanicException":
                     logger.warning(
                         "mix_ternary_lle: PanicException at temperature=%.4f, "
-                        "pressure=%.4f, molefractions=%.4f: %s",
+                        "pressure=%.4f, molefractions=%s: %s",
                         t,
                         p,
                         [x1_m[i, j].item(), x2_m[i, j].item(), x3_m[i, j].item()],
@@ -665,7 +665,7 @@ def _get_ternary_lle_data(
                     continue
                 logger.exception(
                     "mix_ternary_lle: unexpected %s at temperature=%.4f, "
-                    "pressure=%.4f, molefractions=%.4f",
+                    "pressure=%.4f, molefractions=%s",
                     exception_type,
                     t,
                     p,

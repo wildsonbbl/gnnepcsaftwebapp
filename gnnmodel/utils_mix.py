@@ -14,7 +14,6 @@ from gnnepcsaft.pcsaft.pcsaft_feos import (
     pure_vp_feos,
 )
 from gnnepcsaft_mcp_server.utils import predict_pcsaft_parameters
-from joblib import Parallel, delayed
 from numpy import float64
 from numpy.typing import NDArray
 from scipy.optimize import least_squares
@@ -716,7 +715,6 @@ def _loss_fn_bubble_point(
     x1: np.ndarray,
     temperature: np.ndarray,
     pressure: np.ndarray,
-    parallel: Parallel,
 ) -> np.ndarray:
     """Compute residual vector for bubble point optimization.
 
@@ -726,7 +724,6 @@ def _loss_fn_bubble_point(
         x1 (np.ndarray): Mole fractions of component 1.
         temperature (np.ndarray): Temperatures in Kelvin.
         pressure (np.ndarray): Pressures in kPa.
-        parallel (Parallel): Active joblib parallel pool.
 
     Returns:
         out (np.ndarray): Residual vector defined as log(predicted_P/experimental_P).
@@ -736,10 +733,7 @@ def _loss_fn_bubble_point(
 
     # Run predictions in parallel using the active pool
     pred_p = np.asarray(
-        parallel(
-            delayed(_pred_bp_worker)(T, X1, k_12, params)
-            for T, X1 in zip(temperature, x1)
-        )
+        [_pred_bp_worker(T, X1, k_12, params) for T, X1 in zip(temperature, x1)]
     )
 
     # Calculate residuals: log(pred_P/exp_P)
@@ -768,28 +762,26 @@ def optimize_binary_kij_for_vle(
 
     parameters = [predict_pcsaft_parameters(smiles) for smiles in smiles_list]
 
-    with Parallel(n_jobs=-1, backend="loky") as parallel:
-        x1s = vle[:, 0]
-        pressures = vle[:, 1]
-        temperatures = vle[:, 2]
-        try:
-            # Optimize
-            res = least_squares(
-                fun=_loss_fn_bubble_point,
-                x0=[initial_kij],
-                kwargs={
-                    "params": parameters,
-                    "x1": x1s,
-                    "temperature": temperatures,
-                    "pressure": pressures,
-                    "parallel": parallel,
-                },
-                jac="2-point",
-                method="lm",
-                ftol=1e-8,
-                xtol=1e-8,
-            )
-            return res.x[0].item()
+    x1s = vle[:, 0]
+    pressures = vle[:, 1]
+    temperatures = vle[:, 2]
+    try:
+        # Optimize
+        res = least_squares(
+            fun=_loss_fn_bubble_point,
+            x0=[initial_kij],
+            kwargs={
+                "params": parameters,
+                "x1": x1s,
+                "temperature": temperatures,
+                "pressure": pressures,
+            },
+            jac="2-point",
+            method="lm",
+            ftol=1e-8,
+            xtol=1e-8,
+        )
+        return res.x[0].item()
 
-        except RuntimeError:
-            return 0.0
+    except RuntimeError:
+        return 0.0

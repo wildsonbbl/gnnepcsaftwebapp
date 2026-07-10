@@ -1,10 +1,6 @@
 "pywebview gui"
 
-import multiprocessing
-
-multiprocessing.freeze_support()
-
-# pylint: disable = W0611,C0411,C0413
+# pylint: disable = W0611,C0411
 
 # gui.py
 import os
@@ -53,7 +49,6 @@ def _start_django():
 
 
 if __name__ == "__main__":
-    multiprocessing.freeze_support()
     # 2. Start Django in a background thread
     django_thread = threading.Thread(target=_start_django, daemon=True)
     django_thread.start()

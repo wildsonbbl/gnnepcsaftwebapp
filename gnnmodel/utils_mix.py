@@ -440,9 +440,9 @@ def _build_ternary_vle_series(
 
 def _build_fraction_grid(
     mole_fractions: Optional[List[float]],
-    n_points: int,
+    npoints: int,
 ) -> List[float]:
-    x_grid = np.linspace(0.0, 1.0, num=n_points, dtype=np.float64).tolist()
+    x_grid = np.linspace(0.0, 1.0, num=npoints, dtype=np.float64).tolist()
     if mole_fractions:
         x_grid.extend(mole_fractions)
         x_grid = sorted(x_grid)
@@ -478,7 +478,7 @@ def mix_vp(params: MixVpParams) -> Tuple[List[float], List[float], List[float]]:
         params.min_temp, params.max_temp, num=params.npoints
     ).tolist()
 
-    buble_points = []
+    bubble_points = []
     dew_point = []
     valid_temperatures = []
     for temp in temperatures:
@@ -489,10 +489,10 @@ def mix_vp(params: MixVpParams) -> Tuple[List[float], List[float], List[float]]:
                 kij_matrix=params.kij_matrix,
             )
             if bp > dp:
-                buble_points.append(bp)
+                bubble_points.append(bp)
                 dew_point.append(dp)
             else:
-                buble_points.append(dp)
+                bubble_points.append(dp)
                 dew_point.append(bp)
             valid_temperatures.append(temp)
         except RuntimeError as exc:
@@ -511,21 +511,38 @@ def mix_vp(params: MixVpParams) -> Tuple[List[float], List[float], List[float]]:
                 )
                 raise
 
-    return valid_temperatures, buble_points, dew_point
+    return valid_temperatures, bubble_points, dew_point
 
 
 def mix_vle(
     smiles_list: List[str], kij_matrix: List[List[float]], pressure: float, npoints: int
-) -> Dict[str, List[float]]:
+) -> Optional[Dict[str, List[float]]]:
     "Calculate mixture VLE (T-x-y) using PC-SAFT EOS"
     parameters_list = [predict_pcsaft_parameters(smiles) for smiles in smiles_list]
 
-    return mix_vle_diagram_feos(
-        parameters=parameters_list,
-        state=[pressure],
-        kij_matrix=kij_matrix,
-        npoints=npoints,
-    )
+    try:
+        return mix_vle_diagram_feos(
+            parameters=parameters_list,
+            state=[pressure],
+            kij_matrix=kij_matrix,
+            npoints=npoints if npoints < 500 else 500,
+        )
+    except RuntimeError as exc:
+        logger.debug("mix_vle: Runtime Error at pressure=%.4f: %s", pressure, exc)
+    except BaseException as exc:  # pylint: disable=W0718
+        exception_type = type(exc).__name__
+        if exception_type == "PanicException":
+            logger.warning(
+                "mix_vle: PanicException at pressure=%.4f: %s", pressure, exc
+            )
+        else:
+            logger.exception(
+                "mix_vle: unexpected %s at pressure=%.4f",
+                exception_type,
+                pressure,
+            )
+            raise
+    return None
 
 
 def mix_vle_pxy(
@@ -564,18 +581,48 @@ def mix_vle_pxy(
 
 def mix_lle(
     params: MixLLEParams,
-) -> Dict[str, List[float]]:
+) -> Optional[Dict[str, List[float]]]:
     "Calculate mixture LLE using PC-SAFT EOS"
     parameters_list = [
         predict_pcsaft_parameters(smiles) for smiles in params.smiles_list
     ]
 
-    return mix_lle_diagram_feos(
-        parameters=parameters_list,
-        state=[params.temperature, params.pressure, *params.mole_fractions],
-        kij_matrix=params.kij_matrix,
-        npoints=params.npoints,
-    )
+    try:
+        return mix_lle_diagram_feos(
+            parameters=parameters_list,
+            state=[params.temperature, params.pressure, *params.mole_fractions],
+            kij_matrix=params.kij_matrix,
+            npoints=params.npoints if params.npoints < 500 else 500,
+        )
+    except RuntimeError as exc:
+        logger.debug(
+            "mix_lle: Runtime Error at temperature=%.4f, pressure=%.4f, molefractions=%.4f: %s",
+            params.temperature,
+            params.pressure,
+            params.mole_fractions,
+            exc,
+        )
+    except BaseException as exc:  # pylint: disable=W0718
+        exception_type = type(exc).__name__
+        if exception_type == "PanicException":
+            logger.warning(
+                "mix_lle: PanicException at temperature=%.4f, "
+                "pressure=%.4f, molefractions=%.4f: %s",
+                params.temperature,
+                params.pressure,
+                params.mole_fractions,
+                exc,
+            )
+        else:
+            logger.exception(
+                "mix_lle: unexpected %s at temperature=%.4f, pressure=%.4f, molefractions=%.4f",
+                exception_type,
+                params.temperature,
+                params.pressure,
+                params.mole_fractions,
+            )
+            raise
+    return None
 
 
 def _get_ternary_lle_data(
@@ -604,6 +651,27 @@ def _get_ternary_lle_data(
                 )
             except (RuntimeError, ValueError):
                 continue
+            except BaseException as exc:  # pylint: disable=W0718
+                exception_type = type(exc).__name__
+                if exception_type == "PanicException":
+                    logger.warning(
+                        "mix_ternary_lle: PanicException at temperature=%.4f, "
+                        "pressure=%.4f, molefractions=%.4f: %s",
+                        t,
+                        p,
+                        [x1_m[i, j].item(), x2_m[i, j].item(), x3_m[i, j].item()],
+                        exc,
+                    )
+                    continue
+                logger.exception(
+                    "mix_ternary_lle: unexpected %s at temperature=%.4f, "
+                    "pressure=%.4f, molefractions=%.4f",
+                    exception_type,
+                    t,
+                    p,
+                    [x1_m[i, j].item(), x2_m[i, j].item(), x3_m[i, j].item()],
+                )
+                raise
             # For LLE, y is one phase and x is the other phase
             if lle["density liquid"][0] > lle["density vapor"][0]:
                 ternary_data["x0"].extend(lle["x0"])
@@ -639,7 +707,7 @@ def mix_ternary_lle(
         params=parameters_list,
         state=[temperature, pressure],
         kij_matrix=kij_matrix,
-        npoints=npoints,
+        npoints=npoints if npoints < 100 else 100,
     )
 
 
@@ -669,7 +737,7 @@ def mix_ternary_vle_tx_fixed(
         min_pc=min(pcs),
         max_pc=max(pcs),
     )
-    x1_grid = _build_fraction_grid(params.mole_fractions, n_points=params.npoints)
+    x1_grid = _build_fraction_grid(params.mole_fractions, npoints=params.npoints)
     series = _build_ternary_vle_series(x1_grid, params.solvent_ratio, context)
 
     return series.x1_values, series.bubble_pressures, series.dew_pressures

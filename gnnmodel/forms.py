@@ -262,6 +262,7 @@ class CustomPlotConfigForm(forms.Form):
     npoints = forms.IntegerField(
         label="",
         min_value=2,
+        max_value=500,
         required=False,
         widget=forms.NumberInput(
             attrs={

@@ -410,6 +410,8 @@ def _get_binary_vle_data(
             pressure=forms.plot_config.cleaned_data["pressure"],
             npoints=forms.plot_config.cleaned_data["npoints"] or 10,
         )
+        if _vle_phase_diagram_data is None:
+            _vle_phase_diagram_data = {"T": [], "x0": []}
         _vle_phase_diagram_data["exp_T"] = []
         _vle_phase_diagram_data["exp_x0"] = []
         try:
@@ -456,6 +458,8 @@ def _get_binary_lle_data(
                 npoints=forms.plot_config.cleaned_data["npoints"] or 10,
             )
         )
+        if _binary_lle_phase_diagram_data is None:
+            _binary_lle_phase_diagram_data = {"T": [], "x0": []}
         _binary_lle_phase_diagram_data["exp_T"] = []
         _binary_lle_phase_diagram_data["exp_x0"] = []
         try:

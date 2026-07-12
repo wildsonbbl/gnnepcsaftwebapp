@@ -236,6 +236,7 @@ def _build_binary_vle_pxy_series(
     series = BinaryVleSeries(xs=[], bps=[], dps=[])
     _append_binary_pure_point(temperature, tcs, vps, series)
 
+    previous_bp = 0.0
     for x0 in x0s:
         point = _binary_vle_pxy_point(context, x0)
         if point is None:
@@ -243,6 +244,9 @@ def _build_binary_vle_pxy_series(
         if point == "break":
             break
         bp, dp, warn_above_min = point
+        if previous_bp > max(bp, dp):
+            continue
+        previous_bp = max(bp, dp)
         if warn_above_min:
             logger.warning(
                 "mix_vle_pxy: point above one component Pc at x0=%.4f: bp=%.2f, dp=%.2f",
@@ -432,9 +436,9 @@ def _build_ternary_vle_series(
             continue
 
         bubble_p, dew_p = point
-        if previous_bp > bubble_p:
+        if previous_bp > max(bubble_p, dew_p):
             continue
-        previous_bp = bubble_p
+        previous_bp = max(bubble_p, dew_p)
         result = _append_ternary_pressures(x1, bubble_p, dew_p, context, series)
         if result == "break":
             break
@@ -485,6 +489,7 @@ def mix_vp(params: MixVpParams) -> Tuple[List[float], List[float], List[float]]:
     bubble_points = []
     dew_point = []
     valid_temperatures = []
+    previous_bp = 0.0
     for temp in temperatures:
         try:
             bp, dp = mix_vp_feos(
@@ -492,12 +497,11 @@ def mix_vp(params: MixVpParams) -> Tuple[List[float], List[float], List[float]]:
                 state=[temp, 0] + params.mole_fractions,
                 kij_matrix=params.kij_matrix,
             )
-            if bp > dp:
-                bubble_points.append(bp)
-                dew_point.append(dp)
-            else:
-                bubble_points.append(dp)
-                dew_point.append(bp)
+            if previous_bp > max(bp, dp):
+                continue
+            previous_bp = max(bp, dp)
+            bubble_points.append(max(bp, dp))
+            dew_point.append(min(bp, dp))
             valid_temperatures.append(temp)
         except RuntimeError as exc:
             logger.debug("mix_vp: Runtime Error at temperature=%.4f: %s", temp, exc)
@@ -767,13 +771,13 @@ def _pred_bp_worker(
             Returns np.nan when bubble point calculation fails.
     """
     try:
-        bp_pa, _ = mix_vp_feos(
+        bp_pa, dp_pa = mix_vp_feos(
             parameters=params,
             state=[t, 0.0, x1, 1 - x1],
             kij_matrix=[[0.0, k_12], [k_12, 0.0]],
             epsilon_ab=None,
         )
-        return float(bp_pa / 1e3)  # Convert Pa to kPa
+        return float(max(bp_pa, dp_pa) / 1e3)  # Convert Pa to kPa
     except RuntimeError:
         return np.nan
     except BaseException as exc:  # pylint: disable=W0718

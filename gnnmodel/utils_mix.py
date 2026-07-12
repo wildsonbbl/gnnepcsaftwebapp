@@ -421,6 +421,7 @@ def _build_ternary_vle_series(
 ) -> TernaryVleSeries:
     series = TernaryVleSeries(x1_values=[], bubble_pressures=[], dew_pressures=[])
 
+    previous_bp = 0.0
     for x1 in x1_grid:
         x2, x3 = _ternary_solvent_split(x1, solvent_ratio)
         if x2 <= 0.0 or x3 <= 0.0:
@@ -431,6 +432,9 @@ def _build_ternary_vle_series(
             continue
 
         bubble_p, dew_p = point
+        if previous_bp > bubble_p:
+            continue
+        previous_bp = bubble_p
         result = _append_ternary_pressures(x1, bubble_p, dew_p, context, series)
         if result == "break":
             break

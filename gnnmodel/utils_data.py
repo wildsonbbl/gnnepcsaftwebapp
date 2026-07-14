@@ -59,7 +59,7 @@ def _filter_binary_pair(
 def _build_binary_rho_data(
     inchi1: str,
     inchi2: str,
-) -> Optional[List[float]]:
+) -> Optional[List[List[float]]]:
     rho_bin = pl.read_parquet(osp.join(application_path, "_data", "rho_binary.parquet"))
     filtered = _filter_binary_pair(
         rho_bin, inchi1, inchi2, "mole_fraction_c1", "mole_fraction_c2"
@@ -79,7 +79,7 @@ def _build_binary_rho_data(
 def _build_binary_bubble_data(
     inchi1: str,
     inchi2: str,
-) -> Optional[List[float]]:
+) -> Optional[List[List[float]]]:
     path_vle = osp.join(application_path, "_data", "vle_binary.parquet")
     path_vp = osp.join(application_path, "_data", "vp_binary.parquet")
     df = _read_parquet_if_exists([path_vle, path_vp])
@@ -103,7 +103,7 @@ def _build_binary_bubble_data(
 def _build_binary_lle_data(
     inchi1: str,
     inchi2: str,
-) -> Optional[List[float]]:
+) -> Optional[List[List[float]]]:
     path_lle = osp.join(application_path, "_data", "lle_binary.parquet")
     path_lle_temp = osp.join(application_path, "_data", "lle_binary_temp.parquet")
     df = _read_parquet_if_exists([path_lle, path_lle_temp])
@@ -127,7 +127,7 @@ def _build_binary_lle_data(
 def _build_binary_vle_data(
     inchi1: str,
     inchi2: str,
-) -> Tuple[Optional[List[float]], Optional[List[float]]]:
+) -> Tuple[Optional[List[List[float]]], Optional[List[List[float]]]]:
     path_vle = osp.join(application_path, "_data", "vle_binary.parquet")
     path_vp = osp.join(application_path, "_data", "vp_binary.parquet")
     df = _read_parquet_if_exists([path_vle, path_vp])
@@ -203,7 +203,7 @@ def _filter_ternary_set(
 
 def _build_ternary_rho_data(
     target_set: list,
-) -> Optional[List[float]]:
+) -> Optional[List[List[float]]]:
     path_rho = osp.join(application_path, "_data", "rho_ternary.parquet")
     df = _read_parquet_if_exists([path_rho])
     if df is None:
@@ -224,7 +224,7 @@ def _build_ternary_rho_data(
     return None
 
 
-def _build_ternary_lle_data(target_set: list) -> Optional[List[float]]:
+def _build_ternary_lle_data(target_set: list) -> Optional[List[List[float]]]:
     path_lle = osp.join(application_path, "_data", "lle_ternary.parquet")
     path_lle_mass = osp.join(application_path, "_data", "lle_mass_ternary.parquet")
     df = _read_parquet_if_exists([path_lle, path_lle_mass])
@@ -249,7 +249,7 @@ def _build_ternary_lle_data(target_set: list) -> Optional[List[float]]:
 
 def _build_ternary_vle_data(
     target_set: list,
-) -> Tuple[Optional[List[float]], Optional[List[float]]]:
+) -> Tuple[Optional[List[List[float]]], Optional[List[List[float]]]]:
     path_vle = osp.join(application_path, "_data", "vle_ternary.parquet")
     path_vp = osp.join(application_path, "_data", "vp_ternary.parquet")
     df = _read_parquet_if_exists([path_vle, path_vp])
@@ -281,6 +281,24 @@ def _build_ternary_vle_data(
     )
 
     return vle_pt_data, vle_tx_data
+
+
+def default_mixture_output_args() -> (
+    Dict[str, Optional[Union[List[List[float]], List[Tuple[str, List[float]]]]]]
+):
+    """Return the default output_args dict for mixture plots."""
+    return {
+        "rho_px_data_b": None,
+        "vle_x_data_b": None,
+        "lle_p_data_b": None,
+        "vle_p_data_b": None,
+        "vle_t_data_b": None,
+        "rho_px_data_t": None,
+        "lle_pt_data_t": None,
+        "vle_pt_data_t": None,
+        "vle_tx_data_t": None,
+        "preds": [],
+    }
 
 
 def retrieve_rho_pure_data(smiles: str, pressure: float) -> Optional[NDArray[float64]]:
@@ -528,7 +546,7 @@ def retrieve_lle_binary_data(
 
 def retrieve_available_data_binary(
     smiles_list: list,
-) -> Dict[str, Optional[List[float]]]:
+) -> Dict[str, Optional[List[List[float]]]]:
     "retrieve available binary data"
 
     i1, i2 = smilestoinchi(smiles_list[0]), smilestoinchi(smiles_list[1])
@@ -549,7 +567,7 @@ def retrieve_available_data_binary(
 
 def retrieve_available_data_ternary(
     smiles_list: list,
-) -> Dict[str, Optional[List[float]]]:
+) -> Dict[str, Optional[List[List[float]]]]:
     "retrieve available ternary data"
 
     target_set = [

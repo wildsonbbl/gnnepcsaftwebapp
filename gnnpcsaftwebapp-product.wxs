@@ -1,6 +1,6 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
   <Package Name="GNNPCSAFT Web App" Language="1033" Version="$(var.ProductVersion)"
-    Manufacturer="Wildson B. B. Lima" UpgradeCode="{df748ee4-8696-4e1a-bb50-f6470a57c58d}">
+    Manufacturer="Wildson Lima" UpgradeCode="{df748ee4-8696-4e1a-bb50-f6470a57c58d}">
     <MajorUpgrade DowngradeErrorMessage="A newer version of gnnpcsaft web app is already installed." />
     <MediaTemplate EmbedCab="yes" />
     <Icon Id="AppIcon" SourceFile="$(var.ProjectDir)\electron\icon.ico" />
@@ -17,13 +17,10 @@
     </StandardDirectory>
     <StandardDirectory Id="DesktopFolder" />
 
-    <StandardDirectory Id="LocalAppDataFolder" />
-
     <Feature Id="MainFeature" Title="gnnpcsaftwebapp" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="StartMenuShortcutComponent" />
       <ComponentRef Id="DesktopShortcutComponent" />
-      <ComponentRef Id="LogEnvironmentComponent" />
     </Feature>
   </Package>
 
@@ -31,32 +28,6 @@
     <ComponentGroup Id="AppFiles" Directory="INSTALLDIR">
       <Files Include="$(var.SourceDir)\**" />
     </ComponentGroup>
-  </Fragment>
-
-  <Fragment>
-
-    <DirectoryRef Id="LocalAppDataFolder">
-      <Directory Id="UserAppFolder" Name="gnnpcsaftwebapp">
-        <Directory Id="UserLogFolder" Name="logs">
-
-          <Component Id="LogEnvironmentComponent" Guid="{c91b5c46-be5e-4c75-9c5c-7d9a8e0f5df1}">
-            <CreateFolder />
-
-            <Environment Id="LogPathEnv"
-              Name="GNNPCSAFTWEBAPP_LOG_PATH"
-              Value="[LocalAppDataFolder]gnnpcsaftwebapp\logs"
-              Action="set"
-              Part="all"
-              System="no" />
-
-            <RegistryValue Root="HKCU" Key="Software\gnnpcsaftwebapp" Name="LogEnvSet"
-              Type="integer"
-              Value="1" KeyPath="yes" />
-          </Component>
-
-        </Directory>
-      </Directory>
-    </DirectoryRef>
   </Fragment>
 
   <Fragment>

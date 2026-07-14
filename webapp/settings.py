@@ -10,9 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+import os
+import platform
+import sys
 from pathlib import Path
 
 from decouple import Csv, config
+
+IS_PACKAGED = getattr(sys, "frozen", False)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -173,7 +178,41 @@ CSRF_TRUSTED_ORIGINS = config(
 # Logging
 # https://docs.djangoproject.com/en/4.2/topics/logging/
 
-LOG_PATH = config("GNNPCSAFTWEBAPP_LOG_PATH", default=BASE_DIR, cast=Path)
+if IS_PACKAGED:
+    CURRENT_OS = platform.system()
+
+    if CURRENT_OS == "Windows":
+        # Windows AppData (Safe for MSIX / Windows Store)
+        # Defaults to: C:\Users\<Username>\AppData\Local\gnnpcsaftwebapp\logs
+        LOCAL_APP_DATA = os.environ.get("LOCALAPPDATA")
+        if LOCAL_APP_DATA:
+            LOG_DIR = Path(LOCAL_APP_DATA) / "gnnpcsaftwebapp" / "logs"
+        else:
+            LOG_DIR = BASE_DIR / "logs"
+
+    elif CURRENT_OS == "Darwin":  # macOS
+        # macOS standard User Library Application Support
+        # Defaults to: /Users/<Username>/Library/Application Support/gnnpcsaftwebapp/logs
+        LOG_DIR = (
+            Path.home() / "Library" / "Application Support" / "gnnpcsaftwebapp" / "logs"
+        )
+
+    else:  # Linux / Ubuntu
+        # Linux standard XDG data home (or fallback to ~/.local/share)
+        # Defaults to: /home/<Username>/.local/share/gnnpcsaftwebapp/logs
+        XDG_DATA_HOME = os.environ.get("XDG_DATA_HOME")
+        if XDG_DATA_HOME:
+            LOG_DIR = Path(XDG_DATA_HOME) / "gnnpcsaftwebapp" / "logs"
+        else:
+            LOG_DIR = Path.home() / ".local" / "share" / "gnnpcsaftwebapp" / "logs"
+else:
+    # Local Development Fallback
+    LOG_DIR = BASE_DIR / "logs"
+
+# Ensure the log folder is created programmatically
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+LOG_PATH = config("GNNPCSAFTWEBAPP_LOG_PATH", default=LOG_DIR, cast=Path)
 LOG_LEVEL = config("GNNPCSAFTWEBAPP_LOG_LEVEL", default="WARNING")
 
 assert isinstance(LOG_PATH, Path), "LOG_PATH must be a Path object"

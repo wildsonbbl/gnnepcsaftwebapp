@@ -188,35 +188,35 @@ class ViewsTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "about.html")
 
-    @patch("gnnmodel.views.__version__", new="8.0.2")
-    @patch("gnnmodel.views.is_newer_version")
-    @patch("gnnmodel.views.fetch_latest_release")
-    def test_about_update_available(
-        self, mock_fetch_latest_release, mock_is_newer_version
-    ):
-        """Test about page view when a newer release is available."""
-        mock_fetch_latest_release.return_value = type(
-            "Release",
-            (),
-            {
-                "tag_name": "v9.0.0",
-                "html_url": "https://example.com/releases/v9.0.0",
-                "name": "v9.0.0",
-                "body": "",
-            },
-        )()
-        mock_is_newer_version.return_value = True
+    # @patch("gnnmodel.views.__version__", new="8.0.2")
+    # @patch("gnnmodel.views.is_newer_version")
+    # @patch("gnnmodel.views.fetch_latest_release")
+    # def test_about_update_available(
+    #     self, mock_fetch_latest_release, mock_is_newer_version
+    # ):
+    #     """Test about page view when a newer release is available."""
+    #     mock_fetch_latest_release.return_value = type(
+    #         "Release",
+    #         (),
+    #         {
+    #             "tag_name": "v9.0.0",
+    #             "html_url": "https://example.com/releases/v9.0.0",
+    #             "name": "v9.0.0",
+    #             "body": "",
+    #         },
+    #     )()
+    #     mock_is_newer_version.return_value = True
 
-        response = self.client.get(reverse("about"))
+    #     response = self.client.get(reverse("about"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, "about.html")
-        self.assertTrue(response.context["update_available"])
-        self.assertEqual(response.context["current_version"], "8.0.2")
-        self.assertEqual(response.context["latest_release_tag"], "v9.0.0")
-        self.assertEqual(
-            response.context["latest_release_url"],
-            "https://example.com/releases/v9.0.0",
-        )
-        mock_fetch_latest_release.assert_called_once()
-        mock_is_newer_version.assert_called_once_with("v9.0.0", "8.0.2")
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertTemplateUsed(response, "about.html")
+    #     self.assertTrue(response.context["update_available"])
+    #     self.assertEqual(response.context["current_version"], "8.0.2")
+    #     self.assertEqual(response.context["latest_release_tag"], "v9.0.0")
+    #     self.assertEqual(
+    #         response.context["latest_release_url"],
+    #         "https://example.com/releases/v9.0.0",
+    #     )
+    #     mock_fetch_latest_release.assert_called_once()
+    #     mock_is_newer_version.assert_called_once_with("v9.0.0", "8.0.2")

@@ -387,8 +387,9 @@ class BinaryLLECheckForm(forms.Form):
         label_suffix="",
         required=False,
         initial=False,
-        help_text="<p class='form-text'>- Mole fractions and minimum temperature are used "
-        "as starting value for calculations</p>",
+        help_text="<p class='form-text'>- Mole fractions are used "
+        "as starting value for calculations<br>"
+        "- Min/Max temperature are used as range values for calculations</p>",
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",

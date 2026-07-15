@@ -83,7 +83,8 @@ class MixLLEParams:
     smiles_list: List[str]
     mole_fractions: List[float]
     kij_matrix: List[List[float]]
-    temperature: float
+    temperature_min: float
+    temperature_max: float
     pressure: float
     npoints: int
 
@@ -599,14 +600,19 @@ def mix_lle(
     try:
         return mix_lle_diagram_feos(
             parameters=parameters_list,
-            state=[params.temperature, params.pressure, *params.mole_fractions],
+            state=[
+                params.temperature_min,
+                params.temperature_max,
+                params.pressure,
+                *params.mole_fractions,
+            ],
             kij_matrix=params.kij_matrix,
             npoints=params.npoints if params.npoints < 500 else 500,
         )
     except RuntimeError as exc:
         logger.debug(
             "mix_lle: Runtime Error at temperature=%.4f, pressure=%.4f, molefractions=%s: %s",
-            params.temperature,
+            params.temperature_min,
             params.pressure,
             params.mole_fractions,
             exc,
@@ -618,7 +624,7 @@ def mix_lle(
             logger.warning(
                 "mix_lle: PanicException at temperature=%.4f, "
                 "pressure=%.4f, molefractions=%s: %s",
-                params.temperature,
+                params.temperature_min,
                 params.pressure,
                 params.mole_fractions,
                 exc,
@@ -627,7 +633,7 @@ def mix_lle(
             logger.exception(
                 "mix_lle: unexpected %s at temperature=%.4f, pressure=%.4f, molefractions=%s",
                 exception_type,
-                params.temperature,
+                params.temperature_min,
                 params.pressure,
                 params.mole_fractions,
             )

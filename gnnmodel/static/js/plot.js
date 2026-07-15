@@ -227,15 +227,10 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
   };
 
   var pressure_el = document.getElementById("id_pressure");
-  var temp_min_el = document.getElementById("id_temp_min");
   var pressure = pressure_el
     ? (pressure_el.value || pressure_el.textContent || "").trim()
     : "";
-  var temp_min = temp_min_el
-    ? (temp_min_el.value || temp_min_el.textContent || "").trim()
-    : "";
-  var _Title =
-    "LLE/VLE at P=" + pressure + " Pa, starting with T=" + temp_min + " K";
+  var _Title = "LLE/VLE at P=" + pressure + " Pa";
   Plotly.newPlot(
     "binary_lle_phase_diagram",
     [trace1, trace2, trace3],

@@ -445,6 +445,8 @@ def _get_binary_lle_data(
             raise ValueError("LLE phase diagram only for binary mixtures.")
         if forms.plot_config.cleaned_data["temp_min"] is None:
             raise ValueError("Missing minimum temperature")
+        if forms.plot_config.cleaned_data["temp_max"] is None:
+            raise ValueError("Missing maximum temperature")
         if forms.plot_config.cleaned_data["pressure"] is None:
             raise ValueError("Missing pressure")
 
@@ -453,7 +455,8 @@ def _get_binary_lle_data(
                 smiles_list=smiles_list,
                 mole_fractions=mole_fractions_list,
                 kij_matrix=kij_matrix,
-                temperature=forms.plot_config.cleaned_data["temp_min"],
+                temperature_min=forms.plot_config.cleaned_data["temp_min"],
+                temperature_max=forms.plot_config.cleaned_data["temp_max"],
                 pressure=forms.plot_config.cleaned_data["pressure"],
                 npoints=forms.plot_config.cleaned_data["npoints"] or 10,
             )

@@ -79,6 +79,17 @@ function getplot(data_json, xtitle, ytitle, title, id) {
 
   var plot_data = [trace1, trace2];
 
+  if (alldata["GNN"][2]) {
+    var trace3 = {
+      x: alldata["GNN"][0],
+      y: alldata["GNN"][2],
+      mode: "lines",
+      type: "scatter",
+      name: alldata["legends"][1],
+    };
+    var plot_data = [trace1, trace2, trace3];
+  }
+
   Plotly.newPlot(id, plot_data, layout, {
     responsive: true,
     modeBarButtonsToRemove: ["select2d", "lasso2d"],

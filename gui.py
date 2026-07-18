@@ -7,6 +7,7 @@ import os
 import socket
 import sys
 import threading
+import webbrowser
 
 import bootstrap5
 import feos
@@ -18,6 +19,8 @@ from uvicorn import run
 
 import webapp.asgi
 import webapp.wsgi
+
+webview.settings["OPEN_EXTERNAL_LINKS_IN_BROWSER"] = False
 
 
 def _find_free_port():
@@ -48,17 +51,44 @@ def _start_django():
     run("webapp.asgi:application", port=PORT, log_config=None)
 
 
+class WindowAPI:
+    "window api"
+
+    def __init__(self, port):
+        self.port = port
+
+    def open_link(self, url: str):
+        "open nav link in new window"
+        if self.check_url(url):
+            webview.create_window(
+                "GNNPCSAFT - New Window",
+                url,
+                width=800,
+                height=600,
+                resizable=True,
+            )
+        else:
+            webbrowser.open(url)
+
+    def check_url(self, url: str):
+        "check url"
+        return url.startswith(f"http://localhost:{self.port}") or url.startswith("/")
+
+
 if __name__ == "__main__":
     # 2. Start Django in a background thread
     django_thread = threading.Thread(target=_start_django, daemon=True)
     django_thread.start()
 
+    api = WindowAPI(PORT)
+
     # 3. Launch the pywebview window pointing to localhost
     webview.create_window(
         "GNNPCSAFT",
         f"http://localhost:{PORT}",
-        width=1280,
+        width=800,
         height=600,
         maximized=True,
+        js_api=api,
     )
     webview.start()

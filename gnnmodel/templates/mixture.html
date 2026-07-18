@@ -21,8 +21,12 @@
               {{ form.kijs }}
             </div>
             <div class="col-sm-4">
+              <div class="form-control my-2">{{ plot_config }}</div>
+            </div>
+          </div>
+          <div class="row justify-content-center">
+            <div class="col-md-8">
               <div class="form-control my-2">
-                {{ plot_config }}
                 {% for checkbox in plot_checkboxes %}
                   {% if checkbox %}<div class="form-check form-switch">{{ checkbox }}</div>{% endif %}
                 {% endfor %}
@@ -30,7 +34,7 @@
             </div>
           </div>
           <div class="row justify-content-center">
-            <div class="col-sm-6">
+            <div class="col-md-8">
               <input type="submit"
                      value="Analyse SMILES/InChI Mixture"
                      class="form-control btn-outline-primary" />
@@ -48,91 +52,112 @@
                             id="rho_exp_data"
                             data-bs-toggle="dropdown"
                             aria-expanded="false">Density experimental data</button>
-                    <ul class="dropdown-menu" aria-labelledby="rho_exp_data">
-                      {% for pkpa, x1, count in rho_px_data_b %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item rho-px-data-b-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}"
-                                  data-x="{{ x1 }}">P (kPa) = {{ pkpa }} - x1 = {{ x1 }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for pkpa, x1,x2, count in rho_px_data_t %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item rho-px-data-t-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}"
-                                  data-x1="{{ x1 }}"
-                                  data-x2="{{ x2 }}">P (kPa) = {{ pkpa }} - x = [{{ x1 }}, {{ x2 }}] - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                    </ul>
+                    <div class="dropdown-menu p-3" aria-labelledby="rho_exp_data">
+                      <div class="row g-2">
+                        <div class="col-md-12">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">rho-T (Binary)</h6>
+                          {% for pkpa, x1, count in rho_px_data_b %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item rho-px-data-b-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}"
+                                    data-x="{{ x1 }}">P (kPa) = {{ pkpa }} - x1 = {{ x1 }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                      <div class="row g-2 border-top mt-3 pt-2">
+                        <div class="col-md-12">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">rho-T (Ternary)</h6>
+                          {% for pkpa, x1,x2, count in rho_px_data_t %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item rho-px-data-t-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}"
+                                    data-x1="{{ x1 }}"
+                                    data-x2="{{ x2 }}">P (kPa) = {{ pkpa }} - x = [{{ x1 }}, {{ x2 }}] - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
                     <button class="form-control my-1 btn-outline-secondary dropdown-toggle"
                             type="button"
                             id="lle_exp_data"
                             data-bs-toggle="dropdown"
                             aria-expanded="false">LLE experimental data</button>
-                    <ul class="dropdown-menu" aria-labelledby="lle_exp_data">
-                      {% for pkpa, count in lle_p_data_b %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item lle-p-data-b-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for pkpa, tk, count in lle_pt_data_t %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item lle-pt-data-t-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}"
-                                  data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                    </ul>
+                    <div class="dropdown-menu p-3" aria-labelledby="lle_exp_data">
+                      <div class="row g-2">
+                        <div class="col-md-12">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">T-x-x (Binary)</h6>
+                          {% for pkpa, count in lle_p_data_b %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item lle-p-data-b-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                      <div class="row g-2 border-top mt-3 pt-2">
+                        <div class="col-md-12">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">x1-x2-x3 (Ternary)</h6>
+                          {% for pkpa, tk, count in lle_pt_data_t %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item lle-pt-data-t-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}"
+                                    data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
                     <button class="form-control my-1 btn-outline-secondary dropdown-toggle"
                             type="button"
                             id="vle_exp_data"
                             data-bs-toggle="dropdown"
                             aria-expanded="false">VLE experimental data</button>
-                    <ul class="dropdown-menu" aria-labelledby="vle_exp_data">
-                      {% for pkpa, count in vle_p_data_b %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item vle-p-data-b-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for tk, count in vle_t_data_b %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item vle-t-data-b-btn"
-                                  type="button"
-                                  data-tk="{{ tk }}">T (K) = {{ tk }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for x, count in vle_x_data_b %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item vle-x-data-b-btn"
-                                  type="button"
-                                  data-x="{{ x }}">x1 = {{ x }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for pkpa, tk, count in vle_pt_data_t %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item vle-pt-data-t-btn"
-                                  type="button"
-                                  data-pressure="{{ pkpa }}"
-                                  data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                      {% for tk, ratio, count in vle_tx_data_t %}
-                        <li>
-                          <button class="form-control my-1 btn-outline-primary dropdown-item vle-tx-data-t-btn"
-                                  type="button"
-                                  data-tk="{{ tk }}"
-                                  data-ratio="{{ ratio }}">T (K) = {{ tk }} - x2/(x2+x3) = {{ ratio }} - {{ count }} points</button>
-                        </li>
-                      {% endfor %}
-                    </ul>
+                    <div class="dropdown-menu p-3" aria-labelledby="vle_exp_data">
+                      <div class="row g-2">
+                        <div class="col-md-4">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">T-x-y (Binary)</h6>
+                          {% for pkpa, count in vle_p_data_b %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item vle-p-data-b-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}">P (kPa) = {{ pkpa }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">P-x-y (Binary)</h6>
+                          {% for tk, count in vle_t_data_b %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item vle-t-data-b-btn text-wrap"
+                                    type="button"
+                                    data-tk="{{ tk }}">T (K) = {{ tk }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">P-T (Binary)</h6>
+                          {% for x, count in vle_x_data_b %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item vle-x-data-b-btn text-wrap"
+                                    type="button"
+                                    data-x="{{ x }}">x1 = {{ x }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                      <div class="row g-2 border-top mt-3 pt-2">
+                        <div class="col-md-6">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">x1-x2-x3 (Ternary)</h6>
+                          {% for pkpa, tk, count in vle_pt_data_t %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item vle-pt-data-t-btn text-wrap"
+                                    type="button"
+                                    data-pressure="{{ pkpa }}"
+                                    data-tk="{{ tk }}">P (kPa) = {{ pkpa }} - T (K) = {{ tk }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                          <h6 class="dropdown-header text-center border-bottom pb-1 mb-2">P-x1 (Ternary)</h6>
+                          {% for tk, ratio, count in vle_tx_data_t %}
+                            <button class="form-control my-1 btn-outline-primary dropdown-item vle-tx-data-t-btn text-wrap"
+                                    type="button"
+                                    data-tk="{{ tk }}"
+                                    data-ratio="{{ ratio }}">T (K) = {{ tk }} - x2/(x2+x3) = {{ ratio }} - {{ count }} points</button>
+                          {% endfor %}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               {% endif %}

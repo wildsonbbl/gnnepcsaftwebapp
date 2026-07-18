@@ -77,3 +77,33 @@ document.addEventListener("click", function (e) {
 window.addEventListener("pywebviewready", function () {
   console.log("Integração do pywebview ativada com sucesso!");
 });
+
+// Função auxiliar para ler o valor atual de um cookie
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === name + "=") {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Intercepta o envio de formulários e atualiza o token CSRF com o valor mais recente do Cookie
+document.addEventListener("submit", function (e) {
+  const csrfInput = e.target.querySelector('input[name="csrfmiddlewaretoken"]');
+  if (csrfInput) {
+    const currentCookieToken = getCookie("csrftoken");
+    if (currentCookieToken && csrfInput.value !== currentCookieToken) {
+      console.log(
+        "Sincronizando token CSRF desatualizado com o cookie mais recente...",
+      );
+      csrfInput.value = currentCookieToken;
+    }
+  }
+});

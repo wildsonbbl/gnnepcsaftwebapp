@@ -287,10 +287,9 @@
 
       {% if kij_value %}
       if (kij_input) {
-        kij_input.value = {{kij_value}}.toFixed(4);
+        kij_input.value = ({{ kij_value }}).toFixed(4);
         kij_input.dispatchEvent(new Event('input'));
         kij_input.dispatchEvent(new Event('change'));
-
       }
       {% endif %}
 
@@ -305,8 +304,22 @@
       const vlePTBtns = document.querySelectorAll('.vle-pt-data-t-btn');
       const vleTXBtns = document.querySelectorAll('.vle-tx-data-t-btn');
 
+      const allBtns = [
+        ...rhoBinaryBtns, ...rhoTernaryBtns, ...lleBinaryPBtns, 
+        ...lleTernaryBtns, ...vlePBtns, ...vleTBtns, ...vleXBtns, 
+        ...vlePTBtns, ...vleTXBtns
+      ];
+
+      // Helper function to reset button styling
+      function resetButtonStyle(button) {
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-primary');
+      }
+
       // Helper function to fill form fields and update button styling
       function fillFormAndHighlight(button, pressureValue, tempValue, moleFractions = null) {
+        allBtns.forEach(resetButtonStyle);
+
         // Fill form fields
         if (pressureValue !== null && pressureInput) {
           pressureInput.value = pressureValue * 1000; // Convert kPa to Pa
@@ -332,12 +345,6 @@
         // Update button styling to show selection
         button.classList.add('btn-success');
         button.classList.remove('btn-outline-primary');
-      }
-
-      // Helper function to reset button styling
-      function resetButtonStyle(button) {
-        button.classList.remove('btn-success');
-        button.classList.add('btn-outline-primary');
       }
 
       // Handler for density binary buttons (rho-px-data-b-btn)
@@ -404,8 +411,6 @@
           e.preventDefault();
           const x = parseFloat(this.getAttribute('data-x'));
           fillFormAndHighlight(this, null, null, [x, 1.0 - x]);
-          this.classList.add('btn-success');
-          this.classList.remove('btn-outline-primary');
         });
       });
 

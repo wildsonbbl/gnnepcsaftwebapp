@@ -230,7 +230,7 @@
     </div>
     <div class="row justify-content-center" id="output_plots">
       {% if output %}
-        <script src={% static "js-minified/plotly-2.35.2.min.js" %} charset="utf-8"></script>
+        <script src={% static "js-minified/plotly-3.6.0.min.js" %} charset="utf-8"></script>
         <script src={% static "js/plot.js" %}></script>
         {% for data_json, xtitle, ytitle, title, id in mixture_plots %}
           <div class="col-lg-4 mt-2 ">

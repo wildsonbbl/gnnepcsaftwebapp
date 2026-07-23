@@ -92,7 +92,7 @@ function getplot(data_json, xtitle, ytitle, title, id) {
 
   Plotly.newPlot(id, plot_data, layout, {
     responsive: true,
-    modeBarButtonsToRemove: ["select2d", "lasso2d"],
+    modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
   });
 }
 
@@ -118,7 +118,7 @@ function get_phase_diagram(phase_diagram_data, ytitle, y_pos, id) {
 
   Plotly.newPlot(id, plot_data, layout, {
     responsive: true,
-    modeBarButtonsToRemove: ["select2d", "lasso2d"],
+    modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
   });
 }
 
@@ -204,7 +204,7 @@ function get_ternary_lle_phase_diagram(ternary_lle_phase_diagram_data) {
     },
     {
       responsive: true,
-      modeBarButtonsToRemove: ["select2d", "lasso2d"],
+      modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
     },
   );
 }
@@ -248,7 +248,7 @@ function get_binary_lle_phase_diagram(binary_lle_phase_diagram_data) {
     get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
-      modeBarButtonsToRemove: ["select2d", "lasso2d"],
+      modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
     },
   );
 }
@@ -290,7 +290,7 @@ function get_binary_vle_phase_diagram_txy(vle_phase_diagram_data) {
     get_layout("x<sub>1</sub>", "Temperature (K)", _Title),
     {
       responsive: true,
-      modeBarButtonsToRemove: ["select2d", "lasso2d"],
+      modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
     },
   );
 }
@@ -314,7 +314,7 @@ function get_binary_vle_phase_diagram_xy(vle_phase_diagram_data) {
     get_layout("x<sub>1</sub>", "y<sub>1</sub>", _Title),
     {
       responsive: true,
-      modeBarButtonsToRemove: ["select2d", "lasso2d"],
+      modeBarButtonsToRemove: ["select2d", "lasso2d", "toImage"],
     },
   );
 }

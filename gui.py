@@ -31,24 +31,22 @@ def _find_free_port():
     return port
 
 
-PORT = _find_free_port()
-
-
-def _start_django():
-    # Set the environment variable for your settings module
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webapp.settings")
-
-    # In PyInstaller, standard outputs can crash hidden console apps,
-    # so we redirect them if necessary or run with stdout bypass
+def _redirect_std_streams_to_devnull():
+    """Prevent PyInstaller-hidden console apps from crashing on stdout/stderr."""
     sys.stdout = open(os.devnull, "w", encoding="utf-8")  # pylint: disable=R1732
     sys.stderr = open(os.devnull, "w", encoding="utf-8")  # pylint: disable=R1732
 
+
+def start_django_server(port: int):
+    """Start the ASGI app on a specific local port."""
+    _redirect_std_streams_to_devnull()
+
     # Run the server on the dynamic port without the auto-reloader
     # execute_from_command_line(
-    #     [sys.argv[0], "runserver", f"127.0.0.1:{PORT}", "--noreload"]
+    #     [sys.argv[0], "runserver", f"127.0.0.1:{port}", "--noreload"]
     # )
 
-    run("webapp.asgi:application", port=PORT, log_config=None)
+    run("webapp.asgi:application", port=port, log_config=None)
 
 
 class WindowAPI:
@@ -75,20 +73,28 @@ class WindowAPI:
         return url.startswith(f"http://localhost:{self.port}") or url.startswith("/")
 
 
-if __name__ == "__main__":
-    # 2. Start Django in a background thread
-    django_thread = threading.Thread(target=_start_django, daemon=True)
+def start_app():
+    """Bootstrap migrations, launch the local server, and open the desktop window."""
+    port = _find_free_port()
+
+    django_thread = threading.Thread(
+        target=start_django_server,
+        args=(port,),
+        daemon=True,
+    )
     django_thread.start()
 
-    api = WindowAPI(PORT)
-
-    # 3. Launch the pywebview window pointing to localhost
+    api = WindowAPI(port)
     webview.create_window(
         "GNNPCSAFT",
-        f"http://localhost:{PORT}",
+        f"http://localhost:{port}",
         width=800,
         height=600,
         maximized=True,
         js_api=api,
     )
     webview.start()
+
+
+if __name__ == "__main__":
+    start_app()

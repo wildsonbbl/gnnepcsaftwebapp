@@ -78,7 +78,7 @@ Section: utils
 Priority: optional
 Architecture: $arch
 Maintainer: Wildson B. B. Lima <wil_bbl@hotmail.com>
-Homepage: https://github.com/wildsonbbl/gnnpcsaftwebapp
+Homepage: https://github.com/wildsonbbl/gnnepcsaftwebapp
 Installed-Size: $installed_size
 Depends:libgl1, libglib2.0-0, libsm6, libxrender1, libxext6, libegl1, libmtdev1, xvfb, libnss3
 Description: GNNPCSAFT desktop application

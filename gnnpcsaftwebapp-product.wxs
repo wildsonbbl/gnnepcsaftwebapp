@@ -6,8 +6,8 @@
     <Icon Id="AppIcon" SourceFile="$(var.ProjectDir)\electron\icon.ico" />
     <Property Id="ARPPRODUCTICON" Value="AppIcon" />
     <Property Id="ARPCONTACT" Value="wil_bbl@hotmail.com" />
-    <Property Id="ARPURLINFOABOUT" Value="https://github.com/wildsonbbl/gnnpcsaftwebapp" />
-    <Property Id="ARPHELPLINK" Value="https://github.com/wildsonbbl/gnnpcsaftwebapp/issues" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/wildsonbbl/gnnepcsaftwebapp" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/wildsonbbl/gnnepcsaftwebapp/issues" />
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLDIR" Name="gnnpcsaftwebapp" />

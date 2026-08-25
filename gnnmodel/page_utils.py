@@ -5,9 +5,9 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from gnnepcsaft_mcp_server.utils_data import (
-    retrieve_available_data_binary,
-    retrieve_available_data_pure,
-    retrieve_available_data_ternary,
+    _retrieve_available_data_binary,
+    _retrieve_available_data_pure,
+    _retrieve_available_data_ternary,
     retrieve_vle_for_kij,
 )
 from gnnepcsaft_mcp_server.utils_kij import optimize_binary_kij_for_vle
@@ -81,7 +81,7 @@ def process_pure_post(forms: PureForms) -> Optional[Dict[str, Any]]:
         "output": True,
         "pure_plots": custom_plots,
         "phase_diagrams": phase_diagrams,
-        "available_exp_data": retrieve_available_data_pure(smiles=smiles),
+        "available_exp_data": _retrieve_available_data_pure(smiles=smiles),
     }
 
 
@@ -144,9 +144,9 @@ def _build_kij_matrix(
 
 def _available_mixture_exp_data(smiles_list: list[str]):
     if len(smiles_list) == 2:
-        return retrieve_available_data_binary(smiles_list=smiles_list)
+        return _retrieve_available_data_binary(smiles_list=smiles_list)
     if len(smiles_list) == 3:
-        return retrieve_available_data_ternary(smiles_list=smiles_list)
+        return _retrieve_available_data_ternary(smiles_list=smiles_list)
     return {}
 
 

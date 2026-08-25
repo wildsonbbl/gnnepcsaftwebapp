@@ -4,6 +4,14 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
+from gnnepcsaft_mcp_server.utils_data import (
+    retrieve_available_data_binary,
+    retrieve_available_data_pure,
+    retrieve_available_data_ternary,
+    retrieve_vle_for_kij,
+)
+from gnnepcsaft_mcp_server.utils_kij import optimize_binary_kij_for_vle
+
 from .forms import (
     BinaryLLECheckForm,
     BinaryVLECheckForm,
@@ -29,13 +37,6 @@ from .utils import (
     get_pred,
     get_pure_plots_data,
 )
-from .utils_data import (
-    retrieve_available_data_binary,
-    retrieve_available_data_pure,
-    retrieve_available_data_ternary,
-    retrieve_vle_for_kij,
-)
-from .utils_mix import optimize_binary_kij_for_vle
 
 
 def init_pure_forms(post_data=None):

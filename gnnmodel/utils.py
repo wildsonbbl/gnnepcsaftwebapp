@@ -7,11 +7,7 @@ from typing import List, Optional, Tuple, Union
 import onnxruntime as ort
 from gnnepcsaft.pcsaft.pcsaft_feos import critical_points_feos
 from gnnepcsaft_mcp_server.utils import predict_pcsaft_parameters
-from rdkit.Chem import AllChem as Chem
-
-from . import logger
-from .forms import MixtureForms, PureForms
-from .utils_data import (
+from gnnepcsaft_mcp_server.utils_data import (
     retrieve_bubble_pressure_data,
     retrieve_lle_binary_data,
     retrieve_lle_ternary_data,
@@ -25,7 +21,7 @@ from .utils_data import (
     retrieve_vle_ternary_tx_fixed_data,
     retrieve_vp_pure_data,
 )
-from .utils_mix import (
+from gnnepcsaft_mcp_server.utils_mix import (
     MixDenParams,
     MixLLEParams,
     MixVpParams,
@@ -38,7 +34,7 @@ from .utils_mix import (
     mix_vle_pxy,
     mix_vp,
 )
-from .utils_pure import (
+from gnnepcsaft_mcp_server.utils_pure import (
     pure_den,
     pure_h_lv,
     pure_phase_diagram,
@@ -46,6 +42,10 @@ from .utils_pure import (
     pure_surface_tension,
     pure_vp,
 )
+from rdkit.Chem import AllChem as Chem
+
+from . import logger
+from .forms import MixtureForms, PureForms
 
 # lazy import
 # import polars as pl
@@ -765,7 +765,7 @@ def get_pure_plots_data(
                 )
         except RuntimeError as err:
             logger.debug(err)
-    return phase_diagrams, custom_plots
+    return list(phase_diagrams), custom_plots
 
 
 def get_mixture_plots_data(

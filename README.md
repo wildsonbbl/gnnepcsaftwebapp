@@ -10,6 +10,20 @@ On [releases](https://github.com/wildsonbbl/gnnepcsaftwebapp/releases), you find
 docker run -p 19770:8000 wildsonbbl/gnnpcsaftwebapp:latest
 ```
 
+## CPU-compatible desktop build
+
+The standard desktop release requires AVX2 for `polars`. On older CPUs, build the runtime-compatible variant, which installs `polars[rtcompat]`:
+
+```powershell
+.\release-workflow.ps1 -Rtcompat
+```
+
+```bash
+./release-workflow.sh --rtcompat
+```
+
+The standard build detects CPUs without AVX2 before loading native dependencies and directs users to the latest release page for the compatible installer.
+
 Other implementations with GNNPCSAFT:
 
 - [GNNPCSAFT CLI](https://github.com/wildsonbbl/gnnepcsaftcli)

@@ -6,7 +6,6 @@ from PyInstaller.utils.hooks import copy_metadata
 datas = [
     ("./gnnmodel/templates", "./gnnmodel/templates"),
     ("./productionfiles", "./productionfiles"),
-    ("./gnnmodel/_data", "./gnnmodel/_data"),
 ]
 datas += copy_metadata("django-bootstrap-v5")
 runtime_hooks = []

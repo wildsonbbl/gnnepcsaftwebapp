@@ -1,5 +1,6 @@
 param(
-	[switch]$SkipUpload
+	[switch]$SkipUpload,
+	[switch]$Rtcompat
 )
 
 $versionFile = Join-Path $PSScriptRoot 'webapp/_version.py'
@@ -13,13 +14,23 @@ if (-not $versionNumber) {
 
 $version = "v$versionNumber"
 $platform='windows'
-$installerName = "gnnpcsaftwebapp-$version-$platform.msi"
+$buildSuffix = if ($Rtcompat) { '-rtcompat' } else { '' }
+$installerName = "gnnpcsaftwebapp-$version$buildSuffix-$platform.msi"
 
 ## create package
 uv pip install -r requirements.txt
+if ($Rtcompat) {
+	uv pip install --reinstall 'polars[rtcompat]'
+}
 uv run python manage.py collectstatic --no-input
 uv run python manage.py migrate --no-input
+if ($Rtcompat) {
+	$env:GNNPCSAFTWEBAPP_RTCOMPAT = '1'
+} else {
+	Remove-Item Env:GNNPCSAFTWEBAPP_RTCOMPAT -ErrorAction SilentlyContinue
+}
 uv run pyinstaller --distpath ./app_pkg/dist --workpath ./app_pkg/build --noconfirm --clean ./gnnpcsaftwebapp.spec
+Remove-Item Env:GNNPCSAFTWEBAPP_RTCOMPAT -ErrorAction SilentlyContinue
 
 $distDir = Join-Path $PSScriptRoot 'app_pkg/dist/gnnpcsaftwebapp'
 if (-not (Test-Path $distDir)) {

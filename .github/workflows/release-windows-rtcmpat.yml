@@ -1,4 +1,4 @@
-name: Release Windows MSI
+name: Release Windows MSI rt compat
 
 on:
   push:
@@ -39,12 +39,12 @@ jobs:
         id: build
         shell: pwsh
         run: |
-          ./release-workflow.ps1 -SkipUpload
+          ./release-workflow.ps1 -SkipUpload -Rtcompat
 
       - name: Publish release asset
         uses: softprops/action-gh-release@v3
         with:
           files: installer/*.msi
           fail_on_unmatched_files: true
-          generate_release_notes: true
+          generate_release_notes: false
           draft: true

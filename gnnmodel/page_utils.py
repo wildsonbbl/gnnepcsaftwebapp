@@ -10,7 +10,10 @@ from gnnepcsaft_mcp_server.utils_data import (
     _retrieve_available_data_ternary,
     retrieve_vle_for_kij,
 )
-from gnnepcsaft_mcp_server.utils_kij import optimize_binary_kij_for_vle
+from gnnepcsaft_mcp_server.utils_kij import (
+    optimize_binary_kij_for_vle,
+    optimize_binary_kij_with_lle,
+)
 
 from .forms import (
     BinaryLLECheckForm,
@@ -21,6 +24,7 @@ from .forms import (
     InChIorSMILESareaInputforMixture,
     InChIorSMILESinput,
     KijCheckForm,
+    KijLLECheckForm,
     MixtureForms,
     PhaseDiagramCheckForm,
     PureForms,
@@ -165,6 +169,7 @@ def init_mixture_forms(post_data=None):
             BinaryVLEpxyCheckForm(post_data),
             TernaryVLEpxCheckForm(post_data),
             KijCheckForm(post_data),
+            KijLLECheckForm(post_data),
         )
     return MixtureForms(
         InChIorSMILESareaInputforMixture(),
@@ -177,6 +182,7 @@ def init_mixture_forms(post_data=None):
         BinaryVLEpxyCheckForm(),
         TernaryVLEpxCheckForm(),
         KijCheckForm(),
+        KijLLECheckForm(),
     )
 
 
@@ -204,6 +210,16 @@ def process_mixture_post(forms: MixtureForms):
                     vle=vle,
                 )
                 kij = [kij_value]
+
+        forms.kij_lle_checkform.full_clean()
+        if forms.kij_lle_checkform.cleaned_data["kij_lle_checkbox"]:
+            forms.plot_config.full_clean()
+            kij_value = optimize_binary_kij_with_lle(
+                smiles_list=smiles_list,
+                initial_kij=kij[0] if kij else 0.05,
+            )
+            if isinstance(kij_value, float):
+                kij = [kij_value]
         kij_matrix = _build_kij_matrix(smiles_list, kij)
         para_pred_list = [
             [round(para, 5) for para in get_pred(smiles)] for smiles in smiles_list
@@ -228,6 +244,7 @@ def process_mixture_post(forms: MixtureForms):
             forms.ternary_lle_checkform,
             forms.ternary_vlepx_checkform,
             forms.kij_checkform,
+            forms.kij_lle_checkform,
         ],
         "para_pred_list": para_pred_list,
         "mole_fractions_list": mole_fractions_list,
@@ -271,6 +288,7 @@ def build_mixture_context(post_data=None):
             TernaryLLECheckForm(),
             TernaryVLEpxCheckForm(),
             KijCheckForm(),
+            KijLLECheckForm(),
         ],
         "available_params": available_params,
         "parameters_molefractions_list": [],

@@ -9,7 +9,7 @@ whitenoise
 gunicorn
 fontawesomefree
 gnnepcsaft>=0.5
-gnnepcsaft-mcp-server>=0.4
+gnnepcsaft-mcp-server>=0.5.9
 jq
 feos
 si-units

@@ -473,7 +473,7 @@ class KijCheckForm(forms.Form):
     "Form to check estimate kij"
 
     kij_checkbox = forms.BooleanField(
-        label="Estimate kij value for binary mixture",
+        label="Estimate kij value for binary mixture with VLE data",
         label_suffix="",
         required=False,
         initial=False,
@@ -481,7 +481,25 @@ class KijCheckForm(forms.Form):
         widget=forms.CheckboxInput(
             attrs={
                 "class": "form-check-input",
-                "aria-label": "Estimate kij value for binary mixture",
+                "aria-label": "Estimate kij value for binary mixture with VLE data",
+            }
+        ),
+    )
+
+
+class KijLLECheckForm(forms.Form):
+    "Form to check estimate kij"
+
+    kij_lle_checkbox = forms.BooleanField(
+        label="Estimate kij value for binary mixture with LLE data",
+        label_suffix="",
+        required=False,
+        initial=False,
+        help_text="<p class='form-text'>- All available LLE exp. data used in optimization</p>",
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "form-check-input",
+                "aria-label": "Estimate kij value for binary mixture with LLE data",
             }
         ),
     )
@@ -513,3 +531,4 @@ class MixtureForms(NamedTuple):
     binary_vlepxy_checkform: BinaryVLEpxyCheckForm
     ternary_vlepx_checkform: TernaryVLEpxCheckForm
     kij_checkform: KijCheckForm
+    kij_lle_checkform: KijLLECheckForm

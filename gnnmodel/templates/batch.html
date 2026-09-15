@@ -70,44 +70,4 @@
       {% endif %}
     </div>
   </div>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const copyableParameters = document.querySelectorAll('.copyable-parameter');
-
-      async function copyParameter(parameterCell) {
-        const value = parameterCell.dataset.copyValue;
-        try {
-          if (navigator.clipboard && window.isSecureContext) {
-            await navigator.clipboard.writeText(value);
-          } else {
-            throw new Error('Modern clipboard API unavailable');
-          }
-        } catch (error) {
-          const copyInput = document.createElement('textarea');
-          copyInput.value = value;
-          copyInput.style.position = 'fixed';
-          copyInput.style.opacity = '0';
-          document.body.appendChild(copyInput);
-          copyInput.focus();
-          copyInput.select();
-          document.execCommand('copy');
-          copyInput.remove();
-        }
-        parameterCell.title = 'Copied';
-        window.setTimeout(() => {
-          parameterCell.title = 'Copy parameter';
-        }, 1200);
-      }
-
-      copyableParameters.forEach(parameterCell => {
-        parameterCell.addEventListener('click', () => copyParameter(parameterCell));
-        parameterCell.addEventListener('keydown', event => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            copyParameter(parameterCell);
-          }
-        });
-      });
-    });
-  </script>
 {% endblock content %}

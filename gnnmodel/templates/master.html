@@ -9,15 +9,10 @@
     <meta name="keywords" content="HTML, Django, CSS, GNNPCSAFT">
     <meta name="author" content="Wildson B B Lima">
     <link href="{% static 'fontawesomefree/css/fontawesome.css' %}"
-          rel="stylesheet"
-          type="text/css" />
-    <link href="{% static 'fontawesomefree/css/brands.css' %}"
-          rel="stylesheet"
-          type="text/css" />
-    <link href="{% static 'fontawesomefree/css/solid.css' %}"
-          rel="stylesheet"
-          type="text/css">
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet" type="text/css" />
+          rel="stylesheet" />
+    <link href="{% static 'fontawesomefree/css/brands.css' %}" rel="stylesheet" />
+    <link href="{% static 'fontawesomefree/css/solid.css' %}" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
     {% bootstrap_css %} {% bootstrap_javascript %}
     <link rel="manifest" href="{% static "/manifest.json" %}">
     <script>
@@ -82,5 +77,6 @@
       </div>
     </main>
     <script src={% static "js/newwindowhandler.js" %}></script>
+    <script src={% static "js/page.js" %}></script>
   </body>
 </html>

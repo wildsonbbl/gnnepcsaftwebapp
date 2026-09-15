@@ -58,8 +58,10 @@
                       {% endfor %}
                     </ul>
                   </div>
-                  <button class="form-control my-1 btn-outline-secondary" type="button">Vapor Pressure: {{ vp_range }} points</button>
-                  <button class="form-control my-1 btn-outline-secondary" type="button">Surface Tension: {{ st_range }} points</button>
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button">Vapor Pressure: {{ vp_range }} points</button>
+                  <button class="form-control my-1 btn-outline-secondary"
+                          type="button">Surface Tension: {{ st_range }} points</button>
                 </div>
               {% endif %}
             </div>
@@ -112,7 +114,11 @@
               {% for paraname, para in predicted_para %}
                 <tr>
                   <td>{{ paraname }}</td>
-                  <td>{{ para }}</td>
+                  <td class="copyable-parameter"
+                      data-copy-value="{{ para }}"
+                      role="button"
+                      tabindex="0"
+                      title="Copy parameter">{{ para }}</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -126,16 +132,16 @@
           </p>
         </div>
         {% for data_json, xtitle, ytitle, title, id in pure_plots %}
-          <div class="col-lg-4 my-2 ">
+          <div class="col-lg-4 my-2">
             <div id="{{ id }}" alt="{{ title }} plot"></div>
             <script>getplot("{{data_json|escapejs}}","{{xtitle}}","{{ytitle}}","{{title}}","{{id}}");</script>
           </div>
         {% endfor %}
         {% if phase_diagrams %}
-          <div class="col-lg-4 my-2 ">
+          <div class="col-lg-4 my-2">
             <div id="t_rho_diagram" alt="T-rho diagram"></div>
           </div>
-          <div class="col-lg-4 my-2 ">
+          <div class="col-lg-4 my-2">
             <div id="p_rho_diagram" alt="P-rho diagram"></div>
           </div>
           <script>
@@ -176,5 +182,45 @@
       });
     }
   });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const copyableParameters = document.querySelectorAll('.copyable-parameter');
+
+      async function copyParameter(parameterCell) {
+        const value = parameterCell.dataset.copyValue;
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            throw new Error('Modern clipboard API unavailable');
+          }
+        } catch (error) {
+          const copyInput = document.createElement('textarea');
+          copyInput.value = value;
+          copyInput.style.position = 'fixed';
+          copyInput.style.opacity = '0';
+          document.body.appendChild(copyInput);
+          copyInput.focus();
+          copyInput.select();
+          document.execCommand('copy');
+          copyInput.remove();
+        }
+        parameterCell.title = 'Copied';
+        window.setTimeout(() => {
+          parameterCell.title = 'Copy parameter';
+        }, 1200);
+      }
+
+      copyableParameters.forEach(parameterCell => {
+        parameterCell.addEventListener('click', () => copyParameter(parameterCell));
+        parameterCell.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            copyParameter(parameterCell);
+          }
+        });
+      });
+    });
   </script>
 {% endblock content %}

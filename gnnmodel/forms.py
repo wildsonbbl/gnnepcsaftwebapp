@@ -1,5 +1,6 @@
 "Django forms."
 
+import math
 import re
 from typing import NamedTuple
 
@@ -49,6 +50,10 @@ def _parse_kij_values(kij_line: str, component_count: int) -> list[float]:
     for kij_value in kij_values:
         if kij_value < -1.0 or kij_value > 1.0:
             raise ValidationError(_("Kij values must be between -1 and 1."))
+
+    for kij_value in kij_values:
+        if math.isnan(kij_value):
+            raise ValidationError(_("All Kij values must be valid numbers."))
 
     return kij_values
 

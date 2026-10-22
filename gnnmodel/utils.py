@@ -64,8 +64,6 @@ def _json_dumps(data: object) -> str:
 
     return json.dumps(normalize(data), allow_nan=False)
 
-# lazy import
-# import polars as pl
 
 ort.set_default_logger_severity(3)
 

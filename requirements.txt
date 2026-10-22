@@ -1,19 +1,12 @@
 Django
-numpy
 psycopg2-binary
 python-decouple
-rdkit
-polars
 django-bootstrap-v5
 whitenoise
 gunicorn
 fontawesomefree
-gnnepcsaft>=0.5
-gnnepcsaft-mcp-server>=0.5.9
+gnnepcsaft-mcp-server>=0.5.11
 jq
-feos
-si-units
-onnxruntime
 channels
 daphne
 djlint
@@ -21,4 +14,3 @@ pylint
 pylint-django
 pyinstaller
 pywebview
-scipy

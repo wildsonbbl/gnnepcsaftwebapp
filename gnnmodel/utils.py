@@ -1,7 +1,9 @@
 "Module for utils like plotting data."
 
 import json
+import math
 import os.path as osp
+from numbers import Real
 from typing import List, Optional, Tuple, Union
 
 import onnxruntime as ort
@@ -46,6 +48,21 @@ from rdkit.Chem import AllChem as Chem
 
 from . import logger
 from .forms import MixtureForms, PureForms
+
+
+def _json_dumps(data: object) -> str:
+    """Serialize plot data with JSON-compatible values for non-finite numbers."""
+
+    def normalize(value: object) -> object:
+        if isinstance(value, Real) and not math.isfinite(value):
+            return None
+        if isinstance(value, dict):
+            return {key: normalize(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [normalize(item) for item in value]
+        return value
+
+    return json.dumps(normalize(data), allow_nan=False)
 
 # lazy import
 # import polars as pl
@@ -425,7 +442,7 @@ def _get_binary_vle_data(
 
         except (AssertionError, RuntimeError) as e:
             logger.debug(e)
-        vle_phase_diagram_data = json.dumps(_vle_phase_diagram_data)
+        vle_phase_diagram_data = _json_dumps(_vle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
     return vle_phase_diagram_data
@@ -487,7 +504,7 @@ def _get_binary_lle_data(
 
         except (AssertionError, RuntimeError) as e:
             logger.debug(e)
-        binary_lle_phase_diagram_data = json.dumps(_binary_lle_phase_diagram_data)
+        binary_lle_phase_diagram_data = _json_dumps(_binary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
     return binary_lle_phase_diagram_data
@@ -555,7 +572,7 @@ def _get_ternary_lle_data(
 
         except (AssertionError, RuntimeError) as e:
             logger.debug(e)
-        ternary_lle_phase_diagram_data = json.dumps(_ternary_lle_phase_diagram_data)
+        ternary_lle_phase_diagram_data = _json_dumps(_ternary_lle_phase_diagram_data)
     except (ValueError, RuntimeError) as err:
         logger.debug(err)
     return ternary_lle_phase_diagram_data
@@ -633,7 +650,7 @@ def pure_plots(
         plot_data = _get_rho_data(smiles, temp_min, temp_max, pressure, npoints)
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Density (mol / m³)",
                 f"Density at P={pressure} Pa",
@@ -649,7 +666,7 @@ def pure_plots(
         plot_data = _get_vp_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Vapor pressure (Pa)",
                 "Vapor pressure",
@@ -665,7 +682,7 @@ def pure_plots(
         plot_data = _get_h_lv_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Enthalpy of vaporization (kJ/mol)",
                 "Enthalpy of vaporization",
@@ -681,7 +698,7 @@ def pure_plots(
         plot_data = _get_s_lv_data(smiles, temp_min, temp_max, npoints)
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Entropy of vaporization (J/mol/K)",
                 "Entropy of vaporization",
@@ -693,7 +710,7 @@ def pure_plots(
         plot_data = _get_st_data(smiles, temp_min)
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Surface Tension (mN/m)",
                 "Surface Tension",
@@ -839,7 +856,7 @@ def mixture_plots(
 
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Liquid Density (mol / m³)",
                 f"Density at P={pressure} Pa and mole fractions={mole_fractions_list}",
@@ -854,7 +871,7 @@ def mixture_plots(
 
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "Temperature (K)",
                 "Pressure (Pa)",
                 f"VLE at mole fractions={mole_fractions_list}",
@@ -862,14 +879,14 @@ def mixture_plots(
             )
         )
 
-    if "tvlepx" in checkboxes and len(smiles_list) == 3:
+    if "tvlepx" in checkboxes and len(smiles_list) == 3 and temp_min is not None:
         plot_data, solvent_ratio = _get_mix_vle_t_data(
             smiles_list, kij_matrix, npoints, mole_fractions_list, temp_min
         )
 
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "x1",
                 "Pressure (Pa)",
                 f"VLE P-x1 at T={temp_min} K and x2/(x2+x3)={solvent_ratio:.3f}",
@@ -882,7 +899,7 @@ def mixture_plots(
 
         all_plots.append(
             (
-                json.dumps(plot_data),
+                _json_dumps(plot_data),
                 "x1",
                 "Pressure (Pa)",
                 f"VLE P-x-y at T={temp_min} K",
